@@ -45,199 +45,421 @@ header-includes:
   - \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
 ---
 
-
-
-
-
 ```{python}
-# Import necessary libraries
+#| echo: false
+
+# Wczytywanie bibliotek
+
+from math import log, e
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from scipy.stats import expon, gamma
+from random import seed
+from scipy.integrate import quad as integrate
 
 from IPython.display import Markdown  # formatowanie zmiennych do markdown
 from tabulate import tabulate  # formatowanie tabelek
+
+seed(25)  # dla powtarzalności wyników
 ```
 
-# Przykłady użycia pythona
+# Lista 1
 
-## Losowanie próby z danego rozkładu
-Funkcje dotyczące poszczególnych rozkładów możemy uzyskać korzystając z biblioteki *scipy*. Rozkład wykładniczy znajdziemy w klasie *expon*. Liczby losowe (pseudolosowe) generujemy za pomocą metody *rvs*.
+Lista pierwsza obejmuje analizę rozszerzonego rozkładu Weibulla $\left( \mathcal{EW} \left( \alpha, \beta, \gamma \right)\right)$: definicje jego funkcji, generowanie danych, wizualizację oraz porównanie statystyk empirycznych i teoretycznych.
+
+## Zadanie 1
+
+W tym zadaniu definiujemy funkcje:
+
+* gęstości,
+* dystrybuanty,
+* kwantylową,
+* hazardu
+
+dla rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$.
+
+### Funkcja gęstości
+
+$$
+f(x) = \frac{\alpha \gamma}{\beta} \left( \frac{x}{\beta} \right)^{\alpha-1}
+\left( 1 - exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right) \right)^{\gamma-1}
+exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right)  \mathbf{1}_{\left(0;\infty\right)}\left( x \right)
+$$
 
 ```{python}
-# Create x values from Exp(2)
-x = expon.rvs(loc=0, scale=2, size=10)
-# https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.expon.html
+def density(x, alpha, beta, gamma):
+    return(alpha*gamma/beta*(x/beta)**(alpha-1)*
+           (1-e**(-(x/beta)**alpha))**(gamma-1)*
+           e**(-(x/beta)**alpha))
 ```
 
-Inną możliwością jest skorzystanie z biblioteki *numpy*.
+### Dystrybuanta
+
+$$
+F(t) = 
+\left( 1 - exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right) \right)^\gamma
+\mathbf{1}_{\left(0;\infty\right)}\left( t \right)
+$$
+
 ```{python}
-# Create x values from Exp(2)
-x = np.random.exponential(scale=2, size=10)
-# https://numpy.org/doc/2.3/reference/random/generated/numpy.random.exponential.html
+def distribution(t, alpha, beta, gamma):
+    return((1-e**(-(t/beta)**alpha))**gamma)
 ```
 
+### Funkcja kwantylowa (dystrybuanta odwrotna)
 
-Do uzyskania dystrybuanty możemy użyć metody *cdf*. Analogicznie *pdf* to gęstość, *sf* to funkcja przeżycia, a *ppf* to funkcja kwantylowa.
+$$
+Q(p) = \beta \left( -\ln \left( 1-p^{\frac{1}{\gamma}} \right) \right)^{\frac{1}{\alpha}}
+$$
 
 ```{python}
-# Create x values
-x = np.arange(0, 10.1, 0.1)
-n = len(x)
-
-# Initialize list to store data
-data_list = []
-
-# Exponential distribution with rate=4 (mean=1/4)
-y1 = expon.cdf(x, scale=1/4)
-data_list.append(pd.DataFrame({
-    'axis_x': x,
-    'axis_y': y1,
-    'podtytul': 'Dystrybuanta rozkładu wykładniczego',
-    'rozklad': 'Exp(4)'
-}))
-
-# Exponential distribution with rate=1/4 (mean=4)
-y2 = expon.cdf(x, scale=4)
-data_list.append(pd.DataFrame({
-    'axis_x': x,
-    'axis_y': y2,
-    'podtytul': 'Dystrybuanta rozkładu wykładniczego',
-    'rozklad': 'Exp(1/4)'
-}))
-
-# Gamma distribution with shape=4, rate=2 (scale=1/2)
-y3 = gamma.cdf(x, a=4, scale=1/2)
-data_list.append(pd.DataFrame({
-    'axis_x': x,
-    'axis_y': y3,
-    'podtytul': 'Dystrybuanta rozkładu gamma',
-    'rozklad': 'G(4,2)'
-}))
-
-# Gamma distribution with shape=1/4, rate=2 (scale=1/2)
-y4 = gamma.cdf(x, a=1/4, scale=1/2)
-data_list.append(pd.DataFrame({
-    'axis_x': x,
-    'axis_y': y4,
-    'podtytul': 'Dystrybuanta rozkładu gamma',
-    'rozklad': 'G(1/4,2)'
-}))
-
-# Combine all data
-data = pd.concat(data_list, ignore_index=True)
+def quantile(p, alpha, beta, gamma):
+    return(beta*(-log(1-p**(1/gamma)))**(1/alpha))
 ```
 
+### Funkcja hazardu
 
-## Generowanie wykresu
-Wykresy możemy wygenerować korzystając z biblioteki *matplotlib*.
+$$
+h(x) = \frac{f(x)}{1-F(x)} =
+\frac{\alpha \gamma \left( \frac{x}{\beta} \right)^{\alpha-1}
+\left( 1 - exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right) \right)^{\gamma-1}
+exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right)}{\beta \left(1-\left( 1 - exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right) \right)^\gamma \right)}
+\mathbf{1}_{\left(0;\infty\right)}\left( x \right)
+$$
 
 ```{python}
-#| echo: true
+def hazard(x, alpha, beta, gamma):
+    return(density(x, alpha, beta, gamma)/(1-distribution(x, alpha, beta, gamma)))
+```
 
-# Create the plot with facets
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+## Zadanie 2
 
-# Plot for exponential distribution
-exp_data = data[data['podtytul'] == 'Dystrybuanta rozkładu wykładniczego']
-for rozklad in exp_data['rozklad'].unique():
-    subset = exp_data[exp_data['rozklad'] == rozklad]
-    axes[0].plot(subset['axis_x'], subset['axis_y'], label=rozklad)
-axes[0].set_xlabel('$x$')
-axes[0].set_ylabel('$F(x)$')
-# stosujemy dolary robiac podpisy osi, etykiety w legendzie itp.!
-axes[0].set_title('Dystrybuanta rozkładu wykładniczego')
-axes[0].legend()
-axes[0].grid(True, alpha=0.3)
+Poniżej przedstawione są wykresy przykładowych funkcji hazardu.
 
-# Plot for gamma distribution
-gamma_data = data[data['podtytul'] == 'Dystrybuanta rozkładu gamma']
-for rozklad in gamma_data['rozklad'].unique():
-    subset = gamma_data[gamma_data['rozklad'] == rozklad]
-    axes[1].plot(subset['axis_x'], subset['axis_y'], label=rozklad)
-axes[1].set_xlabel('$x$')
-axes[1].set_ylabel('$F(x)$')
-axes[1].set_title('Dystrybuanta rozkładu gamma')
-axes[1].legend()
-axes[1].grid(True, alpha=0.3)
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-cap: Przykładowe funkcje hazardu dla pięciu trójek parametrów
 
-plt.tight_layout()
-plt.savefig('example_plot.pdf')
+x = np.linspace(0.001, 8, 1000)
+
+plt.ylim(0, 1.2)
+plt.xlim(0, 8)
+
+plt.plot(x, hazard(x, 1/2, 2, 3/4), color="dodgerblue",
+         label=r"$\alpha = \frac{1}{2}, \ \beta = 2, \ \gamma = \frac{3}{4}$")
+
+plt.plot(x, hazard(x, 1, 2, 1), color="red",
+         label=r"$\alpha = 1, \ \beta = 2, \ \gamma = 1$")
+
+plt.plot(x, hazard(x, 3/2, 3, 3), color="green",
+         label=r"$\alpha = \frac{3}{2}, \ \beta = 3, \ \gamma = 3$")
+
+plt.plot(x, hazard(x, 3/2, 4, 1/8), color="gold",
+         label=r"$\alpha = \frac{3}{2}, \ \beta = 4, \ \gamma = \frac{1}{8}$")
+
+plt.plot(x, hazard(x, 3/4, 1, 2), color="darkorchid",
+         label=r"$\alpha = \frac{3}{4}, \ \beta = 1, \ \gamma = 2$")
+
+plt.title("Funkcje hazardu")
+plt.legend()
+plt.grid(alpha=0.3)
+
+plt.show()
 plt.close()
 ```
 
-Kod napisany powyżej służy do wygenerowania wykresu [-@fig-example1] przedstawiającego wykresy dystrybuant rozkładu wykładniczego i rozkładu gamma z różnymi parametrami. W kodzie powyższego chunka jest pokazane jak zmieniać opcję poszczególnych chunków - w tym przypadku *echo: true* oznacza, że wyświetlamy kod w pliku pdf, a *echo: false* oznacza, że jest on ukryty.
+## Zadanie 3
 
-<!-- wykres w formacie: ![Podpis](nazwa_pliku.pdf){#fig-etykieta}  -->
-![Przykładowy wykres](example_plot.pdf){#fig-example1}
+W tym zadaniu piszemy funkcję generującą zmienne z rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$. Ze względu na to, że łatwo jest wyznaczyć funkcję odwrotną do dystrybuanty (inaczej: funkcję kwantylową), wykorzystamy ją do generowania danych w następujący sposób:
 
-## Przykładowa tabelka
+1. $U_i \sim Uniform \left( 0, 1 \right)$
+2. $X_i = F^{-1}(U_i)$
+
+Wtedy zmienna losowa $X_i$ ma rozkład jednoznacznie określony przez dystrybuantę $F(t)$.
 
 ```{python}
-#| tbl-cap: Podstawowe statystyki z dwóch wygenerowanych próbek
-#| label: tbl-stats
+def generator(alpha, beta, gamma):
+    return(quantile(np.random.uniform(), alpha, beta, gamma))
+    # [0;1) to opcja domyślna
+```
 
-# Set random seed for reproducibility
-np.random.seed(123456)
-# Create x values from Exp(1)
-x = expon.rvs(loc=0, scale=1, size=100)
-# Create y values from Exp(5)
-y = expon.rvs(loc=0, scale=1/5, size=100)
+## Zadanie 4
 
-# Calculate summary statistics for x
-stat_opis_x = [
-    np.min(x),                    # Min
-    np.percentile(x, 25),         # 1st Quartile
-    np.median(x),                 # Median
-    np.mean(x),                   # Mean
-    np.percentile(x, 75),         # 3rd Quartile
-    np.max(x),                    # Max
-    np.std(x, ddof=1)             # Standard Deviation (sample std)
-]
+W tym zadaniu będziemy generować odpowiednio $n$=50 oraz $n$=100 próbek z dwóch trójek parametrów rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$, oraz przedstawiać ich gęstości na rysunku porównując z rzeczywistymi.
 
-stat_opis_y = [
-    np.min(y),                    # Min
-    np.percentile(y, 25),         # 1st Quartile
-    np.median(y),                 # Median
-    np.mean(y),                   # Mean
-    np.percentile(y, 75),         # 3rd Quartile
-    np.max(y),                    # Max
-    np.std(y, ddof=1)             # Standard Deviation (sample std)
-]
+Dla ułatwienia piszemy funkcję generującą coś tam i chuj.
 
-# Create a DataFrame with row and column names
-stat_opis_df = pd.DataFrame(
-    [stat_opis_x, stat_opis_y],
-    columns=["Min", "Pierwszy Kw.", "Mediana", "Średnia", "Trzeci Kw.", "Max", "Odch.Stand."],
-    index=["$x$", "$y$"]
+```{python}
+def ew(n, alpha, beta, gamma):
+
+    dane = []
+    y_max = 0
+    
+    for i in range(len(n)):
+        
+        x = np.array([generator(alpha, beta, gamma) for _ in range(n[i])])
+        counts, bin_edges = np.histogram(x, bins="scott", density=True)
+        y_max = max(y_max, counts.max())
+        dane.append(x)
+
+    fig, ax = plt.subplots(nrows=1, ncols=len(n), figsize=(5*len(n), 5))
+    
+    for i in range(len(n)):
+        
+        x_min, x_max = min(dane[i]), max(dane[i])
+        x_density = np.linspace(x_min, x_max, 1000)
+        
+        ax[i].hist(x, bins="scott", density = True, color="dodgerblue", alpha=0.5, label="Histogram")
+        ax[i].plot(x_density, density(x_density, alpha, beta, gamma), color="red", label="Gęstość")
+        ax[i].set_xlim(x_min, x_max)
+        ax[i].set_ylim(0, y_max+0.02)
+        ax[i].set_title(f"Liczba punktów: n={n[i]}")
+        ax[i].grid(alpha=0.3)
+        ax[i].legend(loc="upper right")
+
+        dane.append(x)
+    
+    fig.suptitle(fr"Wykresy rozkładu $\mathcal{{EW}} \left( \alpha={alpha}, \beta={beta}, \gamma={gamma} \right)$", fontsize=16)
+    plt.tight_layout()
+    plt.show()
+
+    return(dane)
+```
+
+```{python}
+#| echo: false
+#| fig-cap: Generowanie 50 oraz 100 próbek z rozkładu o parametrach $\alpha$=2, $\beta$=1, $\gamma$=1
+#| fig-align: center
+
+par1 = ew((50, 100), 2, 1, 1)
+```
+
+```{python}
+#| echo: false
+#| fig-cap: Generowanie 50 oraz 100 próbek z rozkładu o parametrach $\alpha$=1.5, $\beta$=3, $\gamma$=3
+#| fig-align: center
+
+par2 = ew((50, 100), 1.5, 3, 3)
+```
+
+## Zadanie 5
+
+Porównanie statystyk opisowych danych wygenerowanych oraz teoretycznych bla bla bla.
+
+```{python}
+#| echo: false
+#| tbl-cap: AAAAAAAAAAAAAAAAAAAAAAAAAA
+
+stat_50_1 = [
+    np.min(par1[0]),
+    np.percentile(par1[0], 25),
+    np.median(par1[0]),
+    np.percentile(par1[0], 75),
+    np.max(par1[0]),
+    np.mean(par1[0]),
+    np.std(par1[0], ddof=1)
+    ]
+stat_50_1 = [round(x, 3) for x in stat_50_1]  
+    
+stat_100_1 = [
+    np.min(par1[1]),
+    np.percentile(par1[1], 25),
+    np.median(par1[1]),
+    np.percentile(par1[1], 75),
+    np.max(par1[1]),
+    np.mean(par1[1]),
+    np.std(par1[1], ddof=1)
+    ]
+stat_100_1 = [round(x, 3) for x in stat_100_1]    
+
+stat_theoretical_1 = [
+    "-",
+    quantile(0.25, 2, 1, 1),
+    quantile(0.5, 2, 1, 1),
+    quantile(0.75, 2, 1, 1),
+    "-",
+    integrate(lambda x: x*density(x, 2, 1, 1), 0, quantile(0.999, 2, 1, 1))[0],
+    integrate(lambda x: x**2*density(x, 2, 1, 1), 0, quantile(0.999, 2, 1, 1))[0] - (integrate(lambda x: x*density(x, 2, 1, 1), 0, quantile(0.999, 2, 1, 1))[0])**2
+    ]
+stat_theoretical_1 = [round(x, 3) if isinstance(x, (int, float)) else x for x in stat_theoretical_1]    
+
+stat_df_1 = pd.DataFrame(
+    [stat_50_1, stat_100_1, stat_theoretical_1],
+    columns=["Min", "Pierwszy Kw.", "Mediana", "Trzeci Kw.", "Max", "Średnia", "Odch.Stand."],
+    index=["$n$=50", "$n$=100", "Dane teoretyczne"]
 )
 
 Markdown( 
-  tabulate(stat_opis_df, showindex=True, 
-           headers=stat_opis_df.columns)
+  tabulate(stat_df_1, showindex=True, 
+           headers=stat_df_1.columns)
 )
-
-# more about tables:
-# https://quarto.org/docs/authoring/tables.html
-
-# wiecej o odnoszeniu sie do tabel i wykresow:
-# https://quarto.org/docs/authoring/cross-references.html
-
-# Type	        Syntax	            Output
-# Default	      @fig-elephant	      Figure 1
-# Capitalized	  @Fig-elephant	      Figure 1
-# Custom Prefix	[Fig @fig-elephant]	Fig 1
-# No Prefix	    [-@fig-elephant]	  1
-
-# wiec jesli chcemy w tekscie sam numerek 1, a nie Table 1, to robimy [-@tbl-stats]
 ```
 
-W Tabeli [-@tbl-stats] widzimy podsumowanie wygenerowanych próbek.
+```{python}
+#| echo: false
+#| tbl-cap: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
+stat_50_2 = [
+    np.min(par2[0]),
+    np.percentile(par2[0], 25),
+    np.median(par2[0]),
+    np.percentile(par2[0], 75),
+    np.max(par2[0]),
+    np.mean(par2[0]),
+    np.std(par2[0], ddof=1)
+    ]
+stat_50_2 = [round(x, 3) for x in stat_50_2]  
+    
+stat_100_2 = [
+    np.min(par2[1]),
+    np.percentile(par2[1], 25),
+    np.median(par2[1]),
+    np.percentile(par2[1], 75),
+    np.max(par2[1]),
+    np.mean(par2[1]),
+    np.std(par2[1], ddof=1)
+    ]
+stat_100_2 = [round(x, 3) for x in stat_100_2]    
 
----
+stat_theoretical_2 = [
+    "-",
+    quantile(0.25, 1.5, 3, 3),
+    quantile(0.5, 1.5, 3, 3),
+    quantile(0.75, 1.5, 3, 3),
+    "-",
+    integrate(lambda x: x*density(x, 1.5, 3, 3), 0, quantile(0.999, 1.5, 3, 3))[0],
+    integrate(lambda x: x**2*density(x, 1.5, 3, 3), 0, quantile(0.999, 1.5, 3, 3))[0] - (integrate(lambda x: x*density(x, 1.5, 3, 3), 0, quantile(0.999, 1.5, 3, 3))[0])**2
+    ]
+stat_theoretical_2 = [round(x, 3) if isinstance(x, (int, float)) else x for x in stat_theoretical_2]    
 
-# Podsumowanie
+stat_df_2 = pd.DataFrame(
+    [stat_50_2, stat_100_2, stat_theoretical_2],
+    columns=["Min", "Pierwszy Kw.", "Mediana", "Trzeci Kw.", "Max", "Średnia", "Odch.Stand."],
+    index=["$n$=50", "$n$=100", "Dane teoretyczne"]
+)
 
-Tu można umieścić podsumowanie raportu.
+Markdown( 
+  tabulate(stat_df_2, showindex=True, 
+           headers=stat_df_2.columns)
+)
+```
+
+## Zadanie dodatkowe 1
+
+Tu liczymy wariancje i wariancje, policzymy dla wcześniejszych rozkładów, jako iż losowanie punktów średnio wychodzi to użyjemy metody parabol, porównamy do scipy.integrate.quad
+
+```{python}
+# n = ilość przedziałów, zatem liczba punktów = n+1
+#Liczba punktów musi być nieparzysta, zatem liczba przedziałów musi być parzysta
+
+def metoda_parabol(a, b, funkcja, n):
+
+    if n%2 != 0: raise Exception("Liczba przedziałów musi być parzysta")
+    
+    x_punkty = np.linspace(a, b, n+1)
+    #y_punkty = funkcja(x_punkty)
+    y_punkty = []
+    for i in x_punkty: y_punkty.append(funkcja(i))
+    
+    h = (b-a)/(n)
+    calka = 0
+    calka += y_punkty[0]
+    parzyste = False
+    
+    for i in range(1, n):
+        if parzyste:
+            calka += 2*y_punkty[i]
+            parzyste = False
+        else:
+            calka += 4*y_punkty[i]
+            parzyste = True
+
+    calka += y_punkty[n]
+    calka = h*calka/3
+    
+    return(calka)
+```
+
+```{python}
+def expected_value(alpha, beta, gamma, moment = 1):
+    return(metoda_parabol(0, quantile(0.999, alpha, beta, gamma),
+           lambda x: x**moment * density(x, alpha, beta, gamma), 10**5))
+```
+
+```{python}
+def variance(alpha, beta, gamma):
+    return(expected_value(alpha, beta, gamma, 2) -
+           expected_value(alpha, beta, gamma)**2)
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: Wartość oczekiwana dwóch trójek rozszerzonego rozkładu Weibulla
+
+ev = [
+  expected_value(2, 1, 1),
+  expected_value(1.5, 3, 3)
+]
+
+scipy_ev = [
+  integrate(lambda x: x*density(x, 2, 1, 1), 0, quantile(0.999, 2, 1, 1))[0],
+  integrate(lambda x: x*density(x, 1.5, 3, 3), 0, quantile(0.999, 1.5, 3, 3))[0]
+]
+
+ev_df = pd.DataFrame(
+    [ev, scipy_ev],
+    columns=[r"$\alpha$ = 2, $\beta$ = 1, $\gamma$ = 1", r"$\alpha$ = 1.5, $\beta$ = 3, $\gamma$ = 3"],
+    index=["Funkcja własna", "Funkcja wbudowana"]
+).round(3)
+
+Markdown( 
+  tabulate(ev_df, showindex=True, 
+           headers=ev_df.columns)
+)
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: Wariancja dwóch trójek rozszerzonego rozkładu Weibulla
+
+v = [
+  variance(2, 1, 1),
+  variance(1.5, 3, 3)
+]
+
+scipy_v = [
+  integrate(lambda x: x**2*density(x, 2, 1, 1), 0, quantile(0.999, 2, 1, 1))[0]-(integrate(lambda x: x*density(x, 2, 1, 1), 0, quantile(0.999, 2, 1, 1))[0])**2,
+  integrate(lambda x: x**2*density(x, 1.5, 3, 3), 0, quantile(0.999, 1.5, 3, 3))[0]-(integrate(lambda x: x*density(x, 1.5, 3, 3), 0, quantile(0.999, 1.5, 3, 3))[0])**2
+]
+
+v_df = pd.DataFrame(
+    [ev, scipy_ev],
+    columns=[r"$\alpha$ = 2, $\beta$ = 1, $\gamma$ = 1", r"$\alpha$ = 1.5, $\beta$ = 3, $\gamma$ = 3"],
+    index=["Funkcja własna", "Funkcja wbudowana"]
+).round(3)
+
+Markdown( 
+  tabulate(v_df, showindex=True, 
+           headers=stat_df_2.columns)
+)
+
+v_df = pd.DataFrame(
+    [v, scipy_v],
+    columns=[r"$\alpha$ = 2, $\beta$ = 1, $\gamma$ = 1", r"$\alpha$ = 1.5, $\beta$ = 3, $\gamma$ = 3"],
+    index=["Funkcja własna", "Funkcja wbudowana"]
+).round(3)
+
+Markdown( 
+  tabulate(v_df, showindex=True, 
+           headers=v_df.columns)
+)
+```
+
+*Znaleźć inną metodę niż quad, bo porównuje się funkcję parabol własną do wbudowanej, może jest jakaś dokładna?*
+
+## Zadanie dodatkowe 2
+
+*Trzeba ręcznie policzyć pochodne, dowód na kartce, i rozważyć na przypadki*
+
+# Lista 2
