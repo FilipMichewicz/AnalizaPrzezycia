@@ -4,7 +4,8 @@ subtitle: "Raport 1"
 author:
   - "Wiktor Niedźwiedzki (258882)"
   - "Filip Michewicz (258882)"
-date: "1 listopada 2025 Anno Domini"
+date: last-modified
+date-format: "D [listopada] YYYY [Anno Domini]"
 
 lang: pl
 jupyter: python3
@@ -60,7 +61,7 @@ from scipy.integrate import quad as integrate
 from IPython.display import Markdown  # formatowanie zmiennych do markdown
 from tabulate import tabulate  # formatowanie tabelek
 
-seed(25)  # dla powtarzalności wyników
+seed(6*10**6)  # dla powtarzalności wyników
 ```
 
 # Lista 1
@@ -129,7 +130,8 @@ $$
 
 ```{python}
 def hazard(x, alpha, beta, gamma):
-    return(density(x, alpha, beta, gamma)/(1-distribution(x, alpha, beta, gamma)))
+    return(density(x, alpha, beta, gamma) / 
+           (1-distribution(x, alpha, beta, gamma)))
 ```
 
 ## Zadanie 2
@@ -161,7 +163,6 @@ plt.plot(x, hazard(x, 3/2, 4, 1/8), color="gold",
 plt.plot(x, hazard(x, 3/4, 1, 2), color="darkorchid",
          label=r"$\alpha = \frac{3}{4}, \ \beta = 1, \ \gamma = 2$")
 
-plt.title("Funkcje hazardu")
 plt.legend()
 plt.grid(alpha=0.3)
 
@@ -210,8 +211,10 @@ def ew(n, alpha, beta, gamma):
         x_min, x_max = min(dane[i]), max(dane[i])
         x_density = np.linspace(x_min, x_max, 1000)
         
-        ax[i].hist(x, bins="scott", density = True, color="dodgerblue", alpha=0.5, label="Histogram")
-        ax[i].plot(x_density, density(x_density, alpha, beta, gamma), color="red", label="Gęstość")
+        ax[i].hist(x, bins="scott", density = True,
+                   color="dodgerblue", alpha=0.5, label="Histogram")
+        ax[i].plot(x_density, density(x_density, alpha, beta, gamma),
+                   color="red", label="Gęstość")
         ax[i].set_xlim(x_min, x_max)
         ax[i].set_ylim(0, y_max+0.02)
         ax[i].set_title(f"Liczba punktów: n={n[i]}")
@@ -219,8 +222,7 @@ def ew(n, alpha, beta, gamma):
         ax[i].legend(loc="upper right")
 
         dane.append(x)
-    
-    fig.suptitle(fr"Wykresy rozkładu $\mathcal{{EW}} \left( \alpha={alpha}, \beta={beta}, \gamma={gamma} \right)$", fontsize=16)
+
     plt.tight_layout()
     plt.show()
 
@@ -229,7 +231,7 @@ def ew(n, alpha, beta, gamma):
 
 ```{python}
 #| echo: false
-#| fig-cap: Generowanie 50 oraz 100 próbek z rozkładu o parametrach $\alpha$=2, $\beta$=1, $\gamma$=1
+#| fig-cap: Generowanie 50 oraz 100 próbek z rozkładu $\mathcal{EW} \left( \alpha = 2, \beta = 1, \gamma = 1 \right)$
 #| fig-align: center
 
 par1 = ew((50, 100), 2, 1, 1)
@@ -237,7 +239,7 @@ par1 = ew((50, 100), 2, 1, 1)
 
 ```{python}
 #| echo: false
-#| fig-cap: Generowanie 50 oraz 100 próbek z rozkładu o parametrach $\alpha$=1.5, $\beta$=3, $\gamma$=3
+#| fig-cap: Generowanie 50 oraz 100 próbek z rozkładu $\mathcal{EW} \left( \alpha = 1.5, \beta = 3, \gamma = 3 \right)$
 #| fig-align: center
 
 par2 = ew((50, 100), 1.5, 3, 3)
@@ -350,40 +352,36 @@ Markdown(
 Tu liczymy wariancje i wariancje, policzymy dla wcześniejszych rozkładów, jako iż losowanie punktów średnio wychodzi to użyjemy metody parabol, porównamy do scipy.integrate.quad
 
 ```{python}
-# n = ilość przedziałów, zatem liczba punktów = n+1
-#Liczba punktów musi być nieparzysta, zatem liczba przedziałów musi być parzysta
+def simpson_rule(a, b, function, n):
 
-def metoda_parabol(a, b, funkcja, n):
-
-    if n%2 != 0: raise Exception("Liczba przedziałów musi być parzysta")
+    if n%2 != 0: raise Exception("The number of intervals must be even.")
     
-    x_punkty = np.linspace(a, b, n+1)
-    #y_punkty = funkcja(x_punkty)
-    y_punkty = []
-    for i in x_punkty: y_punkty.append(funkcja(i))
+    x_points = np.linspace(a, b, n+1)
+    y_points = []
+    for i in x_points: y_points.append(function(i))
     
     h = (b-a)/(n)
-    calka = 0
-    calka += y_punkty[0]
-    parzyste = False
+    integral = 0
+    integral += y_points[0]
+    even = False
     
     for i in range(1, n):
-        if parzyste:
-            calka += 2*y_punkty[i]
-            parzyste = False
+        if even:
+            integral += 2*y_points[i]
+            even = False
         else:
-            calka += 4*y_punkty[i]
-            parzyste = True
+            integral += 4*y_points[i]
+            even = True
 
-    calka += y_punkty[n]
-    calka = h*calka/3
+    integral += y_points[n]
+    integral = h*integral/3
     
-    return(calka)
+    return(integral)
 ```
 
 ```{python}
 def expected_value(alpha, beta, gamma, moment = 1):
-    return(metoda_parabol(0, quantile(0.999, alpha, beta, gamma),
+    return(simpson_rule(0, quantile(0.999, alpha, beta, gamma),
            lambda x: x**moment * density(x, alpha, beta, gamma), 10**5))
 ```
 
@@ -455,8 +453,6 @@ Markdown(
            headers=v_df.columns)
 )
 ```
-
-*Znaleźć inną metodę niż quad, bo porównuje się funkcję parabol własną do wbudowanej, może jest jakaś dokładna?*
 
 ## Zadanie dodatkowe 2
 
