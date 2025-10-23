@@ -3,7 +3,7 @@ title: "Analiza Przeżycia"
 subtitle: "Raport 1"
 author:
   - "Wiktor Niedźwiedzki (258882)"
-  - "Filip Michewicz (258882)"
+  - "Filip Michewicz (282239)"
 date: last-modified
 date-format: "D [listopada] YYYY [Anno Domini]"
 
@@ -36,6 +36,7 @@ header-includes:
   - \usepackage{graphicx}
   - \usepackage{float}
   - \usepackage{xcolor}
+  - \usepackage{amsmath}
   - \renewcommand{\contentsname}{Spis treści}
   - \renewcommand{\listfigurename}{Spis wykresów}
   - \renewcommand{\listtablename}{Spis tabel}
@@ -459,3 +460,239 @@ Markdown(
 *Trzeba ręcznie policzyć pochodne, dowód na kartce, i rozważyć na przypadki*
 
 # Lista 2
+
+Siemanko, witam w mojej kuchni. Dzisiaj zajmiemy się generacją danych cenzorywhch prwaostroni I-go typu, II-go typu i losowe (niezależne). Zakładamy, że generowane dane są i.i.d.
+
+## Zadanie 1
+
+Na początek definiujemy funkcję kwantylową uogólnionego rozkładu wykładniczego $\mathcal{GE} \left( \lambda, \alpha \right)$, z którego będziemy generować dane.
+Wzór na dystrybuantę: $F(t) = \left( 1-exp \left( \lambda t \right) \right)^\alpha$.
+Wzór na funkcję kwantylową: $Q(p) = - \frac{log \left( 1 - p^\frac{1}{\alpha}\right)}{\lambda}$.
+Łatwo widać, że $\mathcal{GE} \left( \lambda, \alpha \right) = \mathcal{EW} \left( 1, \frac{1}{\lambda}, \alpha \right)$.
+
+```{python}
+def quantile(p, alpha, lamba):
+    return(-log(1-p**(1/alpha))/lamba)
+```
+
+Informację na temat danych cenzurowanych będziemy zawierać w tzw. indykatorze cenzurowania:
+
+$$
+\delta_i =
+\begin{cases}
+1, & \text{jeśli dane są kompletne (niecenzurowane)}, \\[3pt]
+0, & \text{jeśli dane są niekompletne (cenzurowane)}.
+\end{cases}
+$$
+
+### I. typ
+
+Czyli mierzymy tylko do pewnego czasu $t_0$. Niech $X_i$ - zaobserwowane czasy życia. Definiujemy zmienne losowe cenzurowane jako:
+
+$$
+T_i =
+\begin{cases}
+X_i, & X_i \le t_0 \quad (\delta_i = 1),\\[3pt]
+t_0, & X_i > t_0 \quad (\delta_i = 0),
+\end{cases}
+\quad
+\text{czyli} \quad
+T_i = \min(X_i,\, t_0).
+$$
+
+```{python}
+def I(alpha, lamba, t0, n):
+    x = np.array([quantile(np.random.uniform(), alpha, lamba)
+                  for _ in range(n)])
+    data = []
+    for i in range(n):
+        if x[i] <= t0: data.append((x[i], 1))
+        else: data.append((t0, 0))
+    return(data)
+```
+
+Przykładowe wywołanie:
+
+```{python}
+I(1, 2, 0.5, 10)
+```
+
+### II. typ
+
+Czyli mierzymy tylko do uzyskania $m \leq n$ danyck kompletnych. Niech $X_{(k)}$ - $k$-ta statystyka pozycyjna. Definiujemy zmienne losowe cenzurowane jako:
+
+$$
+T_i =
+\begin{cases}
+X_{(i)}, & i = 1, \dots, m \quad (\delta_i = 1),\\[3pt]
+X_{(m)}, & i = m+1, \dots, n \quad (\delta_i = 0),
+\end{cases}
+\quad
+\text{czyli} \quad
+T_i = \min \bigl(X_{(i)}, X_{(m)}\bigr).
+$$
+
+```{python}
+def II(alpha, lamba, m, n):
+    x = sorted(np.array([quantile(np.random.uniform(), alpha, lamba)
+                         for _ in range(n)]))
+    data = []
+    for i in range(m):
+        data.append((x[i], 1))
+    for j in range(n-m):
+        data.append((x[i], 0))
+    return(data)
+```
+
+Przykładowe wywołanie:
+
+```{python}
+II(1, 2, 4, 10)
+```
+
+### Losowe (niezależne)
+
+Ten typ danych może zostać ocenzurowany w losowej chwili $C_i$, zwaną zmienną cenzurującą o rozkładzie $g$ i dystrybuancie $G$ (nie musi być taki sam jak dla zmiennej cenzurowanej). Jest on taki sam dla każdej jednostki $X_i$ i niezależny od niej.
+
+$$
+T_i =
+\begin{cases}
+X_i, & X_i \le C_i \quad (\delta_i = 1),\\[3pt]
+C_i, & X_i > C_i \quad (\delta_i = 0),
+\end{cases}
+\quad
+\text{czyli} \quad
+T_i = \min(X_i,\, C_i).
+$$
+
+Zmienne losowe $C_i$ będziemy losować z rozkładu wykładniczego $\mathcal{E} \left( \eta \right)$ o wartości oczekiwanej równej $\eta$. Łatwo zauważyć, że $\mathcal{E} \left( \eta \right) = \mathcal{GE} \left( \frac{1}{\eta}, 1 \right) = \mathcal{EW} \left( 1, \eta, 1 \right)$.
+
+```{python}
+def random(alpha, lamba, theta, n):
+    data = []
+    x_i = []
+    c_i = []
+    for _ in range(n):
+        x = quantile(np.random.uniform(), alpha, lamba)
+        c = quantile(np.random.uniform(), 1, theta)
+        if x <= c: data.append((x, 1))
+        else: data.append((c, 0))
+        x_i.append(x)
+        c_i.append(c)
+    return(data)
+```
+
+Przykładowe wywołanie:
+
+```{python}
+random(1, 2, 2, 10)
+```
+
+## Zadanie 2
+
+Opisujemy statystyki poszczególnych danych cenzurowanych, odpuszczamy odchylenie standardowe oraz średnią, dodajemy natomiast informację na temat ilości danych cenzurowanych.
+
+```{python}
+#| echo: false
+def statistics(data):
+    
+    censored_data = 0
+    observations = []
+    
+    for i in range(len(data)):
+        if data[i][1] == 0: censored_data += 1
+        observations.append(data[i][0])
+
+    df = pd.DataFrame({
+        "Statystyka": ["Minimum", "Kwartyl dolny", "Mediana", "Kwartyl górny", "Maksimum", "Rozstęp międzykwartylowy", "Rozstęp min-max", "Ilość danych ocenzurowanych"],
+        "data wygenerowane": [min(observations), np.quantile(observations, 0.25), np.quantile(observations, 0.5), np.quantile(observations, 0.75), max(observations), np.quantile(observations, 0.75) - np.quantile(observations, 0.25), max(observations) - min(observations), censored_data]
+    }).round(3)
+
+    return(df)
+```
+
+### I. typ
+
+```{python}
+#| echo: false
+#| tbl-cap: jakaś nazwa1
+
+df = statistics(I(1, 2, 0.5, 10))
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+### II. typ
+
+```{python}
+#| echo: false
+#| tbl-cap: jakaś nazwa2
+
+df = statistics(II(1, 2, 4, 10))
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+### Losowe (niezależne)
+
+```{python}
+#| echo: false
+#| tbl-cap: jakaś nazwa3
+
+df = statistics(random(1, 2, 2, 10))
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+## Zadanie 3
+
+W tym zadaniu będziemy wyznaczać statystyki opisowe danych cenzurowanych I-go typu dotyczących leczenia dwoma różnymi lekami A i B. Grupa 40 pacjentów została podzielona losowo na dwie równoliczne podgrupy. Przez jeden rok obserwacji, jednej z nich podawano lek A, drugiej – lek B, i obserwowano czas do remisji choroby.
+
+W grupie otrzymującej lek A uzyskano następujące dane. U dziesięciu pacjentów remisja choroby
+nastąpiła w chwilach: 0.03345514, 0.08656403, 0.08799947, 0.24385821, 0.27755032,
+0.40787247, 0.58825664, 0.64125620, 0.90679161, 0.94222208, natomiast u pozostałych dziesięciu pacjentów w ciągu roku nie zaobserwowano remisji.
+
+W grupie otrzymującej lek B uzyskano następujące dane. U dziesięciu pacjentów remisja choroby
+nastąpiła w chwilach: 0.03788958, 0.12207257, 0.20319983, 0.24474299, 0.30492413,
+0.34224462, 0.42950144, 0.44484582, 0.63805066, 0.69119721, natomiast u pozostałych dzisięciu pacjentów w ciągu roku nie zaobserwowano remisji.
+
+```{python}
+#| echo: false
+#| tbl-cap: jakaś nazwa4
+
+A = [0.03345514, 0.08656403, 0.08799947, 0.24385821, 0.27755032, 0.40787247, 0.58825664, 0.64125620, 0.90679161, 0.94222208]
+A = [(A[i], 1) for i in range(len(A))] + [(1, 0)] * 10
+
+B = [0.03788958, 0.12207257, 0.20319983, 0.24474299, 0.30492413, 0.34224462, 0.42950144, 0.44484582, 0.63805066, 0.69119721]
+B = [(B[i], 1) for i in range(len(B))] + [(1, 0)] * 10
+
+censored_A = 0
+observations_A = []
+for i in range(len(A)):
+    if A[i][1] == 0: censored_A += 1
+    observations_A.append(A[i][0])
+
+censored_B = 0
+observations_B = []
+for i in range(len(B)):
+    if B[i][1] == 0: censored_B += 1
+    observations_B.append(B[i][0])
+
+df = pd.DataFrame({
+    "Statystyka": ["Minimum", "Kwartyl dolny", "Mediana", "Kwartyl górny", "Maksimum", "Rozstęp międzykwartylowy", "Rozstęp min-max", "Ilość danych ocenzurowanych"],
+    "Lek A": [min(observations_A), np.quantile(observations_A, 0.25), np.quantile(observations_A, 0.5), np.quantile(observations_A, 0.75), max(observations_A), np.quantile(observations_A, 0.75) - np.quantile(observations_A, 0.25), max(observations_A) - min(observations_A), censored_A],
+    "Lek B": [min(observations_B), np.quantile(observations_B, 0.25), np.quantile(observations_B, 0.5), np.quantile(observations_B, 0.75), max(observations_B), np.quantile(observations_B, 0.75) - np.quantile(observations_B, 0.25), max(observations_B) - min(observations_B), censored_B]
+}).round(3)
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+# Lista 3
