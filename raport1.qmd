@@ -298,9 +298,8 @@ stat_df_1 = pd.DataFrame(
 )
 
 Markdown( 
-  tabulate(stat_df_1, showindex=True, 
-           headers=stat_df_1.columns)
-)
+  tabulate(stat_df_1, showindex=False, 
+           headers=stat_df_1.columns))
 ```
 
 ```{python}
@@ -347,9 +346,8 @@ stat_df_2 = pd.DataFrame(
 )
 
 Markdown( 
-  tabulate(stat_df_2, showindex=True, 
-           headers=stat_df_2.columns)
-)
+  tabulate(stat_df_2, showindex=False, 
+           headers=stat_df_2.columns))
 ```
 
 ## Zadanie dodatkowe 1
@@ -417,9 +415,8 @@ ev_df = pd.DataFrame(
 ).round(3)
 
 Markdown( 
-  tabulate(ev_df, showindex=True, 
-           headers=ev_df.columns)
-)
+  tabulate(ev_df, showindex=False, 
+           headers=ev_df.columns))
 ```
 
 ```{python}
@@ -443,20 +440,8 @@ v_df = pd.DataFrame(
 ).round(3)
 
 Markdown( 
-  tabulate(v_df, showindex=True, 
-           headers=stat_df_2.columns)
-)
-
-v_df = pd.DataFrame(
-    [v, scipy_v],
-    columns=[r"$\alpha$ = 2, $\beta$ = 1, $\gamma$ = 1", r"$\alpha$ = 1.5, $\beta$ = 3, $\gamma$ = 3"],
-    index=["Funkcja własna", "Funkcja wbudowana"]
-).round(3)
-
-Markdown( 
-  tabulate(v_df, showindex=True, 
-           headers=v_df.columns)
-)
+  tabulate(v_df, showindex=False, 
+           headers=v_df.columns))
 ```
 
 ## Zadanie dodatkowe 2
@@ -624,7 +609,7 @@ def statistics(data):
 df = statistics(I(1, 2, 0.5, 10))
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -637,7 +622,7 @@ Markdown(
 df = statistics(II(1, 2, 4, 10))
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -650,7 +635,7 @@ Markdown(
 df = statistics(random(1, 2, 2, 10))
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -695,7 +680,7 @@ df = pd.DataFrame({
 }).round(3)
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -810,6 +795,7 @@ def interval(n, k, alpha, step0 = 0.1, tol=1e-6):
 alpha = 0.05
 
 TL, TU = interval(20, 10, alpha)
+TL, TU = -log(1-TL)/1, -log(1-TU)/1
 ```
 
 Jako iż liczba sukcesów w obu próbach jest taka sama, to otrzymujemy wspólny przedział ufności na poziomie $1-0.05=0.95$ wynosi (`{python} TL`; `{python} TU`) $\ni \hat{\theta}_A$, ale $\hat{\theta}_B$ juz wypada (z prawej strony).
@@ -871,7 +857,7 @@ tym samym nie ma wzoru na funkcję kwantylową, będziemy przybliżać właśnie
 
 1. wartość całki będzie przybliżana metodą parabol (zasada Simpsona) zastosowana w dodatkowym zadaniu z listy 3,
 2. w naszym przypadku k to liczba zaobserowanych przypadków $\in \mathbb{N}$, tym samym skorzystamy z właśności $\Gamma\left(n\right)=\left(n+1\right)! \quad \forall \ n \in \mathbb{N}$,
-3. poziom ufności $\alpha$=0.05.
+3. poziom ufności $\alpha=0.05$.
 
 ```{python}
 def incomplete_gamma(s, x):
@@ -975,8 +961,8 @@ def bias_mse(theta, t0, n):
     theta_1, theta_2 = estimation(theta, t0, n)
     df = pd.DataFrame({
         "Estymatory": ["Obciążenie", "Błąd średniokwdratowy"],
-        "Theta z daszkiem": [np.mean(theta_1-theta), np.mean((theta_1-theta)**2)],
-        "Theta z falką": [np.mean(theta_2-theta), np.mean((theta_2-theta)**2)]
+        r"$\hat{\theta}$": [np.mean(theta_1-theta), np.mean((theta_1-theta)**2)],
+        r"$\tilde{\theta}$": [np.mean(theta_2-theta), np.mean((theta_2-theta)**2)]
     })
     return(df)
 ```
@@ -988,7 +974,7 @@ def bias_mse(theta, t0, n):
 df = bias_mse(1, 0.5, 10)
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -999,7 +985,7 @@ Markdown(
 df = bias_mse(1, 0.5, 30)
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -1010,7 +996,7 @@ Markdown(
 df = bias_mse(1, 1, 10)
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -1021,7 +1007,7 @@ Markdown(
 df = bias_mse(1, 1, 30)
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -1032,7 +1018,7 @@ Markdown(
 df = bias_mse(1, 2, 10)
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
 
@@ -1043,6 +1029,6 @@ Markdown(
 df = bias_mse(1, 2, 30)
 
 Markdown( 
-  tabulate(df, showindex=True, 
+  tabulate(df, showindex=False, 
            headers=df.columns))
 ```
