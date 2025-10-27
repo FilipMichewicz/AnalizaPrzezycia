@@ -52,12 +52,16 @@ header-includes:
 
 # Wczytywanie bibliotek
 
-from math import log, e
+from math import log, e, factorial, floor, comb
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from random import seed
 from scipy.integrate import quad as integrate
+
+#Narazie nieużywane
+from scipy.stats import gamma, binomtest
+from statsmodels.stats.proportion import proportion_confint
 
 from IPython.display import Markdown  # formatowanie zmiennych do markdown
 from tabulate import tabulate  # formatowanie tabelek
@@ -696,3 +700,349 @@ Markdown(
 ```
 
 # Lista 3
+
+Tutaj zajmujemy się szacowaniem wartości parametrów rozkładów cenzurowanych, jak i ustalaniem przedziałów ufności.
+
+## Zadanie 1
+
+Zajmujemy się zbiorem pacjentów z lista 2 zadanie 3, uznajemy że wartości pochodzą z rozkładu wykładniczego $\mathcal{E}\left(1\right)$, a dane są zbierane przez jeden rok.
+
+### a) Estymacja punktowa
+
+Pierwszy estymator określamy wzorem $\hat{\theta} = \frac{R}{T_1}$, gdzie:
+
+$$
+R = \sum^n_{i=1} \mathbf{1} \left( X_i \leq t_0 \right), \quad T_1 = \sum^R_{i=1} X_{\left( i \right)} + t_0 (n-R)
+$$
+
+```{python}
+t0 = 1
+R = 0
+T1 = 0
+for i in A:
+    if i[1] == 1:
+        R += 1
+        T1 += i[0]
+T1 += t0 * (len(A)-R)
+theta_1_A = R/T1
+```
+
+Dla danych ze zbioru A otrzymujemy wartość $\hat{\theta}_A$ = `{python} theta_1_A`.
+
+```{python}
+t0 = 1
+R = 0
+T1 = 0
+for i in B:
+    if i[1] == 1:
+        R += 1
+        T1 += i[0]
+T1 += t0 * (len(B)-R)
+theta_1_B = R/T1
+```
+
+Dla danych ze zbioru B otrzymujemy wartość $\hat{\theta}_B$ = `{python} theta_1_B`.
+
+### b) Estymacja przedziałowa
+
+Teraz przedział, stworzenie funkcji centralnej na podstawie $T_1$ - zmiennej ciagłej i $R$ - zmiennej dyskretnej jest przejebane, robimy zatem w oparciu o drugi, inny estymator.
+
+Drugi estymator natomiast określamy $\tilde{\theta}=-\frac{log \left( 1-\frac{R}{n}\right)}{t_0}$. Wiedząc, że R ~ $\mathcal{B}\left( n, F_\theta \left( t_0\right) \right)$, szacujemy $p$ jako $\tilde{p}=\frac{R}{n}=1-exp(- \theta t_0)$ i rozwiązujemy względem $\theta$.
+
+Szacujemy przedział $\left[ T_L;T_U\right]$ ufności parametru $p$ dla próby o n próbach i k sukcesach, po czym przekształcając na $\theta$ otrzymujemy wzór na przedział ufności $\left[ \widetilde{T_L};\widetilde{T_U}\right]$:
+
+$$
+\widetilde{T_L}=-\frac{log\left(1-T_L\right)}{t_0}, \quad \widetilde{T_U}=-\frac{log\left(1-T_U\right)}{t_0}.
+$$
+
+Przedział ufności parametru $p$ na poziomie ufności $1-\alpha$ wyznaczymy za pomocą przedziału Cloppera-Pearsona. Określa się go jako $S_{\leq} \ \cap \ S_{\geq}$, lub równoważenie $\left( \inf S_{\geq} ; \sup S_{\leq} \right)$, gdzie:
+
+$$
+\begin{aligned}
+S_{\leq} = \{ p: \mathbb{P}\left(\mathcal{B(n,p) \leq k} \right) > \frac{\alpha}{2} \}, \\
+S_{\geq} = \{ p: \mathbb{P}\left(\mathcal{B(n,p) \geq k} \right) > \frac{\alpha}{2} \}.
+\end{aligned}
+$$
+
+**UWAGA**:
+
+1. ze względu na błędy numeryczne, wynik będzie jedynie przybliżony,
+2. ustalamy $\alpha=0.05$, zatem przedział będzie na poziomie ufności 95%.
+
+```{python}
+def binomial_probability(n, k, p):
+    probability = 0
+    for i in range(k[0], k[1]+1):
+        probability += comb(n, i) * p**i * (1-p)**(n-i)
+    return(probability)
+  
+def interval(n, k, alpha, step0 = 0.1, tol=1e-6):
+    alpha = alpha/2
+    
+    TU = 0
+    step = step0
+    TU_probability = binomial_probability(n, (0, k), TU)
+    
+    while abs(TU_probability - alpha) > tol:
+        if TU_probability > alpha: TU += step
+        else:
+            step /= 2
+            TU -= step
+        TU_probability = binomial_probability(n, (0, k), TU)
+
+    TL = 1
+    step = step0
+    TL_probability = binomial_probability(n, (k, n), TL)
+    
+    while abs(TL_probability - alpha) > tol:
+        if TL_probability > alpha: TL -= step
+        else:
+            step /= 2
+            TL += step
+        TL_probability = binomial_probability(n, (k, n), TL)
+
+    return((TL, TU))
+```
+
+```{python}
+#| echo: false
+
+alpha = 0.05
+
+TL, TU = interval(20, 10, alpha)
+```
+
+Jako iż liczba sukcesów w obu próbach jest taka sama, to otrzymujemy wspólny przedział ufności na poziomie $1-0.05=0.95$ wynosi (`{python} TL`; `{python} TU`) $\ni \hat{\theta}_A$, ale $\hat{\theta}_B$ juz wypada (z prawej strony).
+
+## Zadanie 2
+
+To samo co przedtem, ale dane cenzurowane drugiego typu. Mamy $n=20$ próbek, oraz kończymy mierzenie czasu po otrzymaniu $m=10$ wyników. Nasz estymator: $\hat{\theta}=\frac{m}{T_2}$, gdzie:
+
+### a) Estymacja punktowa
+
+$$
+T_2=\sum^m_{i=n}X_{\left(i\right)} + (n-m)X_{\left(m\right)}.
+$$
+
+```{python}
+T2A = 0
+uncensored = 0
+X_m = 0
+for i in A:
+    if i[1] == 1:
+        uncensored += 1
+        if X_m < i[0]: X_m = i[0]
+        T2A += X_m
+T2A += (len(A)-uncensored) * X_m
+theta_2_A = uncensored/T2A
+```
+
+Dla A wartość parametru to $\hat{\theta}_A$ = `{python} theta_2_A`.
+
+```{python}
+T2B = 0
+uncensored = 0
+X_m = 0
+for i in B:
+    if i[1] == 1:
+        uncensored += 1
+        if X_m < i[0]: X_m = i[0]
+        T2B += X_m
+T2B += (len(B)-uncensored) * X_m
+theta_2_B = uncensored/T2B
+```
+
+Dla B wartość parametru to $\hat{\theta}_B$ = `{python} theta_2_B`.
+
+### b) Estymacja przedziałowa
+
+Wiemy, że $\frac{\theta \ T_2}{m} \sim \mathcal{G}\left( m, \frac{1}{m} \right)$. Nie ma analitycznego wzoru na dystrybuantę rozkładu gamma, bo jest on postaci $F(t; k, \theta) = \frac{\gamma(k, \frac{x}{\theta})}{\Gamma \left(k \right)}$, gdzie:
+
+$$
+\begin{aligned}
+\gamma(z, x) = \int_0^x t^{z-1}e^{-t} \,dt - \text{niekompletna funkcja gamma,} \\
+\Gamma(z) = \int_0^\infty t^{z-1}e^{-t} \,dt - \text{funkcja gamma,}
+\end{aligned}
+$$
+
+tym samym nie ma wzoru na funkcję kwantylową, będziemy przybliżać właśnie tą dsytrybuantą.
+
+**UWAGA**: 
+
+1. wartość całki będzie przybliżana metodą parabol (zasada Simpsona) zastosowana w dodatkowym zadaniu z listy 3,
+2. w naszym przypadku k to liczba zaobserowanych przypadków $\in \mathbb{N}$, tym samym skorzystamy z właśności $\Gamma\left(n\right)=\left(n+1\right)! \quad \forall \ n \in \mathbb{N}$,
+3. poziom ufności $\alpha$=0.05.
+
+```{python}
+def incomplete_gamma(s, x):
+    n = floor(x/0.001)
+    if n % 2 == 1: n += 1
+    return(simpson_rule(0, x, lambda t: t**(s-1) * e**(-t), n))
+  
+def distribution(alpha, theta, t):
+  return(incomplete_gamma(alpha, t/theta)/factorial(alpha-1))
+
+def quantile(alpha, theta, p, tol=1e-8):
+    a = 0
+    b = 1
+    while distribution(alpha, theta, b) < p: b += 5
+
+    m = (a+b)/2
+    distr_m = distribution(alpha, theta, m)
+    while abs(distr_m - p) > tol:
+        if distr_m < p: a = m
+        else: b = m
+        m = (a+b)/2
+        distr_m = distribution(alpha, theta, m)
+    
+    return(m)
+```
+
+```{python}
+#| echo: false
+
+alpha = 0.05
+
+TL_A = uncensored * quantile(uncensored, 1/uncensored, alpha/2) / T2A
+TU_A = uncensored * quantile(uncensored, 1/uncensored, 1-alpha/2) / T2A
+
+TL_B = uncensored * quantile(uncensored, 1/uncensored, alpha/2) / T2B
+TU_B = uncensored * quantile(uncensored, 1/uncensored, 1-alpha/2) / T2B
+```
+
+Dla A otrzymujemy przedział (`{python} TL_A`; `{python} TU_A`) $\ni \hat{\theta}_A$.
+Dla B otrzymujemy przedział (`{python} TL_B`; `{python} TU_B`) $\ni \hat{\theta}_B$.
+
+## Zadanie 3
+
+Generujemy dane cenzurowane I. typu z rozkładu wykładniczego $\mathcal{E}\left(\theta\right)$ i szacujemy dwa estymatory parametru $\hat{\theta}=\frac{R}{T_1}$ oraz $\tilde{\theta}=-\frac{log\left( 1-\frac{R}{n} \right)}{t_0}$. A potem liczymy błąd średniokwadratowy i obciążenie względem rzeczywistego $\theta$.
+
+**UWAGA**:
+
+1. dla "stabilności" estymatorów oraz statystyk, będziemy dla danych $n$, $t_0$ oraz $\theta$ liczyć średnie wartości dla 10000 iteracji,
+2. ustalamu $\theta$=1,
+3. jeżeli $R=n$, to estymator $\tilde{\theta}$ jest bezsensowny, zatem w takim przypadku dana iteracja będzie powtarza,
+4. wartości $\hat{\theta}$ oraz $\tilde{\theta}$ będą wyznaczane na podstawie tych samych wygenerowanych wartości.
+
+```{python}
+def quantile(p, theta):
+    return(-log(1-p)/theta)
+
+def I(theta, t0, n):
+    x = np.array([quantile(np.random.uniform(), theta) for _ in range(n)])
+    dane = []
+    cenzura = 0
+    for i in range(n):
+        if x[i] <= t0: 
+            dane.append((x[i], 1))
+            cenzura += 1
+        else: dane.append((t0, 0))
+    return((dane, cenzura))
+  
+def estimation(theta, t0, n, M=1e5):
+    theta_1 = []     # z daszkiem
+    theta_2 = []    # falowane
+    
+    iteracje = 0
+    
+    while iteracje < M:
+        
+        data = I(theta, t0, n)
+        
+        if data[1] == n: continue
+        else: data = data[0]
+
+        R = 0
+        T_1 = 0
+        for i in data:
+            if i[1] == 1:
+                R += 1
+                T_1 += i[0]
+        T_1 += t0*(n-R)
+
+        theta_1.append(R/T_1)
+        theta_2.append(-log(1-R/n)/t0)
+
+        iteracje += 1
+        
+    return((np.array(theta_1), np.array(theta_2)))
+```
+
+```{python}
+#| echo: false
+
+def bias_mse(theta, t0, n):
+    theta_1, theta_2 = estimation(theta, t0, n)
+    df = pd.DataFrame({
+        "Estymatory": ["Obciążenie", "Błąd średniokwdratowy"],
+        "Theta z daszkiem": [np.mean(theta_1-theta), np.mean((theta_1-theta)**2)],
+        "Theta z falką": [np.mean(theta_2-theta), np.mean((theta_2-theta)**2)]
+    })
+    return(df)
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: coś1
+
+df = bias_mse(1, 0.5, 10)
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: coś2
+
+df = bias_mse(1, 0.5, 30)
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: coś3
+
+df = bias_mse(1, 1, 10)
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: coś4
+
+df = bias_mse(1, 1, 30)
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: coś5
+
+df = bias_mse(1, 2, 10)
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: coś6
+
+df = bias_mse(1, 2, 30)
+
+Markdown( 
+  tabulate(df, showindex=True, 
+           headers=df.columns))
+```
