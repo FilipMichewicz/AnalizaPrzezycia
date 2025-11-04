@@ -1210,6 +1210,65 @@ Dla większych prób ($n = 30$) oraz dłuższych czasów obserwacji różnice mi
 
 ## Zadanie dodatkowe 2
 
+W tym zadaniu muismy wyznaczyć estymator NW oraz przedziały ufności w oparciu o dane cenzurowane I-go typu, jednak tym razem dane pochodzą z rozkładu Rayleigha $\mathcal{Ra}\left(\sigma\right)$:
+
+$$
+f_{\sigma}(x) = \frac{x}{\sigma^2}\exp\left(-\frac{x^2}{2\sigma^2}\right), \quad
+F_{\sigma}(x) = 1 - \exp\left(-\frac{x^2}{2\sigma^2}\right).
+$$
+
+### Estymacja punktowa
+
+Funkcja wiarogodności oparta o ten rozkład ma postać:
+
+$$
+L\left(\sigma;t^*\right) = \frac{n!}{\left(n-r\right)!}
+\frac{\prod_{i=1}^{r} x_{\left(i\right)}}{\sigma^{2r}}
+\exp\left(-\frac{1}{2\sigma^2}\left(\sum_{i=1}^rx_{\left(i\right)}+\left(n-r\right)t_0\right)\right)
+$$
+
+Do szukania maksimum skorzystamy z funkcji logarytmicznej (log-wiarogodność), gdyż logarytm zachowuje ekstrema:
+
+$$
+\ell\left(\sigma\right) =
+\ln\frac{n!}{\left(n-r\right)!} +
+\ln\prod_{i=1}^{r} x_{\left(i\right)} -
+2r\ln\sigma - \frac{1}{2\sigma^2} T_3, \quad T_3 = \sum_{i=1}^rx_{\left(i\right)}+\left(n-r\right)t_0
+$$
+
+Liczymy pochodną funkcji $l$ po $\sigma$:
+
+$$
+\ell'\left(\sigma\right) =
+\frac{-2r}{\sigma} + \frac{T_3}{\sigma^3}
+\quad\Rightarrow\quad
+\hat{\sigma} = \sqrt{\frac{T_3}{2r}}
+$$
+
+Sprawdzamy, czy w tym punkcie funkcja jest wklęsła:
+
+$$
+\ell''\left(\sigma\right) =
+\frac{2r}{\sigma^2} - \frac{3T_3}{\sigma^4},
+\quad \ell''(\hat{\sigma})<0
+$$
+Zatem mamy wklęsłość, czyli mamy maksimum.
+
+Dodatkowo, funkcja osiąga tylko jedno ekstremum w postaci maksimum. Oznacza to, że funkcja rośnie na przedziale $\left(0;\hat{\sigma}\right]$, oraz maleje na przedziale $\left[\hat{\sigma};\infty\right)$. Oznacza to, że w tym punkcie osiąga maksimum globalne.
+
+**Wniosek**: $L$ jest unimodalna, z maksimum globalnym w $\hat{\sigma}$.
+
+### Estymacja przedziałowa
+
+Estymator NW rozkładu Rayleigha oparty na danych cenzurowanych I-go typu zależy od wartości zmiennych losowych o rozkładach odpowiednio absolutnie ciągłym ($T_3$) oraz dyskretnym ($R \sim \mathcal{B}\left(n,p=F_{\sigma}\left(t_0\right)\right)$). Z tego powodu, podobnie jak w przypadku rozkładu wykładniczego, wyznaczymy przedział ufności dla parametru $p$ i skorzystamy z faktu, że jest on równy dystrybuancie rozkładu $\mathcal{Ra}\left(\sigma\right)$ w punkcie $t_0$.
+
+Tym samym, mając przedział ufności $\left[p_L;p_U\right]$ dla parametru $p$, po odpowiednich przekształceniach otrzymujemy przedział ufności $\left[\sigma_L;\sigma_U\right]$ parametru $\sigma$, gdzie:
+
+$$
+\sigma_L = \frac{t_0}{\sqrt{-2\ln\left(1-p_U\right)}}, \quad
+\sigma_U = \frac{t_0}{\sqrt{-2\ln\left(1-p_L\right)}}.
+$$
+
 ## Zadanie dodatkowe 3
 
 \newpage
@@ -1245,7 +1304,7 @@ $$
 \ell''(\vartheta)=-\frac{r}{\vartheta^2}<0\quad\forall\vartheta>0.
 $$
 
-**Wniosek:** $\ell$ jest ściśle wklęsła, więc $L$ jest unimodalna z maksimum globalnym w $\hat\vartheta$.
+**Wniosek**: $\ell$ jest ściśle wklęsła, więc $L$ jest unimodalna z maksimum globalnym w $\hat\vartheta$.
 
 Funkcja ilorazu wiarogodności ma postać:
 $$
