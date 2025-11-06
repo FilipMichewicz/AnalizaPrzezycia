@@ -715,7 +715,7 @@ Zamiast tego dodano informację o liczbie danych cenzurowanych, co jest kluczowe
 ```{python}
 #| echo: false
 #| tbl-cap: "Podstawowe statystyki opisowe danych cenzurowanych wygenerowanych z rozkładu $\\mathcal{GE}(1, 1.5)$ \\label{tab:beata}"
-#| warnings: false
+
 datasets = {
     f'I typu ($t_0 = {t0}$)': (times_I, deltas_I),
     f'II typu ($m = {m}$)': (times_II, deltas_II),
@@ -738,8 +738,8 @@ for name, (times, deltas) in datasets.items():
     
     keys.append(name)
     rows.append({
-        "Rozmiar próby": n,
-        "Liczba obserwacji kompletnych": n_kompletne,
+        "Rozmiar próby": str(n),
+        "Liczba obserwacji kompletnych": str(n_kompletne),
         "Kwantyl dolny (Q1)": kwartyl_dolny,
         "Mediana": mediana,
         "Kwantyl górny (Q3)": kwartyl_gorny,
@@ -749,9 +749,9 @@ for name, (times, deltas) in datasets.items():
         "Rozstęp": rozstep
     })
 
-df_stats = pd.DataFrame(rows).T
-df_stats = df_stats.reset_index()
-df_stats.iloc[3:, 1:] = df_stats.iloc[3:, 1:].astype(float).apply(lambda col: col.map(lambda x: f"{x:.4f}"))
+df_stats = pd.DataFrame(rows).T.reset_index()
+df_stats.iloc[0:2, 1:] = df_stats.iloc[0:2, 1:].astype(int)
+df_stats.iloc[2:, 1:] = df_stats.iloc[2:, 1:].astype(float).round(4).astype(str)
 
 Markdown(tabulate(df_stats, showindex=False, headers=keys))
 ```
@@ -1206,7 +1206,64 @@ Warto zauważyć, że wraz ze wzrostem liczebności próby różnice w obciąże
 
 ## Zadanie dodatkowe 1
 
-TO DO
+W tym zadaniu udowodniono alternatywny wzór na statystykę $T_2$ w postaci $T_2=\sum_{i=1}^mD_i$, gdzie $D_i=(n-i+1)\left(X_{(i)}-X_{(i-1)}\right)$.
+
+$$
+\begin{aligned}
+T_2 = \sum_{i=1}^mD_i = \sum_{i=1}^m(n-i+1)\left(X_{(i)}-X_{(i-1)}\right) = \\
+\sum_{i=1}^m(n-i+1)X_{(i)}-\sum_{i=1}^m(n-i+1)X_{(i-1)} = \\
+\sum_{i=1}^m(n-i+1)X_{(i)} - \sum_{i=2}^m(n-i+1)X_{(i-1)} \overset{j=i-1}{=} \\ (n-m+1)X_{(m)}+\sum_{i=1}^{m-1}(n-i+1)X_{(i)} - \sum_{j=1}^{m-1}(n-j)X_{(j)} \overset{i=j}{=} \\
+(n-m+1)X_{(m)}+\sum_{i=1}^{m-1}\left[(n-i+1)-(n-i)\right]X_{(i)} = \\
+(n-m+1)X_{(m)}+\sum_{i=1}^{m-1}X_{(i)}=\sum_{i=1}^{m}X_{(i)}+(n-m)X_{(m)}
+\end{aligned}
+$$
+
+Dodatkowo wykazane zostało, że jeżeli zmienne $X_i$ pochodzą z rozkładu $\mathcal{E}(\vartheta)$ i są niezależne, to $D_i$ również są niezależne o tym samym rozkładem.
+
+**Fakt**: Rozkład statystyk pozycyjnych ma postać:
+$$
+f_{X_{(1)},\dots,X_{(m)}}(x)=
+\frac{n!}{(n-m)!}\prod_{i=1}^mf(x_{(i)})=
+\frac{n!}{(n-m)!}\vartheta^m\exp\left(-\vartheta\sum_{i=1}^m\left(n-i+1\right)x_{(i)}\right)
+$$
+
+Niech $Y_i=X_{(i)}-X_{(i-1)}$, wtedy:
+
+$$
+\begin{aligned}
+\varphi\left(\left(X_{(1)},\dots,X_{(m)}\right)\right) = \left(X_{(1)},X_{(2)}-X_{(1)},\dots,X_{(m)}-X_{(m-1)}\right) = \left(Y_1,\dots,Y_m\right)
+\\
+\varphi^{-1}\left(\left(Y_1,\dots,Y_m\right)\right) = \left(Y_1,Y_1+Y_2,\dots,\sum_{i=1}^mY_i\right)
+\\
+J_{\varphi^{-1}} =
+\begin{pmatrix}
+1 & 0 & 0 & \cdots & 0 \\
+1 & 1 & 0 & \cdots & 0 \\
+1 & 1 & 1 & \cdots & 0 \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+1 & 1 & 1 & \cdots & 1
+\end{pmatrix}, \quad
+|\det J_{\varphi^{-1}}|=1
+\end{aligned}
+$$
+$$
+\begin{aligned}
+f_{Y_1,\dots,Y_m}(y)=
+\frac{n!}{(n-m)!}\vartheta^m\exp\left(-\vartheta\sum_{i=1}^m\left(n-i+1\right)\sum_{j=1}^i y_j\right)|\det J_{\varphi^{-1}}| =
+\\
+\frac{n!}{(n-m)!}\vartheta^m\exp\left(-\vartheta\sum_{j=1}^m\sum_{i=j}^m\left(n-i+1\right)y _j\right) \cdot 1 =
+\\
+\prod_{i=1}^m(n-i+1)\vartheta\exp\left(-\left(n-i+1\right)\vartheta y_i\right)
+\end{aligned}
+$$
+
+Rozkład łączny jest iloczynem statystyk brzegowych $Y_i$ o odpowiednich rozkładach wykładniczych, zatem są one od siebie niezależne.
+
+$$
+D_i=(n-i+1)Y_i, \quad Y \sim \mathcal{E}\left(\left(n-i+1\right)\vartheta\right), \quad D_i \sim \mathcal{E}\left(\vartheta\right)
+$$
+
+Zatem $D_i \sim \mathcal{E}(\vartheta)$. są niezależne i o tym samym rozkładzie.
 
 ## Zadanie dodatkowe 2
 
