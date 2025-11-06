@@ -1317,6 +1317,8 @@ Dodatkowo, funkcja osiąga tylko jedno ekstremum w postaci maksimum. Oznacza to,
 
 **Wniosek**: $L$ jest unimodalna, z maksimum globalnym w $\hat{\sigma}$.
 
+\newpage
+
 ### Estymacja przedziałowa
 
 Estymator NW rozkładu Rayleigha oparty na danych cenzurowanych I-go typu zależy od wartości zmiennych losowych o rozkładach odpowiednio absolutnie ciągłym ($T_3$) oraz dyskretnym ($R \sim \mathcal{B}\left(n,\, p = F_{\sigma}(t_0)\right), \quad F_{\sigma}(t_0) = 1 - \exp\left(-\frac{t_0^2}{2\sigma^2}\right)$
