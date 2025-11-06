@@ -1,0 +1,1641 @@
+---
+title: "Analiza Przeżycia"
+subtitle: "Raport 1"
+author:
+  - "Wiktor Niedźwiedzki (258882)"
+  - "Filip Michewicz (282239)"
+date: last-modified
+date-format: "D [listopada] YYYY [Anno Domini]"
+lang: pl
+jupyter: python3
+
+format:
+  pdf:
+    number-sections: true
+    fig-cap-location: bottom
+    tbl-cap-location: top
+    toc: true
+    lof: true
+    lot: true
+execute:
+  echo: true
+
+crossref:
+  fig-title: "Wykres"
+  tbl-title: "Tabela"
+  eq-title: "Równanie"
+  lof-title: "Spis rysunków"
+  lot-title: "Spis tabel"
+
+header-includes:
+  - \usepackage{fontspec}
+  - \usepackage{polyglossia}
+  - \setdefaultlanguage{polish}
+  - \usepackage{amsmath}
+  - \usepackage{graphicx}
+  - \usepackage{float}
+  - \usepackage{xcolor}
+  - \definecolor{ForestGreen}{rgb}{0.1333,0.5451,0.1333}
+  - \definecolor{SteelBlue}{rgb}{0.2745,0.5098,0.7059}
+  - \definecolor{Tomato}{rgb}{1.0,0.3882,0.2784}
+  - |
+    \addto\captionspolish{
+      \renewcommand{\contentsname}{Spis treści}
+      \renewcommand{\listfigurename}{Spis wykresów}
+      \renewcommand{\listtablename}{Spis tabel}
+      \renewcommand{\figurename}{Wykres}
+      \renewcommand{\tablename}{Tabela}
+    }
+  - \usepackage{hyperref}
+---
+
+```{python}
+#| echo: false
+
+# Wczytywanie bibliotek
+
+from math import log, e, factorial, floor, comb
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import re
+
+from random import seed
+from scipy.integrate import quad as integrate
+from scipy.stats import chi2, gamma
+from math import comb
+
+#Narazie nieużywane
+from statsmodels.stats.proportion import proportion_confint
+
+from IPython.display import Markdown  # formatowanie zmiennych do markdown
+from tabulate import tabulate  # formatowanie tabelek
+
+seed(541121)  # dla powtarzalności wyników
+```
+
+\newpage
+
+# Lista 1 {#zad1lis1}
+
+Lista pierwsza obejmuje analizę wykładniczego rozkładu Weibulla $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$; definicje jego funkcji, generowanie danych, wizualizację oraz porównanie statystyk empirycznych i teoretycznych.
+
+## Zadanie 1
+
+Zadanie polega na deklaracji:
+
+* funkcji gęstości,
+* dystrybuanty,
+* funkcji kwantylowwej,
+* funkcji hazardu,
+
+wykładniczego rozkładu Weibulla $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$.
+
+### Funkcja gęstości
+
+Na wykładzie została podana funkcja gęstości rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$, wyrażana wzorem:
+
+$$
+f(x) = \frac{\alpha \gamma}{\beta} \left( \frac{x}{\beta} \right)^{\alpha-1}
+\left( 1 - \exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right) \right)^{\gamma-1}
+\exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right)  \mathbf{1}_{\left(0;\infty\right)}\left( x \right)
+$$
+
+Odpowiadający tej funkcji gęstości kod w języku Python ma postać:
+
+```{python}
+def EW_density(x, alpha, beta, gamm):
+    return(alpha * gamm / beta * (x / beta)**(alpha - 1)*
+           (1 - np.exp(-(x / beta)**alpha))**(gamm - 1)*
+           np.exp(-(x / beta)**alpha))
+```
+
+### Dystrybuanta
+
+Na wykładzie została podana dystrybuanta rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$, która wyrażona jest wzorem: 
+
+$$
+F(t) = 
+\left( 1 - \exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right) \right)^\gamma
+\mathbf{1}_{\left(0;\infty\right)}\left( t \right)
+$$
+Odpowiadający tej dystrybuancie kod w języku Python przedstawiono poniżej.
+
+```{python}
+def EW_distribution(t, alpha, beta, gamm):
+    return (1 - np.exp(-(t / beta)**alpha))**gamm
+```
+
+### Funkcja kwantylowa (dystrybuanta odwrotna)
+
+Funkcja kwantylowa została wyznaczona z dystrybuanty jako funkcja do niej odwrotna. Oznacza to, że dla danej wartości prawdopodobieństwa $p \in (0,1)$ szukamy takiej wartości $t$, dla której $F(t) = p$.
+
+Punktem wyjścia jest dana dystrybuanta: $F(t) = \left(1-\exp\left(-\left(\frac{t}{\beta}\right)^{\alpha}\right)\right)^{\gamma}$
+
+Podstawiamy $F(t) = p$ i rozwiązujemy równanie względem $t$:
+
+$$
+\begin{aligned}
+p &= \left(1-\exp\left(-\left(\frac{t}{\beta}\right)^{\alpha}\right)\right)^{\gamma} \\
+p^{1/\gamma} &= 1 - \exp\left(-\left(\frac{t}{\beta}\right)^{\alpha}\right) \\
+\exp\left(-\left(\frac{t}{\beta}\right)^{\alpha}\right) &= 1 - p^{1/\gamma} \\
+\left(\frac{t}{\beta}\right)^{\alpha} &= -\ln\big(1 - p^{1/\gamma}\big) \\
+t^{\alpha} &= \beta^{\alpha}\big(-\ln\big(1 - p^{1/\gamma}\big)\big) \\
+t &= \beta \big[-\ln(1 - p^{1/\gamma})\big]^{1/\alpha} \\
+Q(p) &= \beta \big[-\ln(1 - p^{1/\gamma})\big]^{1/\alpha}
+\end{aligned}
+$$
+
+Otrzymana funkcja jest funkcją kwantylową (odwrotnością dystrybuanty) rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$ i pozwala dla zadanego prawdopodobieństwa $p$ wyznaczyć wartość dystrybuanty $t$.
+
+Odpowiadający tej funkcji kantylowej kod w języku Python ma postać:
+
+```{python}
+def EW_quantile(p, alpha, beta, gamm):
+    return beta * (-np.log(1.0 - p**(1.0 / gamm)))**(1.0 / alpha)
+```
+
+### Funkcja hazardu
+
+Funkcja hazardu rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$ wyrażona jest wzorem:
+
+$$
+h(x) = \frac{f(x)}{1-F(x)} =
+\frac{\alpha \gamma \left( \frac{x}{\beta} \right)^{\alpha-1}
+\left( 1 - \exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right) \right)^{\gamma-1}
+\exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right)}{\beta \left(1-\left( 1 - \exp \left( - \left( \frac{x}{\beta} \right)^\alpha \right) \right)^\gamma \right)}
+\mathbf{1}_{\left(0;\infty\right)}\left( x \right)
+$$
+
+Odpowiadający tej funkcji gęstości kod w języku Python ma postać:
+
+```{python}
+def EW_hazard(x, alpha, beta, gamm):
+  f = EW_density(x, alpha, beta, gamm)
+  F = EW_distribution(x, alpha, beta, gamm)
+  if F == 1:
+    return np.inf
+  return f / (1 - F)
+```
+
+## Zadanie 2
+
+W tym zadaniu wygenerowano wykresy przykładowych funkcji hazardu rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$ dla 5 różnych trójek parametrów.
+
+Użyte parametry są następujące:
+
+* $\alpha = \tfrac{1}{2}, \beta = 2, \gamma = \tfrac{3}{4}$,
+* $\alpha = 1, \beta = 2, \gamma = 1$,
+* $\alpha = \tfrac{3}{2}, \beta = 3, \gamma = 3$,
+* $\alpha = \tfrac{3}{2}, \beta = 4, \gamma = \tfrac{1}{8}$,
+* $\alpha = \tfrac{3}{4}, \beta = 1, \gamma = 2$.
+
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-cap: "Funkcja hazardu - rozkład rozszerzony Weibulla - przykładowe parametry \\label{fig:hazard}"
+
+parametry = [(1/2, 2, 3/4, "blue"),
+             (1,   2, 1,   "red"),
+             (3/2, 3, 3,   "green"),
+             (3/2, 4, 1/8, "yellow"),
+             (3/4, 1, 2,   "purple")]
+
+x = np.linspace(0.001, 8, 1000)
+
+plt.ylim(0, 1.2)
+plt.xlim(0, 8)
+
+for alpha, beta, gamm, color in parametry:
+    y = np.array([EW_hazard(xi, alpha, beta, gamm) for xi in x])
+    plt.plot(x, y, color=color,
+        label=fr"$\alpha = {alpha}, \ \beta = {beta}, \ \gamma = {gamm}$")
+
+plt.xlabel("x")
+plt.ylabel(r"$h(x)$")
+plt.ylim(0, 1.1)
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+plt.close()
+```
+
+\hyperref[fig:hazard]{Wykres \ref{fig:hazard}.} przedstawia funkcję hazardu rozkładu $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$ dla pięciu różnych trójek parametrów. Widać, że w zależności od doboru parametrów funkcja hazardu może być malejąca, rosnąca, stała, unimodalna lub przyjmować kształt „wanny”.
+
+## Zadanie 3 {#zad3lis1}
+
+W tym zadaniu skonstruowano funkcję generującą zmienne losowe z rozkładu $\mathcal{EW}(\alpha, \beta, \gamma)$.
+W [Zadaniu 1.](#zad1lis1) została wyznaczona funkcja kwantylowa $F^{-1}(p)$, dlatego korzystając z metody dystrybuanty odwrotnej można wygenerować zmienne losowe w następujący sposób:
+
+1. Generujemy zmienną losową z rozkładu jednostajnego $U_i \sim \mathcal{U}(0,1)$,
+2. Obliczamy $X_i = F^{-1}(U_i)$.
+
+Otrzymana zmienna losowa $X_i$ ma rozkład jednoznacznie określony przez dystrybuantę $F(t)$, czyli w naszym przypadku przez dystrybuantę rozkładu $\mathcal{EW}(\alpha, \beta, \gamma)$.
+
+Poniżej przedstawiono kod w Pythonie realizujący ten algorytm.
+
+```{python}
+def EW_generator(alpha, beta, gamm, size=1):
+  u = np.random.rand(size)
+  return(EW_quantile(u, alpha, beta, gamm))
+```
+
+## Zadanie 4 {#zad4lis1}
+
+W tym zadaniu wygenerowano realizację próby z rozkładu $\mathcal{EW}(\alpha, \beta, \gamma)$ o liczności $n=50$ oraz $n=100$ dla następujących parametrów:
+
+* $\alpha = 1, \beta = 2, \gamma = 1$,
+* $\alpha = \tfrac{1}{2}, \beta = 1, \gamma = 4$.
+
+Wyniki przedstawiono na poniższych wykresach.
+
+```{python}
+#| echo: false
+#| fig-cap: "Histogram i gęstość teoretyczna dla próby z rozkładu $\\mathcal{EW} \\left(1,2,1 \\right)$ - liczność prób n = 50 oraz n = 100 \\label{fig:hist1}"
+#| fig-align: center
+
+samples = []
+
+parameters = [(1, 2, 1)]
+
+sizes = [50, 100]
+
+for alpha, beta, gamm in parameters:
+    fig, axes = plt.subplots(1, 2, figsize=(10,6), sharey=True)
+    
+    for ax, n in zip(axes, sizes):
+        sample = EW_generator(alpha, beta, gamm, size=n)
+        samples.append((sample, (alpha, beta, gamm))) # Zapisanie do zadanie 5
+        
+        # Histogram
+        bin_width = 1
+        bins = np.arange(0, max(sample) + bin_width, bin_width)
+        ax.hist(sample, bins=bins, density=True, alpha=0.6, edgecolor="black",
+                label="Histogram")
+        
+        # Gęstość teoretyczna
+        x = np.linspace(0.0001, max(sample)*1.2, 1000)
+        y = np.array([EW_density(xi, alpha, beta, gamm) for xi in x])
+        ax.plot(x, y, color="red", lw=2, label="Gęstość teoretyczna")
+        
+        ax.set_title(f"Liczność próby n={n}")
+        ax.set_xlabel("Zmienna losowa")
+        ax.set_ylabel("Częstość")
+        ax.set_xlim(left=0, right=max(sample))
+        ax.legend()
+        ax.grid(True)
+    
+    plt.show()
+```
+
+Z \hyperref[fig:hist1]{Wykresu \ref{fig:hist1}.} można odczytać, że histogram próby jest bardzo podobny do funkcji gęstości, jednak pewne różnice wynikają z małej liczności próby $n = 50$ - w tym przypadku Prawo Wielkich Liczb jeszcze nie zapewnia dokładnego przybliżenia rozkładu prawdopodobieństwa.
+
+Dla większej próby $n = 100$ dopasowanie histogramu do gęstości wygląda lepiej, choć nadal widać drobne odchylenia.
+
+Mimo to można stwierdzić, że kod poprawnie generuje zmienne losowe z rozkładu $\mathcal{EW}(\alpha, \beta, \gamma)$, co potwierdza wizualne porównanie histogramu z krzywą funkcji gęstości.
+
+```{python}
+#| echo: false
+#| fig-cap: "Histogram i gęstość teoretyczna dla próby z rozkładu $\\mathcal{EW} \\left(\\tfrac{1}{2},1,4 \\right)$ - liczność prób n = 50 oraz n = 100 \\label{fig:hist2}"
+#| fig-align: center
+
+parameters = [(1/2, 1, 4)]
+
+sizes = [50, 100]
+
+for alpha, beta, gamm in parameters:
+    fig, axes = plt.subplots(1, 2, figsize=(10,6), sharey=True)
+    
+    for ax, n in zip(axes, sizes):
+        sample = EW_generator(alpha, beta, gamm, size=n)
+        samples.append((sample, (alpha, beta, gamm))) # Zapisanie do zadanie 5
+        
+        # Histogram
+        bin_width = 3
+        bins = np.arange(0, max(sample) + bin_width, bin_width)
+        ax.hist(sample, bins=bins, density=True, alpha=0.6, edgecolor="black",
+                label="Histogram")
+        
+        # Gęstość teoretyczna
+        x = np.linspace(0.0001, max(sample)*1.2, 1000)
+        y = np.array([EW_density(xi, alpha, beta, gamm) for xi in x])
+        ax.plot(x, y, color="red", lw=2, label="Gęstość teoretyczna")
+        
+        ax.set_title(f"Liczność próby n={n}")
+        ax.set_xlabel("Zmienna losowa")
+        ax.set_ylabel("Częstość")
+        ax.set_xlim(left=0, right=max(sample))
+        ax.legend()
+        ax.grid(True)
+    
+    plt.show()
+```
+
+Na \hyperref[fig:hist2]{Wykresie \ref{fig:hist2}.}, podobnie jak na \hyperref[fig:hist1]{Wykresie \ref{fig:hist1}.}, histogram próby jest bardzo podobny do funkcji gęstości, choć nadal widać pewne odchylenia wynikające z ograniczonej liczności próby $n = 50$ lub $n = 100$.
+
+Tym razem zakres wartości, z którego wylosowały się zmienne losowe, jest większy, jednak liczność próby pozostała bez zmian.
+
+Mimo zmiany parametrów rozkładu, histogram nadal wizualnie przypomina funkcję gęstości, co stanowi dodatkowe potwierdzenie poprawnego działania algorytmu generującego zmienne losowe z rozkładu $\mathcal{EW}(\alpha, \beta, \gamma)$.
+
+## Zadanie 5
+
+W tym zadaniu wyznaczono podstawowe statystyki opisowe (zarówno teoretyczne, jak i empiryczne) dla prób wygenerowanych w [poprzednim zadaniu](#zad4lis1).
+
+```{python}
+#| echo: false
+#| tbl-cap: "Podstawowe statystyki opisowe prób z rozkładu $\\mathcal{EW}(\\alpha, \\beta, \\gamma)$ \\label{tab:stat1}"
+
+rows = []
+keys = ["$\\left( \\alpha, \\beta, \\gamma \\right)$"]
+
+for sample, params in samples:
+    alpha, beta, gamm = params
+    n = len(sample)
+
+    mean = np.mean(sample)
+    std = np.std(sample, ddof=1)
+
+    q25 = np.percentile(sample, 25)
+    median = np.median(sample)
+    q75 = np.percentile(sample, 75)
+
+    # używamy właściwych funkcji kwantylowych
+    tq25 = EW_quantile(0.25, alpha, beta, gamm)
+    tq50 = EW_quantile(0.50, alpha, beta, gamm)
+    tq75 = EW_quantile(0.75, alpha, beta, gamm)
+
+    rang = np.max(sample) - np.min(sample)
+    minimum = np.min(sample)
+    maximum = np.max(sample)
+
+    iqr = q75 - q25
+    tiqr = tq75 - tq25
+    
+    keys.append(f"({alpha}, {beta}, {gamm})")
+    
+    rows.append({
+        "Liczność próby": str(n),
+        "Średnia (emp.)": mean,
+        "Mediana (emp.)": median,
+        "Mediana (teor.)": tq50,
+        "Odchylenie standardowe": std,
+        "Kwartyl dolny (emp.)": q25,
+        "Kwartyl dolny (teor.)": tq25,
+        "Kwartyl górny (emp.)": q75,
+        "Kwartyl górny (teor.)": tq75,
+        "Rozstęp": rang,
+        "Rozstęp międzykwartylowy (emp.)": iqr,
+        "Rozstęp międzykwartylowy (teor.)": tiqr,
+        "Minimum": minimum,
+        "Maksimum": maximum
+    })
+
+df_stats = pd.DataFrame(rows).T
+df_stats = df_stats.reset_index()
+
+df_stats.iloc[4:, 1:] = df_stats.iloc[4:, 1:].astype(float).apply(lambda col: col.map(lambda x: f"{x:.4f}"))
+
+Markdown(tabulate(df_stats, showindex=False, headers=keys))
+```
+
+Z \hyperref[tab:stat1]{Tabeli \ref{tab:stat1}.} można odczytać, że wartości statystyk empirycznych (średnia, mediana, odchylenie standardowe, kwartyle) w przybliżeniu odpowiadają wartościom teoretycznym, choć dla mniejszych prób $n = 50$ różnice są bardziej widoczne. Wynika z tego, że im większe $n$, tym lepsze przybliżenie rozkładu otrzymujemy.
+Dowód tego faktu uzasadnia twierdzenie Glivenki–Cantellego, które stwierdza, że empiryczna dystrybuanta zbiega jednostajnie do dystrybuanty rzeczywistej, gdy $n\to\infty$
+
+## Zadanie dodatkowe 1
+
+W tym zadaniu zadeklarowane zostały funkcje do liczenia wartości oczekiwanej oraz wariancji zmiennej losowej o rozkładzie $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$, który jest absolutnie ciągły. Z tego powodu można zdefiniować ogólny wzór na n-ty moment oraz wariancję jako:
+
+$$
+\begin{aligned}
+\mathbb{E}[X^n] &= \int_{\mathbb{R}} x^nf(x)\,dx, \\
+Var[X] &= \mathbb{E}[X^2] - \left( \mathbb{E}[X] \right)^2
+\end{aligned}
+$$
+
+Dla jak najlepszej dokładności wyników, przedziałem całkowania będzie $\left[0; Q(0.99999)\right]$, gdzie $Q\left(\cdot\right)$ - funkcja kwantylowa. Całka została policzona na dwa sposoby: metodą parabol (Simpsona) oraz metodą Monte Carlo.
+
+### Metoda parabol
+
+Poniżej znajduje się kod w języku Python, realizacujacy metodę Simpsona.
+
+```{python}
+def simpson_rule(a, b, function, n):
+
+    if n%2 != 0: raise Exception("The number of intervals must be even.")
+    
+    x_points = np.linspace(a, b, n+1)
+    y_points = []
+    for i in x_points: y_points.append(function(i))
+    
+    h = (b-a)/(n)
+    integral = 0
+    integral += y_points[0]
+    even = False
+    
+    for i in range(1, n):
+        if even:
+            integral += 2*y_points[i]
+            even = False
+        else:
+            integral += 4*y_points[i]
+            even = True
+
+    integral += y_points[n]
+    integral = h*integral/3
+    
+    return(integral)
+  
+def expected_value_simpson(alpha, beta, gamma, moment = 1):
+    quan = EW_quantile(0.99999, alpha, beta, gamma)
+    intervals = floor(quan/0.01)
+    if intervals % 2 != 0: intervals += 1
+    return(simpson_rule(0.001, quan,
+           lambda x: x**moment * EW_density(x, alpha, beta, gamma), 
+           intervals))
+
+def variance_simpson(alpha, beta, gamma):
+    return(expected_value_simpson(alpha, beta, gamma, 2) -
+           expected_value_simpson(alpha, beta, gamma)**2)
+```
+
+### Metoda Monte Carlo
+
+W metodzie skorzystano z Mocnego Prawa Wielkich Liczb, ponieważ rozkład $\mathcal{EW} \left( \alpha, \beta, \gamma \right)$ jest dodatni i ma skończone momenty pierwszego i drugiego rzędu, dzięki czemu średnia i wariancja próbkowa z niezależnych prób zbiega prawie na pewno do wartości oczekiwanej i wariancji rozkładu, co uzasadnia zastosowanie symulacji Monte Carlo.
+
+Poniżej przedstawiono kod w języku Python, który przeprowadza symulację Monte Carlo w celu przybliżonego oszacowania wartości oczekiwanej oraz wariancji rozkładu.
+
+```{python}
+parameters = [(1, 2, 1),
+              (1/2, 1, 4)]
+n_sim = 100000000
+ew_MC = []
+var_MC = []
+
+for alpha, beta, gamm in parameters:
+    sample = EW_generator(alpha, beta, gamm, n_sim)
+    
+    ew_MC.append(np.mean(sample))
+    var_MC.append(np.var(sample, ddof=1))
+```
+
+### Wyniki
+
+Tabela przedstawia wyniki uzyskane metodą parabol oraz metodą Monte Carlo. Dla weryfikacji poprawności obliczeń można dobrać parametry tak, aby rozkład przyjmował postać klasycznego wykładniczego lub rozszerzonego wykładniczego, a następnie porównać wartości obliczone numerycznie z wynikami analitycznymi.
+
+```{python}
+#| echo: false
+#| tbl-cap: "Wartości oczekiwane rozkładu $\\mathcal{EW} \\left( \\alpha, \\beta, \\gamma \\right)$ dla wybranych parametrów \\label{tab:adam1}"
+
+df = pd.DataFrame({
+        
+        "Metoda": ["Parabol", "Monte Carlo"],
+        
+        r"$\alpha$=1, $\beta$=2, $\gamma$=1":
+                    [expected_value_simpson(1, 2, 1),
+                    ew_MC[0]],
+        
+        r"$\alpha$=0.5, $\beta$=1, $\gamma$=4":
+                      [expected_value_simpson(0.5, 1, 4),
+                      ew_MC[1]]
+})
+
+Markdown(tabulate(df, showindex=False, headers='keys'))
+```
+\newpage
+```{python}
+#| echo: false
+#| tbl-cap: "Wariancje rozkładu $\\mathcal{EW} \\left( \\alpha, \\beta, \\gamma \\right)$ dla wybranych parametrów \\label{tab:adam2}"
+
+df = pd.DataFrame({
+        
+        "Metoda": ["Parabol", "Monte Carlo"],
+        
+        r"$\alpha$=1, $\beta$=2, $\gamma$=1":
+                    [variance_simpson(1, 2, 1),
+                    var_MC[0]],
+        
+        r"$\alpha$=0.5, $\beta$=1, $\gamma$=4":
+                      [variance_simpson(0.5, 1, 4),
+                      var_MC[1]]
+})
+
+Markdown(tabulate(df, showindex=False, headers='keys'))
+```
+
+W \hyperref[tab:adam1]{Tabeli \ref{tab:adam1}.} i \hyperref[tab:adam2]{Tabeli \ref{tab:adam2}.} przedstawiono empiryczne wartości oczekiwane oraz wariancje rozkładu $\mathcal{EW}(\alpha, \beta, \gamma)$ dla wybranych parametrów; widać, że wszystkie zastosowane metody numeryczne dają bardzo zbliżone wyniki, co potwierdza ich poprawność i stabilność estymacji. Dodatkowo, poprawność potwierdza również znany nam wynik dla $\mathcal{EW}\left(1,2,1\right)$, który jest równoznaczny z rozkładem wykładniczym $\mathcal{E}\left(\beta=2\right)$, którego wartość oczekiwana i wariancja są znane $\left(\mathbb{E}[X]=\beta=2, \ Var[X]=\beta^2=4\right)$.
+
+\newpage
+
+# Lista 2
+
+Lista 2 obejmuje generowanie danych cenzurowanych z rozkładu uogólnionego wykładniczego $\mathcal{GE}(\lambda, \alpha)$ oraz opis statystyk opisowych zarówno dla wygenerowanych danych cenzurowanych, jak i dla podanych danych cenzurowanych.
+
+## Zadanie 1
+
+W tym zadaniu zadeklarowano funkcje do prawostronnego cenzurowania danych kompletnych: cenzurowanie typu I, typu II oraz losowe. Chociaż zadanie dotyczy głównie danych z rozkładu $\mathcal{GE}(\lambda, \alpha)$, funkcje te można łatwo rozszerzyć na prawostronnie cenzurowane dane z dowolnego rozkładu, podając zamiast parametrów $\mathcal{GE}(\lambda, \alpha)$ dane kompletne. Pozwoli to potencjalnie na analizę i symulację cenzurowanych danych w szerszym kontekście.
+
+W kontekście zadania łatwo widać że rozkład uogólniony wykładniczy $\mathcal{GE}(\lambda, \alpha)$ jest szczególnym przypadkiem rozkładu wykładniczego Weibulla $\mathcal{EW}(\alpha, \beta, \gamma)$ gdzie,
+$$
+\mathcal{GE}(\lambda, \alpha) = \mathcal{EW}(1, \lambda, \alpha)
+$$
+Dlatego też dane z tego rozkładu można generować za pomocą funkcji z [Listy 1. Zadania 3.](#zad3lis1)
+
+Podobnie rozkład wykładniczy $\mathcal{E}(\lambda)$ jest szczególnycm przypadkiem uogólnionego rozkładu wykładniczego $\mathcal{GE}(\lambda, \alpha)$, a tym samym wykładniczego rozkładu Weibulla $\mathcal{EW}(\alpha, \beta, \gamma)$ gdzie,
+
+$$
+\mathcal{E}(\lambda) =\mathcal{GE}(\lambda, 1) = \mathcal{EW}(1, \lambda, 1)
+$$
+Informację na temat danych cenzurowanych zawarto w tzw. indykatorze cenzurowania:
+
+$$
+\delta_i =
+\begin{cases}
+1, & \text{jeśli dane są kompletne (niecenzurowane)}, \\
+0, & \text{jeśli dane są niekompletne (cenzurowane)}.
+\end{cases}
+$$
+
+### Cenzurowanie I typu
+
+Cenzurowanie typu I polega na niewyznaczaniu wartości zmiennej losowej powyżej pewnego czasu $t_0$. Oznacza to, że jeśli $X_i$ przekracza $t_0$, to jest ona zastępowana przez $t_0$.
+
+Niech $X_i$ oznacza zaobserwowane czasy życia. Wówczas zmienne losowe po cenzurowaniu definiuje się jako:
+
+$$
+T_i =
+\begin{cases}
+X_i, & X_i \le t_0 \quad (\delta_i = 1),\\[3pt]
+t_0, & X_i > t_0 \quad (\delta_i = 0),
+\end{cases}
+\quad
+\text{czyli} \quad
+T_i = \min(X_i,\, t_0).
+$$
+
+gdzie $\delta_i$ jest indykatorem cenzurowania.
+
+Poniżej przedstawiono kod w Pythonie realizujący cenzurowanie I typu dla dowolnych danych:
+
+```{python}
+def cenzurowanie_I_typu(t_0, data):
+    size = len(data)
+
+    censored_data = []
+    deltas = []
+
+    for x in data:
+        if x <= t_0:
+            censored_data.append(x)
+            deltas.append(1)
+        else:
+            censored_data.append(t_0)
+            deltas.append(0)
+
+    return censored_data, deltas
+```
+
+Poniżej przedstawiono kod w Pythonie konkretnie do generowania danych cenzurowanych I typu z rozkładu $\mathcal{GE}(\lambda, \alpha)$:
+
+```{python}
+def GE_cenzurowanie_I_typu(t0, lambd, alpha, n):
+  data = EW_generator(1, lambd, alpha, size=n)
+  return cenzurowanie_I_typu(t0, data)
+```
+
+### Cenzurowanie II typu
+
+Cenzurowanie typu II polega na obserwacji jedynie $m$ najmniejszych wartości zmiennych losowych, a pozostałe wartości są zastępowane przez $X_{(m)}$. Oznacza to, że zmierzono tylko do uzyskania $m \le n$ danych kompletnych.
+
+Niech $X_{(k)}$ oznacza $k$-tą statystykę pozycyjną. Wówczas zmienne losowe cenzurowane definiuje się jako:
+
+$$
+T_i =
+\begin{cases}
+X_{(i)}, & i = 1, \dots, m \quad (\delta_i = 1),\\[3pt]
+X_{(m)}, & i = m+1, \dots, n \quad (\delta_i = 0),
+\end{cases}
+\quad
+\text{czyli} \quad
+T_i = \min \bigl(X_{(i)}, X_{(m)}\bigr).
+$$
+
+gdzie $\delta_i$ jest indykatorem cenzurowania.
+
+Poniżej przedstawiono kod w Pythonie realizujący cenzurowanie II typu dla dowolnych danych:
+
+```{python}
+
+def cenzurowanie_II_typu(m, data):
+    censored_data = np.sort(data)
+
+    # Wszystkie obserwacje powyżej m-tej zamieniamy na X_(m)
+    censored_data[m:] = censored_data[m-1]
+
+    deltas = np.zeros(len(data))
+    deltas[:m] = 1
+
+    return censored_data, deltas
+```
+
+Poniżej przedstawiono kod w Pythonie konkretnie do generowania danych cenzurowanych I typu z rozkładu $\mathcal{GE}(\lambda, \alpha)$:
+
+```{python}
+def GE_cenzurowanie_II_typu(m, lambd, alpha, n):
+  data = EW_generator(1, lambd, alpha, size=n)
+  return cenzurowanie_II_typu(m, data)
+```
+
+### Cenzurowanie losowe
+
+Cenzurowanie losowe jest rozszerzeniem cenzurowania typu I, z tym że $t_0$ nie jest już wartością stałą, lecz zmienną losową $C_i$, różną dla każdej obserwacji. Zmienna $C_i$ nazywana jest zmienną cenzurującą i ma rozkład $g$ oraz dystrybuantę $G$ (nie musi być taka sama jak dla zmiennej cenzurowanej). Zmienna cenzurująca $C_i$ jest niezależna od $X_i$ i przyjmuje tę samą rolę dla każdej jednostki.
+
+$$
+T_i =
+\begin{cases}
+X_i, & X_i \le C_i \quad (\delta_i = 1),\\[3pt]
+C_i, & X_i > C_i \quad (\delta_i = 0),
+\end{cases}
+\quad
+\text{czyli} \quad
+T_i = \min(X_i,\, C_i).
+$$
+gdzie $\delta_i$ jest indykatorem cenzurowania.
+
+Poniżej przedstawiono kod w Pythonie realizujący cenzurowanie losowe dla dowolnych danych:
+
+```{python}
+def cenzurowanie_losowe(cen, data):
+    deltas = (data <= cen).astype(int)
+    censored_data = np.minimum(data, cen)
+    return censored_data, deltas
+```
+
+Poniżej przedstawiono kod w Pythonie konkretnie do generowania danych cenzurowanych losowo z rozkładu $\mathcal{GE}(\lambda, \alpha)$, cenzurowanych zmienną losową z rozkładu wykładniczego $\mathcal{E}(\lambda)$:
+
+```{python}
+def GE_cenzurowanie_losowe(eta, lamb, alpha, n):
+  data = EW_generator(1, lambd, alpha, size=n)
+  cen = EW_generator(1, eta, 1, size=n)
+  return cenzurowanie_losowe(cen, data)
+```
+
+## Zadanie 2
+
+W tym zadaniu wygenerowano próbę o rozmiarze $n = 200$ z rozkładu $\mathcal{GE}(1, 1.5)$, a następnie zastosowano cenzurowanie typu I, typu II oraz losowe.
+
+* W cenzurowaniu typu I wybrano parametr $t_0 = 1$.
+* W cenzurowaniu typu II wybrano parametr $m = 120$.
+* W przypadku cenzurowania losowego wygenerowano próbę zmiennych cenzurujących z rozkładu $\mathcal{E}(1)$.
+
+Poniżej przedstawiono kod w Pythonie generujący wspomniane wyżej dane cenzurowane.
+
+```{python}
+lambd = 1.0
+alpha = 1.5
+size = 200
+
+# Parametry cenzurowania
+t0 = 1.0
+m = 120
+eta = 1.0
+
+data = EW_generator(1, lambd, alpha, size)
+cen = EW_generator(1, eta, 1, size)
+
+times_I, deltas_I = cenzurowanie_I_typu(t0, data)
+times_II, deltas_II = cenzurowanie_II_typu(m, data)
+times_R, deltas_R = cenzurowanie_losowe(cen, data)
+```
+
+W następnej kolejności wyliczono podstawowe statystyki opisowe wygenerowanych danych. Jednak w przypadku danych cenzurowanych pominięto średnią i odchylenie standardowe, ponieważ klasyczne wzory na te statystyki zakładają pełne obserwacje i nie uwzględniają faktu, że niektóre wartości są ograniczone przez cenzurę. Obliczenie średniej lub odchylenia standardowego z użyciem klasycznych formuł mogłoby prowadzić do obciążonych i niepoprawnych wyników.
+
+Zamiast tego dodano informację o liczbie danych cenzurowanych, co jest kluczowe w analizie takich danych, ponieważ pozwala ocenić stopień niepełności próby i wpływ cenzury na interpretację statystyk opisowych.
+
+
+```{python}
+#| echo: false
+#| tbl-cap: "Podstawowe statystyki opisowe danych cenzurowanych wygenerowanych z rozkładu $\\mathcal{GE}(1, 1.5)$ \\label{tab:beata}"
+
+datasets = {
+    f'I typu ($t_0 = {t0}$)': (times_I, deltas_I),
+    f'II typu ($m = {m}$)': (times_II, deltas_II),
+    f'Losowe ($\\eta = {eta}$)': (times_R, deltas_R)
+}
+
+rows = []
+keys = ["Rodzaj cenzurowania"]
+
+for name, (times, deltas) in datasets.items():
+    n = len(times)
+    n_kompletne = int(np.sum(deltas))
+    mediana = np.median(times)
+    kwartyl_dolny = np.quantile(times, 0.25)
+    kwartyl_gorny = np.quantile(times, 0.75)
+    iqr = kwartyl_gorny - kwartyl_dolny
+    minimum = np.min(times)
+    maksimum = np.max(times)
+    rozstep = maksimum - minimum
+    
+    keys.append(name)
+    rows.append({
+        "Rozmiar próby": str(n),
+        "Liczba obserwacji kompletnych": str(n_kompletne),
+        "Kwantyl dolny (Q1)": kwartyl_dolny,
+        "Mediana": mediana,
+        "Kwantyl górny (Q3)": kwartyl_gorny,
+        "Rozstęp międzykwartylowy (IQR)": iqr,
+        "Minimum": minimum,
+        "Maksimum": maksimum,
+        "Rozstęp": rozstep
+    })
+
+df_stats = pd.DataFrame(rows).T.reset_index()
+df_stats.iloc[0:2, 1:] = df_stats.iloc[0:2, 1:].astype(int)
+df_stats.iloc[2:, 1:] = df_stats.iloc[2:, 1:].astype(float).round(4).astype(str)
+
+Markdown(tabulate(df_stats, showindex=False, headers=keys))
+```
+Z \hyperref[tab:beata]{Tabeli \ref{tab:beata}.} można odczytać m.in., że cenzurowanie wpływa na rozkład danych. Cenzurowanie typu I i typu II są do siebie zbliżone pod względem sposobu ograniczania obserwacji - w cenzurowaniu typu I z góry ustalany jest czas obserwacji $t_0$, na podstawie którego wyznaczana jest liczba obserwacji kompletnych, natomiast w cenzurowaniu typu II określa się liczbę obserwacji kompletnych $m$, a odpowiadający jej czas obserwacji $X_{(m)}$ wyznaczany jest na podstawie danych. W przypadku cenzurowania losowego sytuacja wygląda inaczej, ponieważ moment cenzurowania nie jest ustalony z góry, lecz stanowi zmienną losową $C_i$, co wprowadza dodatkowy element losowości i powoduje większe zróżnicowanie wśród obserwacji.
+
+## Zadanie 3 {#zad3lis2}
+
+W tym zadaniu wyznaczono statystyki opisowe danych cenzurowanych I-go typu dotyczących leczenia dwoma różnymi lekami A i B. Grupa 40 pacjentów została podzielona losowo na dwie równoliczne podgrupy. Przez jeden rok obserwacji, jednej z nich podawano lek A, drugiej - lek B, i obserwowano czas do remisji choroby.
+
+W grupie otrzymującej lek A uzyskano następujące dane. U dziesięciu pacjentów remisja choroby
+nastąpiła w chwilach: 0.03345514, 0.08656403, 0.08799947, 0.24385821, 0.27755032,
+0.40787247, 0.58825664, 0.64125620, 0.90679161, 0.94222208, natomiast u pozostałych dziesięciu pacjentów w ciągu roku nie zaobserwowano remisji.
+
+W grupie otrzymującej lek B uzyskano następujące dane. U dziesięciu pacjentów remisja choroby
+nastąpiła w chwilach: 0.03788958, 0.12207257, 0.20319983, 0.24474299, 0.30492413,
+0.34224462, 0.42950144, 0.44484582, 0.63805066, 0.69119721, natomiast u pozostałych dzisięciu pacjentów w ciągu roku nie zaobserwowano remisji.
+
+```{python}
+#| echo: false
+#| tbl-cap: "Podstawowe statystyki opisowe danych czasu remisji choroby po stosowaniu leku A lub leku B - dane cenzurowane I typu \\label{tab:beata2}"
+
+times_A = np.array([0.03345514, 0.08656403, 0.08799947, 0.24385821, 0.27755032,
+                    0.40787247, 0.58825664, 0.64125620, 0.90679161, 0.94222208] +
+                   [1.0]*10)
+deltas_A = np.array([1]*10 + [0]*10)
+
+times_B = np.array([0.03788958, 0.12207257, 0.20319983, 0.24474299, 0.30492413,
+                    0.34224462, 0.42950144, 0.44484582, 0.63805066, 0.69119721] +
+                   [1.0]*10)
+deltas_B = np.array([1]*10 + [0]*10)
+
+datasets = {
+    "Lek A" : (times_A, deltas_A),
+    "Lek B" : (times_B, deltas_B)
+}
+
+df_stats = pd.DataFrame({
+    "Statystyka Opisowa": [
+        "Rozmiar próby",
+        "Liczba obserwacji kompletnych",
+        "Liczba danych cenzurowanych",
+        "Minimum",
+        "Kwartyl dolny (Q1)",
+        "Mediana",
+        "Kwartyl górny (Q3)",
+        "Maksimum",
+        "Rozstęp międzykwartylowy (IQR)",
+        "Rozstęp (max-min)"
+    ],
+    "Lek A": [
+        str(len(times_A)),
+        str(int(np.sum(deltas_A))),
+        str(int(np.sum(deltas_A == 0))),
+        np.min(times_A),
+        np.quantile(times_A, 0.25),
+        np.median(times_A),
+        np.quantile(times_A, 0.75),
+        np.max(times_A),
+        np.quantile(times_A, 0.75) - np.quantile(times_A, 0.25),
+        np.max(times_A) - np.min(times_A)
+    ],
+    "Lek B": [
+        str(len(times_B)),
+        str(int(np.sum(deltas_B))),
+        str(int(np.sum(deltas_B == 0))),
+        np.min(times_B),
+        np.quantile(times_B, 0.25),
+        np.median(times_B),
+        np.quantile(times_B, 0.75),
+        np.max(times_B),
+        np.quantile(times_B, 0.75) - np.quantile(times_B, 0.25),
+        np.max(times_B) - np.min(times_B)
+    ]
+})
+
+for col in ["Lek A", "Lek B"]:
+    df_stats.loc[3:, col] = df_stats.loc[3:, col].astype(float).map(lambda x: f"{x:.4f}")
+
+Markdown(tabulate(df_stats, headers="keys", showindex=False))
+```
+
+Z \hyperref[tab:beata2]{Tabeli \ref{tab:beata2}.} można odczytać, że grupy stosujące lek A oraz lek B nie różnią się znacząco między  Jednak jeżeli mamy już porównywać ich skuteczność, to lek B wypada lepiej. Zarówno mediana, jak i kwartyl dolny posiadają mniejsze wartości. Jest to równoznaczne z tym, że średni czas leczenia lekiem B jest krótszy niż lekiem A. Na korzyść leku A natomiast wypada (choć nieznacznie) minimum: pierwsza wyleczona osoba korzystała właśnie z niego. Natomiast liczba nieskutecznych prób (cenzurowanych) jest równa w obu przypadkach.
+
+\newpage
+
+# Lista 3
+
+Lista 3 polega na wyznaczaniu estymatorów parametrów dla rozkładów, których obserwacje zostały częściowo ocenzurowane, a także na wyznaczaniu przedziałów ufności dla tych estymatorów. Dodatkowo przeprowadzono porównanie różnych estymatorów na danych wygenerowanych.
+
+**UWAGA**: Poniższe fragmenty kodu pozwalają na wyznaczenie estymatorów punktowych oraz przedziałów ufności dla próbek zmiennych losowych pochodzących z rozkładu wykładniczego postaci $f(x)=\vartheta\exp\left(-\vartheta x\right)\mathbb{1}_{\left(0;\infty\right)}(x)$, dla którego wartość oczekiwana wynosi $\mathbb{E}\left[X\right]=\frac{1}{\vartheta}$. Natomiast w Zadaniach [1.](zad1lis3) oraz [2.](#zad2lis3) celem jest otrzymanie średniego czasu do remisji choroby, czyli $\mathbb{E}\left[X\right]=\mu$. Z tego wynika, że $\vartheta=\frac{1}{\mu}$. Z tego powodu wyniki zostały podane w postaci:
+
+* $\hat{\mu}=\frac{1}{\hat{\vartheta}}$, w przypadku estymacji punktowej,
+* $\mu \in \ \left(\frac{1}{T_U}; \frac{1}{T_L}\right)$, gdzie $T_L$ oraz $T_U$ - odpowiednio dolna i górna granica realizacji zbioru ufności dla parametru $\vartheta$.
+
+## Zadanie 1 {#zad1lis3}
+
+Zadanie polega na oszacowaniu średniego czasu do remisji choroby dla pacjentów leczonych lekami A i B na podstawie danych poddanych cenzurowaniu typu I przyjmując, że dane pochodzą z rozkładu wykładniczego $\mathcal{E}(1)$. Obejmuje ono:
+
+(a) wyznaczenie estymatorów największej wiarogodności średniego czasu do remisji dla obu grup,
+(b) wyznaczenie przedziałów ufności dla średniego czasu do remisji na poziomach ufności 95% $\left(\alpha=0.05\right)$ i 99% $\left(\alpha=0.01\right)$ dla obu grup.
+
+### Estymacja punktowa
+
+Z wykładu wiadomo że estymatorem największej wiarogodności jest estymator $\hat{\vartheta} = \frac{R}{T_1}$, gdzie:
+
+$$
+R = \sum^n_{i=1} \mathbf{1} \left( X_i \leq t_0 \right), \quad T_1 = \sum^R_{i=1} X_{\left( i \right)} + t_0 (n-R)
+$$
+
+Poniżej przedstawiono kod w języku Python służący do wyznaczania estymatora największej wiarogodności dla danych cenzurowanych I typu z rozkładu wykładniczego $\mathcal{E}(\vartheta)$. Dodatkowo dokonano estymacji parametrycznej parametru $\vartheta$ dla danych z [Listy 2. Zadania 3.](#zad3lis2) za pomocą metody największej wiarogodności.
+
+```{python}
+def MLE_cenzurowanie_I(times, deltas, t0):
+    R = np.sum(deltas)
+    n = len(times)
+    T1 = np.sum(times[deltas==1]) + t0*(n - R)
+    theta_hat = R / T1
+    return theta_hat
+
+mu_hat_A = 1/MLE_cenzurowanie_I(times_A, deltas_A, t0)
+mu_hat_B = 1/MLE_cenzurowanie_I(times_B, deltas_B, t0)
+```
+
+Dla danych dotyczących osób przyjmujących lek A otrzymano estymator $\hat{\mu}_A$ = `{python} f"{mu_hat_A:.3f}"`, natomiast dla osób przyjmujących lek B - estymator $\hat{\mu}_B$ = `{python} f"{mu_hat_B:.3f}"`.
+
+### Estymacja przedziałowa
+
+Do estymacji przedziałowej nie można stosować estymatora NW $\hat{\vartheta} = \frac{R}{T_1}$ do bezpośredniego konsturowania realizacja zbiorów ufności, ponieważ jest on ilorazem zmiennej dyskretnej $R$ i zmiennej ciągłej $T_1$. Taka mieszana natura utrudnia uzyskanie analitycznej funkcji centralnej o znanym rozkładzie w próbie skończonej, więc konstrukcja dokładnych realizacja zbiorów ufności jest trudna (wymaga przybliżeń asymptotycznych lub metod numerycznych).
+
+Z tego względu używa się alternatywnego estymatora $\tilde{\vartheta}=-\frac{log \left( 1-\frac{R}{n}\right)}{t_0}$, który zależy wyłącznie od $R$ i korzysta z faktu, że $R \sim \mathcal{B}\left( n, p \right)$ z $p=1-\exp(-\vartheta t_0)$.
+
+Dla $\tilde{\vartheta}$ realizację zbioru ufności buduje się dwuetapowo: najpierw wyznacza się przedział $[p_L,p_U]$ dla $p$ na poziomie ufności $1-\alpha$ (np. metodą Cloppera–Pearsona), a następnie transformuje jego końce przez odwrotność $p=1-\exp(-\vartheta t_0)$, otrzymując 
+$$
+\vartheta_L=-\frac{1}{t_0}\ln(1-p_L),\qquad
+\vartheta_U=-\frac{1}{t_0}\ln(1-p_U).
+$$
+
+W praktyce przedział Cloppera–Pearsona dla $p$ definiuje się jako $S_{\le}\cap S_{\ge}$ (równoważnie $[\inf S_{\ge};\sup S_{\le}]$), gdzie dla $k=R$:
+$$
+S_{\le}={p:\Pr(\mathrm{Bin}(n,p)\le k)>\tfrac{\alpha}{2}},\qquad
+S_{\ge}={p:\Pr(\mathrm{Bin}(n,p)\ge k)>\tfrac{\alpha}{2}}.
+$$
+
+Po uzyskaniu $[p_L,p_U]$ powyższa transformacja daje przedział ufności $[\vartheta_L,\vartheta_U]$ o poziomie ufności $1-\alpha$.
+
+Należy mieć na uwadze, że wynik będzie jedynie przybliżony - co wynika z błędów numerycznych.
+
+Poniżej przedstawiono kod w Pythonie realizujący generowanie realizacji wspomnianego wcześniej zbioru ufności:
+
+```{python}
+def binom_cdf(t, n, p):
+    s = 0.0
+    for i in range(0, t+1):
+        s += comb(n, i) * (p**i) * ((1-p)**(n-i))
+    return s
+
+def clopper_pearson_binom(R, n, alpha):
+    if R == 0:
+        p_L = 0
+        P_U = 1 - (alpha / 2) **(1 / n)
+        return p_L, p_U
+    if R == n:
+        p_U = 1.0
+        p_L = (alpha / 2.0) ** (1.0 / n)
+        return p_L, p_U     
+
+    target_low = 1 - alpha / 2
+    L, H = 0, 1
+
+    while H - L > 1e-12:
+        M = (L + H) / 2
+        cdf = binom_cdf(R, n, M)
+        if cdf > target_low:
+            L = M
+        else:
+            H = M
+    p_L = (L + H) / 2
+
+    target_up = alpha / 2
+    L, H = 0, 1
+
+    while H - L > 1e-12:
+        M = (L + H) / 2
+        cdf = binom_cdf(R, n, M)
+        if cdf > target_up:
+            L = M
+        else:
+            H = M
+    p_U = (L + H) / 2
+
+    return p_L, p_U
+
+def p_to_theta(p, t0):
+    return -np.log(1 - p) / t0
+
+def Ci_theta_cenzurowanie_I(times, deltas, t0, alpha):
+    R = np.sum(deltas)
+    n = len(times)
+
+    p_L, p_U = clopper_pearson_binom(R, n, alpha)
+
+    theta_L = p_to_theta(p_L, t0)
+    theta_U = p_to_theta(p_U, t0)
+
+    return theta_L, theta_U
+```
+
+Poniżej przedstawiono wywołanie kodu dla danych z [Listy 2. Zadanie 3.](#zad3lis2) Wyniki przedstawiono w tabeli poniżej.
+
+```{python}
+alphas = [0.05, 0.01]
+rows = []
+
+for alpha in alphas:
+    # Lek A
+    thA_L, thA_U = Ci_theta_cenzurowanie_I(times_A, deltas_A, t0, alpha)
+    rows.append(["Lek A", alpha, 1/thA_U, 1/thA_L])
+
+    # Lek B
+    thB_L, thB_U = Ci_theta_cenzurowanie_I(times_B, deltas_B, t0, alpha)
+    rows.append(["Lek B", alpha, 1/thB_U, 1/thB_L])
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: "Przedziały ufności dla danych cenzurowanych I typu - różne poziomy ufności \\label{tab:cedrik}"
+
+df_przedzialy = pd.DataFrame(
+    rows,
+    columns=["Grupa", r"$\alpha$", r"$\hat{\mu}_L$", r"$\hat{\mu}_U$"]
+).round(3)
+
+Markdown(tabulate(df_przedzialy, headers="keys", showindex=False))
+```
+
+W \hyperref[tab:cedrik]{Tabeli \ref{tab:cedrik}.} widać, że otrzymane realizacje zbioru ufności są identyczne dla obu leków. Wynika to z faktu, że oba zbiory danych zawierają taką samą liczbę obserwacji kompletnych oraz ocenzurowanych, co przy tym samym czasie obserwacji prowadzi do identycznych wartości estymatora i granic przedziału ufności.
+
+## Zadanie 2 {#zad2lis2}
+
+Zadanie polega na oszacowaniu średniego czasu do remisji choroby dla pacjentów leczonych lekami A i B na podstawie danych poddanych cenzurowaniu typu II, przyjmując, że pochodzą one z rozkładu wykładniczego. Obejmuje ono:
+
+(a) wyznaczenie estymatorów największej wiarogodności średniego czasu do remisji dla obu grup,
+(b) wyznaczenie przedziałów ufności dla średniego czasu do remisji na poziomach ufności 95% $(\alpha=0.05)$ i 99% $(\alpha=0.01)$ dla obu grup.
+
+**UWAGA**: Formalnie ze względu na zmianę typu danych cenzurowanych z I-go na II-gi powinno się zastąpić dane cenzurowane w postaci $(t_0, 0)$ na dane $(X_{\left(m\right)},0)$. Jednak estymacja zarówno punktowa, jak i przedziałowa nie korzysta z dokładnych wartości $X_{\left(i\right)}, \ i > m$, zatem ten krok można pominąć. 
+
+### Estymacja punktowa
+
+Dla danych cenzurowanych II typu pochodzących z rozkładu wykładniczego $\mathcal{E}(\vartheta)$ estymator największej wiarogodności przyjmuje postać:
+
+$$
+\hat{\vartheta} = \frac{m}{T_2}, \quad \text{gdzie} \quad T_2 = \sum_{i=1}^{m} X_{(i)} + (n-m) X_{(m)}.
+$$
+Poniżej przedstawiono kod w języku Python dla danych z [Listy 2. Zadania 3.](#zad3lis2), które tym razem przyjęto jako  dane cenzurowane II typu z parametrem cenzurowania $m = 10$.
+
+``` {python}
+m = 10
+
+def MLE_cenzurowanie_II(times, deltas, m):
+    n = len(times)
+    T2 = np.sum(times[deltas==1]) + (n - m)*np.max(times[deltas==1])
+    theta_hat = m / T2
+    return theta_hat
+
+mu_hat_A = 1/MLE_cenzurowanie_II(times_A, deltas_A, m)
+mu_hat_B = 1/MLE_cenzurowanie_II(times_B, deltas_B, m)
+```
+
+Dla danych dotyczących osób przyjmujących lek A otrzymano estymator $\hat{\mu}_A$ = `{python} f"{mu_hat_A:.3f}"`, natomiast dla osób przyjmujących lek B - estymator $\hat{\mu}_B$ = `{python} f"{mu_hat_B:.3f}"`.
+
+### Estymacja przedziałowa
+
+Do wyznaczenia przedziałów ufności dla danych cenzurowanych II typu pochodzących z rozkładu wykładniczego $\mathcal{E}(\vartheta)$ potrzebna będzie funkcja kwantylowa rozkładu gamma $\Gamma(k,\vartheta)$. Wynika to stąd, że dla statystyki
+$$
+T_2=\sum_{i=1}^{m} X_{(i)} + (n-m)X_{(m)}
+$$
+zachodzi zależność
+
+$$
+\frac{T_2}{m \vartheta}\sim\mathrm{Gamma}(m,\frac{1}{m})
+$$
+Dystrybuanta rozkładu gamma wyraża się przez niepełną funkcję gamma:
+
+$$
+F(x;k,\sigma)=\frac{\gamma(k,x/\sigma)}{\Gamma(k)},
+$$
+gdzie
+
+$$
+\begin{aligned}
+\gamma(z,x) &= \int_0^x t^{z-1} e^{-t} \, dt \qquad \text{(niepełna funkcja gamma)},\\
+\Gamma(z)   &= \int_0^\infty t^{z-1} e^{-t} \, dt \qquad \text{(funkcja gamma).}
+\end{aligned}
+$$
+Ponieważ dystrybuanta rozkładu gamma nie ma prostego wzoru elementarnego, zkorzystano z jej funkcji kwantylowej (numerycznie dostępnej w pakietach statystycznych).
+
+Niech $q_{\alpha/2}$ i $q_{1-\alpha/2}$ będą kwantylami rozkładu $\mathcal{Gamma}(m,1/m)$. Z faktu, że
+
+$$
+\Pr\Big(q_{\alpha/2} \le \frac{T_2}{\vartheta} \le q_{1-\alpha/2}\Big) = 1-\alpha
+$$
+otrzymano realizację zbioru ufności dla $\vartheta$:
+
+$$
+[\vartheta_L, \vartheta_U] = \Big[\frac{m \cdot T_2}{q_{1-\alpha/2}},\ \frac{m \cdot T_2}{q_{\alpha/2}}\Big].
+$$
+
+W praktyce kwantyle $q_{\alpha/2}$ i $q_{1-\alpha/2}$ oblicza się numerycznie, np. funkcją `scipy.stats.gamma.ppf` w Pythonie z parametrami `a=m` i `scale=1/m`.
+
+Poniżej przedstawiono kod w języku Python realizujący wyżej wspomniają estymację przedziałową.
+
+```{python}
+def Ci_theta_cenzurowanie_II(times, deltas, m, alpha):
+    n = len(times)
+    T2 = np.sum(times[deltas==1]) + (n - m)*np.max(times[deltas==1])
+    
+    q_lower = gamma.ppf(alpha/2, a=m, scale=1/m)
+    q_upper = gamma.ppf(1 - alpha/2, a=m, scale=1/m)
+
+    theta_L = m * q_lower / T2
+    theta_U = m * q_upper / T2
+
+    return theta_L, theta_U
+```
+
+Poniżej przedstawiono wywołanie kodu dla danych z [Listy 2. Zadania 3.](#zad3lis2) Wyniki przedstawiono w tabeli poniżej.
+
+```{python}
+alphas = [0.05, 0.01]
+rows = []
+
+for alpha in alphas:
+    # Lek A
+    thA_L, thA_U = Ci_theta_cenzurowanie_II(times_A, deltas_A, m, alpha)
+    rows.append(["Lek A", alpha, 1/thA_U, 1/thA_L])
+
+    # Lek B
+    thB_L, thB_U = Ci_theta_cenzurowanie_II(times_B, deltas_B, m, alpha)
+    rows.append(["Lek B", alpha, 1/thB_U, 1/thB_L])
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: "Realizacje zbiorów ufności dla danych cenzurowanych II typu - różne poziomy ufności \\label{tab:cedrik2}"
+
+df_przedzialy = pd.DataFrame(
+    rows,
+    columns=["Grupa", r"$\alpha$", r"$\hat{\mu}_L$", r"$\hat{\mu}_U$"]
+).round(3)
+
+Markdown(tabulate(df_przedzialy, headers="keys", showindex=False))
+```
+
+Z \hyperref[tab:cedrik2]{Tabeli \ref{tab:cedrik2}.} można odczytać, że realizacje zbioru ufności są węższe dla danych dotyczących leku A.
+
+## Zadanie 3
+
+Zadanie polega na symulacyjnym porównaniu dokładności dwóch estymatorów punktowych $\vartheta$, zdefiniowanych wzorami:
+
+$$\hat{\vartheta} = \frac{R}{T_1}, \quad \tilde{\vartheta} = -\frac{\log\left(1 - \frac{R}{n}\right)}{t_0}$$
+
+gdzie
+$$
+R = \sum_{i=1}^{n} \mathbf{1}_{\{X_i \le t_0\}}, \quad
+T_1 = \sum_{i=1}^{R} X_{(i)} + t_0 (n - R).
+$$
+Porównanie estymatorów zostanie dokonane na podstawie:
+
+* obciążenia (bias):
+
+$$
+\text{Bias}(\hat{\vartheta}, \vartheta) = E_\vartheta(\hat{\vartheta} - \vartheta), \quad
+\text{Bias}(\tilde{\vartheta}, \vartheta) = E_\vartheta(\tilde{\vartheta} - \vartheta),
+$$
+
+* średniego błędu kwadratowego (MSE):
+
+$$
+\text{MSE}(\hat{\vartheta}, \vartheta) = E_\vartheta(\hat{\vartheta} - \vartheta)^2, \quad
+\text{MSE}(\tilde{\vartheta}, \vartheta) = E_\vartheta(\tilde{\vartheta} - \vartheta)^2,
+$$
+
+dla wartości $\vartheta = 1$, rozmiarów próby $n = 10, 30$ oraz parametrów cenzurowania $t_0 = 0.5, 1, 2$.
+
+Celem jest ocena, który z estymatorów daje mniejsze obciążenie i mniejszy błąd średniokwadratowy w różnych scenariuszach cenzurowania.
+
+Symulacja będzie polegała na generowaniu prób 100 000 razy. W przypadku, gdy $R = n$ (czyli wszystkie dane są niecenzurowane), estymatory przyjmują wartości skrajne $\hat{\vartheta} = 0$, $\tilde{\vartheta} = -\infty$, co czyni je niepraktycznymi w analizie. W takiej sytuacji iteracja zostanie powtórzona. Wartości $\hat{\vartheta}$ oraz $\tilde{\vartheta}$ zawsze będą wyznaczane na podstawie tych samych prób. Takie podejście ogranicza wpływ sytuacji skrajnych i zapewnia poprawność porównania estymatorów.
+
+Poniżej przedstawiono kod w Pythonie dokonujący wyżej wspomnianej symulacji. Wyniki przedstawiono w tabeli poniżej.
+
+```{python}
+theta_true = 1
+n_values = [10, 30]
+t0_values = [0.5, 1, 2]
+n_sim = 100000  # liczba replikacji
+
+rows = []
+
+for n in n_values:
+    for t0 in t0_values:
+        theta_hat_vals = []
+        theta_wave_vals = []
+        i = 0
+        while i < n_sim:
+          # generowanie próbki i cenzurowanie I typu
+          sample, deltas = GE_cenzurowanie_I_typu(t0, 1/theta_true, 1, n)
+          sample = np.array(sample)
+          deltas = np.array(deltas)
+            
+          R = int(np.sum(deltas))
+            
+          if R == n:
+                continue
+            
+          T1 = np.sum(sample[deltas==1]) + t0*(n - R)
+            
+          theta_hat = R / T1
+          theta_wave = -np.log(1 - R/n) / t0
+            
+          theta_hat_vals.append(theta_hat)
+          theta_wave_vals.append(theta_wave)
+          i += 1
+
+        bias_hat = np.mean(np.array(theta_hat_vals) - theta_true)
+        bias_wave = np.mean(np.array(theta_wave_vals) - theta_true)
+        mse_hat = np.mean((np.array(theta_hat_vals) - theta_true)**2)
+        mse_wave = np.mean((np.array(theta_wave_vals) - theta_true)**2)
+        
+        rows.append({
+        "Liczność próby": n,
+        "Czas obserwacji": t0,
+        r"$\mathrm{Bias}(\hat{\vartheta})$": bias_hat,
+        r"$\mathrm{Bias}(\tilde{\vartheta})$": bias_wave,
+        r"$\mathrm{MSE}(\hat{\vartheta})$": mse_hat,
+        r"$\mathrm{MSE}(\tilde{\vartheta})$": mse_wave
+        })
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: "Porównanie estymatorów $\\hat{\\vartheta}$ oraz $\\tilde{\\vartheta}$ \\label{tab:cedrik3}"
+
+df_results = pd.DataFrame(rows)
+
+Markdown(tabulate(df_results, headers="keys", showindex=False, floatfmt=(".0f", "", ".4f", ".4f", ".4f", ".4f")))
+
+```
+
+Z \hyperref[tab:cedrik3]{Tabeli \ref{tab:cedrik3}.} wynika, że estymator największej wiarygodności $\hat{\vartheta}$ w każdym przypadku charakteryzuje się mniejszym obciążeniem (Bias) niż estymator $\tilde{\vartheta}$, oparty wyłącznie na liczbie obserwacji kompletnych $R$. W większości przypadków $\hat{\vartheta}$ ma również niższą wartość błędu średniokwadratowego (MSE).
+
+Warto zauważyć, że wraz ze wzrostem liczebności próby różnice w obciążeniu i MSE między estymatorami stają się coraz mniejsze. Może to być spowodowane tym, że estymator $\tilde{p}=\frac{R}{n}$, na którym opiera się estymator $\tilde{\vartheta}$, ma mniejsze wartości dla większej liczności próby. To z kolei powoduje lepsze przybliżenie parametru $\vartheta$, a tym samym zmniejszenie różnić z $\hat{\vartheta}$.
+
+## Zadanie dodatkowe 1
+
+W tym zadaniu udowodniono alternatywny wzór na statystykę $T_2$ w postaci $T_2=\sum_{i=1}^mD_i$, gdzie $D_i=(n-i+1)\left(X_{(i)}-X_{(i-1)}\right)$.
+
+$$
+\begin{aligned}
+T_2 = \sum_{i=1}^mD_i = \sum_{i=1}^m(n-i+1)\left(X_{(i)}-X_{(i-1)}\right) = \\
+\sum_{i=1}^m(n-i+1)X_{(i)}-\sum_{i=1}^m(n-i+1)X_{(i-1)} = \\
+\sum_{i=1}^m(n-i+1)X_{(i)} - \sum_{i=2}^m(n-i+1)X_{(i-1)} \overset{j=i-1}{=} \\ (n-m+1)X_{(m)}+\sum_{i=1}^{m-1}(n-i+1)X_{(i)} - \sum_{j=1}^{m-1}(n-j)X_{(j)} \overset{i=j}{=} \\
+(n-m+1)X_{(m)}+\sum_{i=1}^{m-1}\left[(n-i+1)-(n-i)\right]X_{(i)} = \\
+(n-m+1)X_{(m)}+\sum_{i=1}^{m-1}X_{(i)}=\sum_{i=1}^{m}X_{(i)}+(n-m)X_{(m)}
+\end{aligned}
+$$
+
+Dodatkowo wykazane zostało, że jeżeli zmienne $X_i$ pochodzą z rozkładu $\mathcal{E}(\vartheta)$ i są niezależne, to $D_i$ również są niezależne o tym samym rozkładem.
+
+**Fakt**: Rozkład statystyk pozycyjnych ma postać:
+$$
+f_{X_{(1)},\dots,X_{(m)}}(x)=
+\frac{n!}{(n-m)!}\prod_{i=1}^mf(x_{(i)})=
+\frac{n!}{(n-m)!}\vartheta^m\exp\left(-\vartheta\sum_{i=1}^m\left(n-i+1\right)x_{(i)}\right)
+$$
+
+Niech $Y_i=X_{(i)}-X_{(i-1)}$, wtedy:
+
+$$
+\begin{aligned}
+\varphi\left(\left(X_{(1)},\dots,X_{(m)}\right)\right) = \left(X_{(1)},X_{(2)}-X_{(1)},\dots,X_{(m)}-X_{(m-1)}\right) = \left(Y_1,\dots,Y_m\right)
+\\
+\varphi^{-1}\left(\left(Y_1,\dots,Y_m\right)\right) = \left(Y_1,Y_1+Y_2,\dots,\sum_{i=1}^mY_i\right)
+\\
+J_{\varphi^{-1}} =
+\begin{pmatrix}
+1 & 0 & 0 & \cdots & 0 \\
+1 & 1 & 0 & \cdots & 0 \\
+1 & 1 & 1 & \cdots & 0 \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+1 & 1 & 1 & \cdots & 1
+\end{pmatrix}, \quad
+|\det J_{\varphi^{-1}}|=1
+\end{aligned}
+$$
+$$
+\begin{aligned}
+f_{Y_1,\dots,Y_m}(y)=
+\frac{n!}{(n-m)!}\vartheta^m\exp\left(-\vartheta\sum_{i=1}^m\left(n-i+1\right)\sum_{j=1}^i y_j\right)|\det J_{\varphi^{-1}}| =
+\\
+\frac{n!}{(n-m)!}\vartheta^m\exp\left(-\vartheta\sum_{j=1}^m\sum_{i=j}^m\left(n-i+1\right)y _j\right) \cdot 1 =
+\\
+\prod_{i=1}^m(n-i+1)\vartheta\exp\left(-\left(n-i+1\right)\vartheta y_i\right)
+\end{aligned}
+$$
+
+Rozkład łączny jest iloczynem statystyk brzegowych $Y_i$ o odpowiednich rozkładach wykładniczych, zatem są one od siebie niezależne.
+
+$$
+D_i=(n-i+1)Y_i, \quad Y \sim \mathcal{E}\left(\left(n-i+1\right)\vartheta\right), \quad D_i \sim \mathcal{E}\left(\vartheta\right)
+$$
+
+Zatem $D_i \sim \mathcal{E}(\vartheta)$. są niezależne i o tym samym rozkładzie.
+
+## Zadanie dodatkowe 2
+
+Zadanie polega na wyznaczeniu estymatora NW oraz realizacji zbiorów ufności w oparciu o dane cenzurowane I-go typu pochodzące z rozkładu Reyleigha $\mathcal{Ra}\left(\sigma\right)$:
+
+$$
+f_{\sigma}(x) = \frac{x}{\sigma^2}\exp\left(-\frac{x^2}{2\sigma^2}\right)\mathbf{1}_{\left(0;\infty\right)}\left( x \right), \quad
+F_{\sigma}(t) = 1 - \exp\left(-\frac{t^2}{2\sigma^2}\right).
+$$
+
+### Estymacja punktowa
+
+Estymacji punktowej dokonano metodą wiarogodności.
+
+Funkcja wiarogodności oparta o rozkład $\mathcal{Ra}\left(\sigma\right)$ ma postać:
+
+$$
+L\left(\sigma;t^*\right) = \frac{n!}{\left(n-r\right)!}
+\frac{\prod_{i=1}^{r} x_{\left(i\right)}}{\sigma^{2r}}
+\exp\left(-\frac{1}{2\sigma^2}\left(\sum_{i=1}^rx_{\left(i\right)}^2+\left(n-r\right)t_0^2\right)\right)
+$$
+
+Do szukania maksimum skorzystano z funkcji logarytmicznej (log-wiarogodność), gdyż logarytm zachowuje ekstrema oraz monotoniczność:
+
+$$
+\ell\left(\sigma\right) =
+\ln\frac{n!}{\left(n-r\right)!} +
+\ln\prod_{i=1}^{r} x_{\left(i\right)} -
+2r\ln\sigma - \frac{1}{2\sigma^2} T_3, \quad T_3 = \sum_{i=1}^rx_{\left(i\right)}^2+\left(n-r\right)t_0^2
+$$
+
+Policzono pochodną funkcji $\ell$ po zmiennej $\sigma$:
+
+$$
+\ell'\left(\sigma\right) =
+\frac{-2r}{\sigma} + \frac{T_3}{\sigma^3}
+\quad\Rightarrow\quad
+\hat{\sigma} = \sqrt{\frac{T_3}{2r}}
+$$
+
+Sprawdono, czy w tym punkcie funkcja jest wklęsła w otoczeniu $\hat{\sigma}$:
+
+$$
+\ell''\left(\sigma\right) =
+\frac{2r}{\sigma^2} - \frac{3T_3}{\sigma^4},
+\quad \ell''(\hat{\sigma})<0
+$$
+Zatem funkcja $\ell$ w punkcie $\hat{\sigma}$ jest maksimum.
+
+Dodatkowo, funkcja osiąga tylko jedno ekstremum w postaci maksimum. Oznacza to, że funkcja rośnie na przedziale $\left(0;\hat{\sigma}\right]$, oraz maleje na przedziale $\left[\hat{\sigma};\infty\right)$. Oznacza to, że w tym punkcie osiąga maksimum globalne.
+
+**Wniosek**: $L$ jest unimodalna, z maksimum globalnym w $\hat{\sigma}$.
+
+\newpage
+
+### Estymacja przedziałowa
+
+Estymator NW rozkładu Rayleigha oparty na danych cenzurowanych I-go typu zależy od wartości zmiennych losowych o rozkładach odpowiednio absolutnie ciągłym ($T_3$) oraz dyskretnym ($R \sim \mathcal{B}\left(n,\, p = F_{\sigma}(t_0)\right), \quad F_{\sigma}(t_0) = 1 - \exp\left(-\frac{t_0^2}{2\sigma^2}\right)$
+). Z tego powodu, podobnie jak w przypadku rozkładu wykładniczego, wyznaczono przedział ufności dla parametru $p$ i skorzystano z faktu, że jest on równy dystrybuancie rozkładu $\mathcal{Ra}\left(\sigma\right)$ w punkcie $t_0$.
+
+Tym samym, mając realizację zbioru ufności $\left[p_L;p_U\right]$ dla parametru $p$, po odpowiednich przekształceniach otrzymano realizację zbioru ufnosci $\left[\sigma_L;\sigma_U\right]$ parametru $\sigma$, gdzie:
+
+$$
+\sigma_L = \frac{t_0}{\sqrt{-2\ln\left(1-p_U\right)}}, \quad
+\sigma_U = \frac{t_0}{\sqrt{-2\ln\left(1-p_L\right)}}.
+$$
+
+\newpage
+
+# Lista 4
+
+Lista 4 polega na testowaniu hipotez dotyczących średniego czasu życia na podstawie danych cenzurowanych I typu z rozkładu wykładniczego, poprzez wyznaczanie poziomu krytycznego testu ilorazu wiarogodności oraz ocenę jego mocy i rozmiaru.
+
+## Zadanie 1 {#zad1lis4}
+
+Zadanie dotyczy deklaracji funkcji do wyznaczania poziomu krytycznego (*eng. p-value*) w teście ilorazu wiarogodności do testowania hipotez lewo-, prawo- $\phantom{i}$i dwustronnych dla danych cenzurowanych I-go typu pochodzących z rozkładu wykładniczego $\mathcal{E}(\vartheta)$.
+
+Zaczęto od udowodnienia że funkcja wiarygodności jest funkcją unimodalną (ma jedno maksimum globalne).
+
+Funkcja wiarogodności dla rozkładu wykładniczego $\mathcal{E}(\vartheta)$ ma postać:
+$$
+L(\vartheta; t^*) = \frac{n!}{(n-r)!}\,\vartheta^r \exp\!\left(-\vartheta\left[\sum_{i=1}^r x_{(i)} + t_0(n-r)\right]\right).
+$$
+Najwygodniej maksimum będzie się szukało przez funkcję logarytmiczną (log-wiarogodność), ponieważ logarytm jest funkcją rosnącą i zachowuje maksimum:
+$$
+\ell(\vartheta)=\ln\frac{n!}{(n-r)!}+r\ln\vartheta-\vartheta S,\qquad 
+S=\sum_{i=1}^r x_{(i)}+t_0(n-r).
+$$
+
+Aby znaleźć maksimum, obliczono pochodną funkcji wiarogodności (log-wiarogodności) po zmiennej $\vartheta$.
+$$
+\ell'(\vartheta)=\frac{r}{\vartheta}-S=0\quad\Rightarrow\quad
+\hat\vartheta=\frac{r}{S}.
+$$
+Z warunku stacjonarności wynika że ekstremum znajduje się w $\hat\vartheta=\frac{r}{S}$, który jest naszym estymatorem największej wiarogodności.
+ 
+Sprawdzono wklęsłość funkcji (co gwarantuje maksimum):
+$$
+\ell''(\vartheta)=-\frac{r}{\vartheta^2}<0\quad\forall\vartheta>0.
+$$
+
+**Wniosek**: $\ell$ jest ściśle wklęsła, więc $L$ jest unimodalna z maksimum globalnym w $\hat\vartheta$.
+
+Funkcja ilorazu wiarogodności ma postać:
+$$
+\lambda(t^*) = 
+\frac{\sup_{\vartheta \in \Theta_0} L(\vartheta; t^*)}
+     {\sup_{\vartheta \in \Theta} L(\vartheta; t^*)}.
+$$
+
+Przy testowaniu hipotezy dwustronnej zbiór 
+$\Theta_0 = \{\vartheta_0\}$ 
+jest jednoelementowy i właśnie w tym punkcie osiąga swoje supremum. 
+
+W przypadku hipotezy lewostronnej, tj. testowania na przedziale $[\vartheta_0, \infty)\ $, supremum przyjmuje się w punkcie $\hat{\vartheta}$, jeżeli $\hat{\vartheta} \in [\vartheta_0, \infty]$, lub w punkcie $\vartheta_0$ w przeciwnym przypadku. 
+
+Analogicznie, dla hipotezy prawostronnej, gdy rozważany przedział to $(-\infty, \vartheta_0]$, supremum osiągane jest w $\hat{\vartheta}$, jeśli $\hat{\vartheta} \in (-\infty, \vartheta_0]$, lub w $\vartheta_0$ w przeciwnym wypadku.
+
+Zgodnie z twierdzeniem Wilksa, wartość krytyczna ma postać:
+$$
+1 - F_{\chi^2(1)}\!\left(-2 \ln \lambda(r, s)\right),
+$$
+gdzie $F_{\chi^2(1)}$ oznacza dystrybuantę rozkładu $\chi^2$ z jednym stopniem swobody.
+
+Poniżej przedstawiono kod deklarujący funkcję do testowania wyżej wspomianych hipotez danych cenzurowanych z rozkładu wykładniczego $\mathcal{E}(\vartheta)$.
+
+```{python}
+def IW_cenzurowanie_I(r, s, n, t0, theta0, test_type, alpha):
+    if r == 0:
+        theta_hat = 1e-9
+    else:
+        S = s + (n - r) * t0 # Całkowity czas testowania
+        theta_hat = r / S # Estymator MLM
+    
+    Lambda = (theta0 / theta_hat)**r * np.exp(S * (theta_hat - theta0))
+
+    chi2_statistic = -2 * np.log(Lambda)
+    lambda_1 = chi2.ppf(1 - alpha, df=1)
+
+    if test_type == "dwustronna":
+        # H0: theta = theta0  vs  H1: theta =/= theta0
+        p_value = 1 - chi2.cdf(chi2_statistic, df=1)
+    elif test_type == "prawostronna":
+        # H0: theta <= theta0  vs  H1: theta > theta0
+        p_value = ((1 - chi2.cdf(chi2_statistic, df=1))
+        if (theta_hat > theta0) else 1)
+    else:  # "lewwostronna"
+        # H0: theta >= theta0  vs  H1: theta < theta0
+        p_value = ((1 - chi2.cdf(chi2_statistic, df=1))
+        if (theta_hat < theta0) else 1)
+
+    return chi2_statistic, lambda_1, p_value
+```
+
+## Zadanie 2
+
+Zadanie polega na przeprowadzeniu symulacji, których celem jest oszacowanie mocy (dla 10 wybranych alternatyw) oraz rozmiaru testu z punktu dwustronnego dla wybranej wartości $\vartheta_0$, $t_0$ oraz $n \in \{20, 50\}$.
+
+Moc i rozmiar testu statystycznego można wyznaczyć symulacyjnie metodą Monte Carlo, przy czym poprawność takiego podejścia uzasadnia twierdzenie Glivenki–Cantellego.
+
+Próba została wygenerowania z rozkładu wykładniczego $\mathcal{E}(2)$. Dokonano cenzurowania I-typu z parametrem cenzurowania $t_0 = 1.5$.
+
+W następnej kolejność zbadano hipotezę zerową $H_0: \ \vartheta = \vartheta_0 = 2$, przy hipotezie alternatywnej $H_1: \ \vartheta \neq \vartheta_0$ dla 10 wybranych parametrów $\vartheta_1 \in \{1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.1, 2.3, 2.5, 2.7\}$. Dla każdego przypadku wykonano 10 000 replikacji (które było powtarzane w przypadku $R=0$). Wyniki przedstawiono w tabeli poniżej.
+
+Poniżej znajduje się kod w języku Python dokonujący symulacji.
+
+```{python}
+#| warning: false
+#| message: false
+
+theta0 = 2
+t0 = 1.5
+n_vals = [20, 50]
+alternatives = [1.1, 1.3, 1.5, 1.7, 1.9, 2, 2.1, 2.3, 2.5, 2.7]
+alpha = 0.05
+n_sim = 10000  # liczba replikacji
+
+rows = []
+rozmiar = []
+
+for n in n_vals:
+    for theta in alternatives:
+        results = []
+
+        n_cur = 0
+        while n_cur != n_sim:
+            sample, deltas = GE_cenzurowanie_I_typu(t0, 1/theta0, 1, n)
+            sample = np.array(sample)
+            deltas = np.array(deltas)
+
+
+            r = np.sum(deltas)
+            
+            if (r != 0):
+                n_cur += 1
+            else:
+              continue
+            
+            s = np.sum(sample[deltas==1])
+
+            _, _, p_value = IW_cenzurowanie_I(r, s, n, t0, theta, 
+            "dwustronna", alpha)
+            results.append(int(p_value <= alpha))
+
+        moc = np.mean(results)
+        if theta == theta0:
+            rozmiar.append(moc)
+
+        rows.append({
+            r"\vartheta_1": theta,
+            "Liczność próby": n,
+            "Moc testu": moc
+        })
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: "Wyniki symulacji mocy testu dwustronnego \\label{tab:bartosz}"
+
+df_results = pd.DataFrame(rows)
+
+n_rows = len(df_results)
+half = n_rows // 2
+
+df_results['d'] = np.nan
+df_results['e'] = np.nan
+
+df_results.loc[:half-1, 'd'] = df_results.loc[half:, df_results.columns[1]].values  # 2. kolumna
+df_results.loc[:half-1, 'e'] = df_results.loc[half:, df_results.columns[2]].values  # 3. kolumna
+
+# usuwamy dolną połowę w oryginalnych kolumnach
+df_results.loc[half:, df_results.columns[0]] = np.nan
+df_results.loc[half:, df_results.columns[1]] = np.nan
+df_results.loc[half:, df_results.columns[2]] = np.nan
+
+# reset indeksów
+df_results = df_results.iloc[:half].reset_index(drop=True)
+
+Markdown(tabulate(df_results, showindex=False, floatfmt=(".1f", ".0f", ".4f", ".0f", ".4f"), headers=[r"$\vartheta$", "Liczność próby", "Moc testu", "Liczność próby", "Moc testu"]))
+
+```
+
+Z \hyperref[tab:bartosz]{Tabeli \ref{tab:bartosz}} można wywnioskować, że moc testu jest poprawnie estymowana w tym sensie, że im dalej $\vartheta_1$ znajduje się od $\vartheta_0$, tym większa jest moc testu. Ponadto, wraz ze wzrostem liczności próby, moc testu również rośnie (z wyjątkiem przypadku $\vartheta_1 = 2$, co wynika z faktu, że $\vartheta_0 = 2$, czyli gdy hipoteza zerowa jest prawdziwa - moc testu powinna być wtedy niska).
+Rozmiar testu w przypadku $\vartheta_1=\vartheta_0=2$ wyniósł `{python} f"{rozmiar[0]:.3f}"` dla liczności próby $n = 20$ oraz `{python} f"{rozmiar[1]:.3f}"` dla liczności próby $n = 50$.
+
+## Zadanie 3
+
+Zadanie polega na weryfikacji hipotezy, że średni czas do remisji choroby w grupie, która brała lek A, oraz w grupie, która brała lek B (na podstawie danych z [Listy 2. Zadania 3.](#zad3lis2)), można traktować jako realizacje zmiennych losowych z rozkładu wykładniczego $\mathcal{E}(1)$. Załozono również, że dokonano cenzurowania typu I z parametrem cenzurowania $t_0 = 1$. Test przeprowadzono na poziomie istotności $\alpha = 0.05$.
+
+Poniżej przedstawiono kod dokonujący testowania tej hipotezy statystycznej. Wyniki przedstawiono w tabelce poniżej.
+
+```{python}
+theta0 = 1.0
+t0 = 1.0
+alpha = 0.05
+
+rows = []
+
+for name, (times, deltas) in datasets.items():
+    n = len(times)
+    r = int(np.sum(deltas))
+    s = float(np.sum(times[deltas==1]))
+    chi2_statistic, lambda_1, p_value = IW_cenzurowanie_I(r, s, n, t0, theta0,
+    "dwustronna", alpha)
+    rows.append({
+        "Grupa": name,
+        "Liczność próby": n,
+        "Liczność danych kompletnych": r,
+        "p -wartość": p_value,
+    })
+
+```
+
+```{python}
+#| echo: false
+#| tbl-cap: "Testowanie hipotezy dwustronnej na danych rzeczywistych \\label{tab:tomek}"
+
+df_results = pd.DataFrame(rows)
+
+Markdown(tabulate(df_results, showindex=False, floatfmt=("", ".1f", ".1f", ".4f", ".4f", ".4f"), headers="keys"))
+
+```
+
+Z \hyperref[tab:tomek]{Tabeli \ref{tab:tomek}.} odczytano, że wartości p są większe od przyjętego poziomu istotności, zatem nie ma podstaw do odrzucenia hipotezy zerowej $H_0$.
+
+## Zadanie dodatkowe
+
+W tym zadaniu zbaano krytyczny poziom testu ilorazu wiarogodności dla hipotezy $H_0: \vartheta_A=\vartheta_B$, przeciwko hipotezie alternatywnej $H_1: \vartheta_A\neq\vartheta_B$. Skorzystano z faktu, że A i B są prowadzone niezależnie, dzięki również niezależność funkcji wiarogodności:
+
+$$
+L\left(\left(\vartheta_A, \vartheta_B\right);\left(t^*_A, t^*_B\right)\right) = 
+L\left(\vartheta_A;t^*_A\right) \cdot L\left(\vartheta_B;t^*_B\right).
+$$
+
+Dla hipotezy alternatywnej zbadano przestrzeń: $\Theta_1=\left\{\left(\vartheta_A, \vartheta_B\right): \vartheta_A>0, \vartheta_B>0\right\}=\left(0;\infty\right)^2$, natomiast dla hipotezy zerowej: $\Theta_0=\left\{\left(\vartheta_A, \vartheta_B\right): \vartheta_A=\vartheta_B>0\right\}=(0;\infty)$.
+
+Zarówno w liczniku, jak i w mianowniku zbadano supremum iloczynu dwóch funkcji wiarogodności dla A i B. Z faktu, że funkcja wiarogodności jest jednomodalna wnioskujemy, że:
+
+$$
+\sup_{\left(\vartheta_A, \vartheta_B\right) \in \Theta_1} \left[ L(\vartheta_A; t_A^*) \cdot 
+L(\vartheta_B; t_B^*)\right] =
+\sup_{\vartheta_A \in \left(0;\infty\right)} L(\vartheta_A; t_A^*) \phantom{c} \cdot
+\sup_{\vartheta_B \in \left(0;\infty\right)} L(\vartheta_B; t_B^*) =
+L(\hat{\vartheta}_A; t_A^*) \cdot L(\hat{\vartheta}_B; t_B^*),
+$$
+
+W iloczynie natomiast otrzymano iloczyn postaci:
+
+$$
+L\left(\vartheta; \left(t_A^*, t_B^* \right)\right) =  \frac{n!}{(n-r)!}\,\vartheta^r \exp\!\left(-\vartheta\left[\sum_{i=1}^r a_{(i)} + t_0(n-r)\right]\right) \cdot
+$$
+$$
+\cdot \frac{n!}{(n-r)!}\,\vartheta^r \exp\!\left(-\vartheta\left[\sum_{i=1}^r b_{(i)} + t_0(n-r)\right]\right),
+$$
+
+gdzie $a_{(i)}, b_{(i)}$ - realizacje statystyk pozycyjnych odpowiednio wektorów $A$ i $B$. Łatwo zauważyć, że po krótkich przekształceniach test jest postaci:
+
+$$
+\begin{aligned}
+L\left(\vartheta; \left(t_A^*, t_B^* \right)\right) = \left(\frac{n!}{(n-r)!}\right)^2
+\vartheta^{2r}\exp\left(-\vartheta\left[T_{1_A}+T_{1_B}\right]\right), \ \text{gdzie:} \\
+T_{1_A} = \sum^r_{i=1}a_{(i)}+(n-r)t_0, \
+T_{1_B} = \sum^r_{i=1}b_{(i)}+(n-r)t_0
+\end{aligned}
+$$
+
+Z tego natomiast łatwo zauważyć, że otrzymano podobną jak na [Liście 4. Zadaniu 1.](#zad1lis4) funkcję największej wiarogodności, gdzie $T_1=T_{1_A}+T_{1_B}, \ R=R_A+R_B$ (w tym przypadku $R_A=R_B=r$). Tym samym otrzymano wzór na wspólny estymator największej wiarogodności $\hat{\vartheta}=\frac{R_A+R_B}{T_{1_A}+T_{1_B}}$.
+
+Z wartości supremów licznika oraz mianownika, można wyznaczyć postać funkcji $\lambda\left(\left(t_A^*,t_B^*\right)\right)$:
+
+$$
+\lambda\left(\left(t_A^*,t_B^*\right)\right) = 
+\left(\frac{\vartheta^2}{\vartheta_A \vartheta_B}\right)
+\exp\left(T_A\left(\vartheta_A-\vartheta\right) +
+T_B\left(\vartheta_B-\vartheta\right)\right).
+$$
+
+```{python}
+#| echo: false
+
+def podliczanie(data):
+    r = 0
+    s = 0
+    for observation in data:
+        if observation[1] == 1:
+            r += 1
+            s += observation[0]
+    return (r, s)
+  
+def common_theta(A, B, t0):
+    rA, sA = podliczanie(A)
+    rB, sB = podliczanie(B)
+    T_1A = sA + (len(A)-rA)*t0
+    T_1B = sB + (len(B)-rB)*t0
+    
+    theta_A = rA/T_1A
+    theta_B = rB/T_1B
+    theta = (rA+rB)/(T_1A+T_1B)
+
+    lambda0 = (theta/theta_A)**rA * (theta/theta_B)**rB * np.exp((T_1A*(theta_A-theta))) * np.exp(T_1B*(theta-theta_B))
+    
+    p_value = 1-chi2.cdf(-2*log(lambda0), df=1)
+    
+    return p_value
+
+A = [0.03345514, 0.08656403, 0.08799947, 0.24385821, 0.27755032, 0.40787247, 0.58825664, 0.64125620, 0.90679161, 0.94222208]
+A = [(A[i], 1) for i in range(len(A))] + [(1, 0)] * 10
+
+B = [0.03788958, 0.12207257, 0.20319983, 0.24474299, 0.30492413, 0.34224462, 0.42950144, 0.44484582, 0.63805066, 0.69119721]
+B = [(B[i], 1) for i in range(len(B))] + [(1, 0)] * 10
+
+p_value = common_theta(A, B, 1)
+```
+
+W ten sposób uzyskano wartość *p-value* testu badającego równość parametrów realizacji A i B, wynoszącą `{python} f"{p_value:.3f}"`, zatem nie ma podstaw do odrzucenia tej hipotezy zerowej.
