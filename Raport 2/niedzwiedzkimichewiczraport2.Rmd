@@ -1,0 +1,103 @@
+---
+title: "Analiza Przeżycia"
+subtitle: "Raport 2"
+author: "Filip Michewicz 282239  \n  Wiktor Niedźwiedzki 258882"
+date: "23 listpada 2025 Anno Domini"
+output:
+  pdf_document:
+    number_sections: true
+toc: true
+lof: true
+lot: true
+header-includes:
+  - \usepackage[OT4]{polski}
+  - \usepackage[utf8]{inputenc}
+  - \usepackage{graphicx}
+  - \usepackage{float}
+  - \renewcommand{\contentsname}{Spis treści}
+  - \renewcommand{\listfigurename}{Spis wykresów}
+  - \renewcommand{\listtablename}{Spis tabel}
+  - \renewcommand{\figurename}{Wykres}
+  - \renewcommand{\tablename}{Tabela}
+  - \usepackage{xcolor}
+  - \definecolor{ForestGreen}{rgb}{0.1333, 0.5451, 0.1333}
+  - \definecolor{SteelBlue}{rgb}{0.2745, 0.5098, 0.7059}
+  - \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  dpi = 1200,
+  message = FALSE,
+  warning = FALSE,
+  error = TRUE,
+  eval = TRUE,
+  echo = FALSE,
+  fig.align="center",
+  fig.width = 7,
+  fig.height = 5,
+  fig.pos = "H",
+  out.extra = '')
+```
+
+```{r biblioteki+zmienne_pomocnicze}
+library(knitr)
+library(latex2exp)
+library(xtable)
+library(ggplot2)
+library(survminer)
+
+set.seed(21370)
+```
+
+
+\newpage
+# Lista 5
+
+## Zadanie 1
+
+### Estymator Kaplana-Meiera
+
+### Estymator Fleminga-Harringtona
+
+## Zadanie 2
+
+## Zadanie 3
+
+### Estymacja wartości funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ 
+
+### Histogramy oszacowań $t_0$ oraz $2 t_0$ 
+
+\newpage
+# Lista 6
+
+## Zadanie 1
+
+### Estymator Kaplana-Meiera
+
+### Estymator Fleminga-Harringtona
+
+## Zadanie 2
+
+\newpage
+# Lista 7
+
+## Zadanie 1
+
+## Zadanie 2
+
+\newpage
+# lista 8
+
+## Zadanie 1
+
+## Zadanie 2
+
+\newpage
+# Zadania dodatkowe
+
+## Zadanie 1
+
+## Zadanie 2
+
+## Zadanie 3
