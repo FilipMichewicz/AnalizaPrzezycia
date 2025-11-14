@@ -5,7 +5,7 @@ author:
   - "Wiktor Niedźwiedzki (258882)"
   - "Filip Michewicz (282239)"
 date: last-modified
-date-format: "D [listopada] YYYY [Anno Domini]"
+date-format: "6 [listopada] YYYY [Anno Domini]"
 lang: pl
 jupyter: python3
 
@@ -759,7 +759,7 @@ Z \hyperref[tab:beata]{Tabeli \ref{tab:beata}.} można odczytać m.in., że cenz
 
 ## Zadanie 3 {#zad3lis2}
 
-W tym zadaniu wyznaczono statystyki opisowe danych cenzurowanych I-go typu dotyczących leczenia dwoma różnymi lekami A i B. Grupa 40 pacjentów została podzielona losowo na dwie równoliczne podgrupy. Przez jeden rok obserwacji, jednej z nich podawano lek A, drugiej - lek B, i obserwowano czas do remisji choroby.
+W tym zadaniu wyznaczono statystyki opisowe danych cenzurowanych I-go typu dotyczących leczenia dwoma różnymi lekami A i B. Grupa 40 pacjentów została podzielona losowo na dwie równoliczne podgrupy. Jednej z grup podano lek A, a drugiej lek B i przez rok obserwowano czas do remisji choroby.
 
 W grupie otrzymującej lek A uzyskano następujące dane. U dziesięciu pacjentów remisja choroby
 nastąpiła w chwilach: 0.03345514, 0.08656403, 0.08799947, 0.24385821, 0.27755032,
@@ -1551,7 +1551,7 @@ Z \hyperref[tab:tomek]{Tabeli \ref{tab:tomek}.} odczytano, że wartości p są w
 
 ## Zadanie dodatkowe
 
-W tym zadaniu zbaano krytyczny poziom testu ilorazu wiarogodności dla hipotezy $H_0: \vartheta_A=\vartheta_B$, przeciwko hipotezie alternatywnej $H_1: \vartheta_A\neq\vartheta_B$. Skorzystano z faktu, że A i B są prowadzone niezależnie, dzięki również niezależność funkcji wiarogodności:
+W tym zadaniu zbadano krytyczny poziom testu ilorazu wiarogodności dla hipotezy $H_0: \vartheta_A=\vartheta_B$, przeciwko hipotezie alternatywnej $H_1: \vartheta_A\neq\vartheta_B$. Skorzystano z faktu, że A i B są prowadzone niezależnie, dzięki również niezależność funkcji wiarogodności:
 
 $$
 L\left(\left(\vartheta_A, \vartheta_B\right);\left(t^*_A, t^*_B\right)\right) = 
