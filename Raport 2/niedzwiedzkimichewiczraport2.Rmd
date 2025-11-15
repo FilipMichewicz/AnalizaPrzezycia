@@ -392,3 +392,111 @@ histograms$"100"
 
 Histogramy z poprzednich wykresów układają się w kształt dzwonowy charakterystyczny dla rozkładu normalnego, co pozwala przypuszczać, że estymator Kaplana–Meiera jest asymptotycznie normalny w punktach $t_0$ oraz $2 t_0$.
 
+\newpage
+# Lista 6
+
+Lista dotyczy estymacji średniego czasu życia w oparciu o estymatory Kaplana–Meiera oraz Fleminga–Harringtona, z uwzględnieniem szacowania "ogona" zaproponowanego przez Browna, Hollandera i Kowara. Dodatkowo dokonano estymacji średniego czasu życia dla danych pochodzących z zadania 3 z listy 2.
+
+## Zadanie 1
+
+Zadanie polega na zdefiniowaniu funkcji obliczającej średni czas życia w oparciu o estymatory Kaplana–Meiera oraz Fleminga–Harringtona, z uwzględnieniem ogona wykładniczego według propozycji Browna, Hollandera i Kowara. Ze względu na podobieństwo wyglądu wynikowego estymatora dla obu metod, obliczenia zostaną przeprowadzone w uogólnionym przypadku.
+
+Wartość oczekiwaną zmiennej losowej $X$, absolutnie ciągłej względem miary Lebesgue’a, można oszacować na dwa sposoby:
+
+1. Obliczając
+   $$
+   \mathbb{E}[X] = \int_{\mathbb{R}} xf(x) dx,
+   $$
+   gdzie $f(x)$ jest funkcją gęstości rozkładu zmiennej losowej (X).
+
+2. Jeżeli rozkład $X$ ma nośnik $(0, \infty)$, to obliczając:
+   $$
+   \mathbb{E}[X] = \int_0^{\infty} S(x)dx,
+   $$
+   czyli poprzez całkowanie ogona funkcji przeżycia $S(x)$.
+
+Jako że zarówno estymator Kaplana–Meiera, jak i Fleminga–Harringtona są estymatorami funkcji przeżycia, wartość oczekiwaną zmiennej losowej można oszacować za pomocą wzoru:
+
+$$
+\mu = \int_0^{\infty} \hat{S}(x)dx,
+$$
+
+gdzie $\hat{S}(x)$ oznacza estymowaną funkcję przeżycia.
+
+Ze względu na to że $\hat{S}(x)$ na przedziale $(0, t^+)$ jest funkcją schodkową $\mu$ będzie obliczane według wzoru:
+
+$$
+\mu = \sum_{i:, t_{(i)} \le t^+} \hat{S}\left(t_{(i)}\right)\left(t_{(i)} - t_{(i-1)}\right), \quad t_{(0)} := 0,
+$$
+
+gdzie $\hat{S}(t_{(i)})$ to wartość estymatora funkcji przeżycia w chwili $t_{(i)}$, a sumowanie jest wykonywane tylko po obserwacjach do czasu ostatniej kompletnej (niecenzurowanej) obserwacji $t^+$. Powyżej $t^+$ obydwa estymatory są nieokreślone.
+
+Jeżeli natomiast estymator będzie zawierał "ogon" według propozycji Browna, Hollandera i Kowara należy powiększyć wartość $\mu$ o wartość oczekiwaną na tym właśnie "ogonie".
+
+$$
+\begin{aligned}
+\mu &= \int_{t^+}^{\infty} e^{-\theta t} \, dt = \lim_{b \to \infty} \int_{t^+}^{b} e^{-\theta t} \, dt = \lim_{b \to \infty} \left[ -\frac{1}{\theta} e^{-\theta t} \right]_{t^+}^{b} =\\
+&= \lim_{b \to \infty} \left( -\frac{1}{\theta} e^{-\theta b} + \frac{1}{\theta} e^{-\theta t^+} \right) = \frac{e^{-\theta t^+}}{\theta} = \frac{S(t^+) \cdot t^+}{- \ln S(t^+)}
+\end{aligned}
+$$
+Ostatecznie estymowana wartość oczeliwana obliczana jest ze wzoru:
+
+$$
+\mu = \sum_{i:, t_{(i)} \le t^+} \hat{S}\left(t_{(i)}\right)\left(t_{(i)} - t_{(i-1)}\right) - \frac{S(t^+) \cdot t^+}{\ln S(t^+)}, \quad t_{(0)} := 0,
+$$
+
+Poniżej przedstawiono blok kodu w R obliczający średni czas życia. Parametr `type` pozwala wybrać, czy obliczenia mają być wykonane dla estymatora Kaplana–Meiera czy Fleminga–Harringtona, natomiast parametr `tail` określa, czy ma być uwzględniony ogon wykładniczy według propozycji Browna, Hollandera i Kowara.
+
+```{r zycie-mnie-mnie}
+expected.life <- function(df, type = "kaplan-meier", tail = FALSE) {
+  fit <- survfit(Surv(df$times, df$deltas) ~ 1, type = type)
+  
+  # tylko czasy zdarzeń
+  event_idx <- which(fit$n.event > 0)
+  df.complete <- data.frame(time = c(0, fit$time[event_idx]),
+                            surv = c(1, fit$surv[event_idx]))
+  
+  # dyskretna całka
+  dt <- diff(df.complete$time)
+  surv_val <- head(df.complete$surv, -1)
+  integral_KM <- sum(surv_val * dt)
+  
+  # ogon wykładniczy
+  if (tail) {
+    t_plus <- tail(df.complete$time, 1)
+    S_plus <- tail(df.complete$surv, 1)
+    theta <- -log(S_plus) / t_plus
+    tail_integral <- S_plus / theta
+    return(integral_KM + tail_integral)
+  }
+  
+  return(integral_KM)
+}
+```
+
+## Zadanie 2
+
+Zadanie polega na wykorzystaniu napisanej w poprzednim zadaniu funkcji do oszacowania sedniego czasu do emisji choroby pacjentów leczonym lekiem A i lekiem B na podstawie danych z zadania 3 z listy 2.
+
+Wyniki przedstawiono w tabelach poniżej.
+
+```{r choroba, echo=FALSE}
+mean_times <- data.frame(
+  "Lek A" = c(
+    expected.life(df.A, type = "kaplan-meier", tail = TRUE),
+    expected.life(df.A, type = "fleming-harrington", tail = TRUE)
+  ),
+  "Lek B" = c(
+    expected.life(df.B, type = "kaplan-meier", tail = TRUE),
+    expected.life(df.B, type = "fleming-harrington", tail = TRUE)
+  )
+)
+
+rownames(mean_times) <- c("Kaplan-Meier", "Fleming-Harrington")
+kable(mean_times, digits = 3, row.names = TRUE,
+      caption = "Średni czas życia estymowany metodami Kaplana-Meiera oraz Fleminga-Harringtona",
+      label = "choroba1")
+```
+
+\hyperref[tab:choroba1]{Tabela \ref*{tab:choroba1}.} przedstawia średni czas życia estymowany metodami Kaplana–Meiera oraz Fleminga–Harringtona. W obu grupach estymatory wskazują, że średni czas życia w grupie przyjmującej lek A jest większy niż w grupie przyjmującej lek B. Estymator Fleminga-Harringtona zwraca nieco wyższe wartości średniego czasu życia niż estymator Kaplana–Meiera, co wynika z samej konstrukcji estymatora i sposobu ważenia obserwacji cenzurowanych.
+
