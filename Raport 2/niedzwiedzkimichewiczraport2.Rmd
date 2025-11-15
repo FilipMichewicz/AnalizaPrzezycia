@@ -2,7 +2,7 @@
 title: "Analiza Przeżycia"
 subtitle: "Raport 2"
 author: "Filip Michewicz 282239  \n  Wiktor Niedźwiedzki 258882"
-date: "23 listpada 2025 Anno Domini"
+date: "23 listopada 2025 Anno Domini"
 output:
   pdf_document:
     number_sections: true
@@ -31,7 +31,6 @@ library(ggplot2)
 library(survival)
 library(survminer)
 library(xtable)
-library(bookdown)
 library(gridExtra)
 library(latex2exp)
 
@@ -39,7 +38,7 @@ knitr::opts_chunk$set(fig.align='center',
                       fig.pos='H', 
                       dev='png', 
                       dpi=1200, 
-                      fig.width = 8, 
+                      fig.width = 6, 
                       fig.height = 4)
 set.seed(21370)
 ```
@@ -285,7 +284,7 @@ Konstrukcja estymatora Kaplana–Meiera wraz z "ogonem" została omówiona w dw�
 
 Poniżej przedstawiono blok kodu w pakiecie R wyznaczający, za pomocą estymatora Kaplana–Meiera z "ogonem", estymowaną wartość funkcji przeżycia w punkcie $t$.
 
-```{r}
+```{r surv-value}
 KM.surv.value <- function(df, type = "kaplan-meier", t) {
   # Estymator KM
   fit <- survfit(Surv(df$times, df$deltas) ~ 1, type = type)
@@ -310,9 +309,9 @@ KM.surv.value <- function(df, type = "kaplan-meier", t) {
 
 Poniżej przedstawiono blok kodu w pakiecie R przeprowadzający opisaną na początku zadania symulację. W trakcie obliczeń zapisywane są estymowane wartości funkcji przeżycia w punktach $t_0$ oraz $2 t_0$. Na podstawie wyników sporządzono stosowne histogramy.
 
-```{r}
+```{r symulation}
 M <- 10
-#M <- 1000 # CHUJ
+M <- 1000 # CHUJ
 n_values <- c(30, 50, 100)
 alpha <- 2
 lambda <- 2
@@ -500,3 +499,43 @@ kable(mean_times, digits = 3, row.names = TRUE,
 
 \hyperref[tab:choroba1]{Tabela \ref*{tab:choroba1}.} przedstawia średni czas życia estymowany metodami Kaplana–Meiera oraz Fleminga–Harringtona. W obu grupach estymatory wskazują, że średni czas życia w grupie przyjmującej lek A jest większy niż w grupie przyjmującej lek B. Estymator Fleminga-Harringtona zwraca nieco wyższe wartości średniego czasu życia niż estymator Kaplana–Meiera, co wynika z samej konstrukcji estymatora i sposobu ważenia obserwacji cenzurowanych.
 
+\newpage
+# Lista 7
+
+Lista polega na napisaniu funkcji która na podstawie danych cenzurowanych losowo oblicza dolną i górną granicę przedziału ufności dla średniego czasu życia na zadanym poziomie ufności $1-\alpha$ oraz dla określonej wartości $\tau$, który odzwierciedla naszą wiedzę a priori o maksymalnym czasie do wystąpienia zdarzenia. Następnie, wykorzystując rzeczywiste dane z badania Mayo Clinic dotyczące czasu do progresji choroby w dwóch grupach pacjentek, zastosowano tę funkcję do wyznaczenia przedziałów ufności dla wybranych wartości $\tau$ i porównano otrzymane wyniki między grupami.
+
+## Zadanie 1
+
+TO DO
+
+## Zadanie 2
+
+TO DO
+
+\newpage
+# Lista 8
+
+Lista polega na weryfikacji hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, przy użyciu testów log-rank, Gehana-Breslowa, Tarone’a-Warego i Peto-Peto, porównaniu otrzymanych wartości poziomów krytycznych oraz na naszkicowaniu wykresów estymatorów Kaplana-Meiera funkcji przeżycia dla czasu do progresji choroby w obu grupach wraz z funkcjami wagowymi użytymi w statystykach testowych.
+
+## Zadanie 1
+
+TO DO
+
+## Zadanie 2
+
+TO DO
+
+\newpage
+# Zadania dodatkowe
+
+## Zadanie 1
+
+TO DO
+
+## Zadanie 2
+
+TO DO
+
+## Zadanie 3
+
+TO DO
