@@ -1,7 +1,7 @@
 ---
 title: "Analiza Przeżycia"
 subtitle: "Raport 2"
-author: "Filip Michewicz 282239  \n  Wiktor Niedźwiedzki 258882"
+author: "Wiktor Niedźwiedzki (258882)  \n  Filip Michewicz (282239)"
 date: "23 listopada 2025 Anno Domini"
 output:
   pdf_document:
@@ -38,8 +38,8 @@ knitr::opts_chunk$set(fig.align='center',
                       fig.pos='H', 
                       dev='png', 
                       dpi=1200, 
-                      fig.width = 6, 
-                      fig.height = 4)
+                      fig.width = 5, 
+                      fig.height = 3)
 set.seed(21370)
 ```
 

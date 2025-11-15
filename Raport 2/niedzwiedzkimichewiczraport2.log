@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  15 NOV 2025 01:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  15 NOV 2025 10:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -533,17 +533,17 @@ LaTeX Font Warning: Font shape `OML/lmtt/bx/n' undefined
 (Font)              for symbol `textgreater' on input line 214.
 
 [2{c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}{c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rmtt.enc}]
-<niedzwiedzkimichewiczraport2_files/figure-latex/KM-plot-1.png, id=86, 433.62pt x 289.08pt>
+<niedzwiedzkimichewiczraport2_files/figure-latex/KM-plot-1.png, id=86, 361.35pt x 216.81pt>
 File: niedzwiedzkimichewiczraport2_files/figure-latex/KM-plot-1.png Graphic file (type png)
 <use niedzwiedzkimichewiczraport2_files/figure-latex/KM-plot-1.png>
 Package pdftex.def Info: niedzwiedzkimichewiczraport2_files/figure-latex/KM-plot-1.png  used on input line 233.
-(pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
+(pdftex.def)             Requested size: 361.34912pt x 216.80946pt.
 [3 <./niedzwiedzkimichewiczraport2_files/figure-latex/KM-plot-1.png>]
-<niedzwiedzkimichewiczraport2_files/figure-latex/FH-plot-1.png, id=93, 433.62pt x 289.08pt>
+<niedzwiedzkimichewiczraport2_files/figure-latex/FH-plot-1.png, id=93, 361.35pt x 216.81pt>
 File: niedzwiedzkimichewiczraport2_files/figure-latex/FH-plot-1.png Graphic file (type png)
 <use niedzwiedzkimichewiczraport2_files/figure-latex/FH-plot-1.png>
 Package pdftex.def Info: niedzwiedzkimichewiczraport2_files/figure-latex/FH-plot-1.png  used on input line 304.
-(pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
+(pdftex.def)             Requested size: 361.34912pt x 216.80946pt.
 [4 <./niedzwiedzkimichewiczraport2_files/figure-latex/FH-plot-1.png>]
 LaTeX Font Info:    Trying to load font information for OMS+lmtt on input line 343.
 LaTeX Font Info:    No file OMSlmtt.fd. on input line 343.
@@ -552,45 +552,41 @@ LaTeX Font Warning: Font shape `OMS/lmtt/m/n' undefined
 (Font)              using `OMS/cmsy/m/n' instead
 (Font)              for symbol `textbraceleft' on input line 343.
 
-<niedzwiedzkimichewiczraport2_files/figure-latex/KM-ogon-plot-1.png, id=100, 433.62pt x 289.08pt>
+<niedzwiedzkimichewiczraport2_files/figure-latex/KM-ogon-plot-1.png, id=100, 361.35pt x 216.81pt>
 File: niedzwiedzkimichewiczraport2_files/figure-latex/KM-ogon-plot-1.png Graphic file (type png)
 <use niedzwiedzkimichewiczraport2_files/figure-latex/KM-ogon-plot-1.png>
 Package pdftex.def Info: niedzwiedzkimichewiczraport2_files/figure-latex/KM-ogon-plot-1.png  used on input line 377.
-(pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
+(pdftex.def)             Requested size: 361.34912pt x 216.80946pt.
 [5] [6 <./niedzwiedzkimichewiczraport2_files/figure-latex/KM-ogon-plot-1.png>]
-Underfull \vbox (badness 3333) detected at line 489
- []
-
-[7]
-<niedzwiedzkimichewiczraport2_files/figure-latex/hist-1-1.png, id=117, 433.62pt x 289.08pt>
+<niedzwiedzkimichewiczraport2_files/figure-latex/hist-1-1.png, id=112, 361.35pt x 216.81pt>
 File: niedzwiedzkimichewiczraport2_files/figure-latex/hist-1-1.png Graphic file (type png)
 <use niedzwiedzkimichewiczraport2_files/figure-latex/hist-1-1.png>
 Package pdftex.def Info: niedzwiedzkimichewiczraport2_files/figure-latex/hist-1-1.png  used on input line 493.
-(pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
-<niedzwiedzkimichewiczraport2_files/figure-latex/hist-2-1.png, id=119, 433.62pt x 289.08pt>
+(pdftex.def)             Requested size: 361.34912pt x 216.80946pt.
+[7]
+<niedzwiedzkimichewiczraport2_files/figure-latex/hist-2-1.png, id=119, 361.35pt x 216.81pt>
 File: niedzwiedzkimichewiczraport2_files/figure-latex/hist-2-1.png Graphic file (type png)
 <use niedzwiedzkimichewiczraport2_files/figure-latex/hist-2-1.png>
 Package pdftex.def Info: niedzwiedzkimichewiczraport2_files/figure-latex/hist-2-1.png  used on input line 507.
-(pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
-[8 <./niedzwiedzkimichewiczraport2_files/figure-latex/hist-1-1.png>]
-<niedzwiedzkimichewiczraport2_files/figure-latex/hist-3-1.png, id=127, 433.62pt x 289.08pt>
+(pdftex.def)             Requested size: 361.34912pt x 216.80946pt.
+<niedzwiedzkimichewiczraport2_files/figure-latex/hist-3-1.png, id=122, 361.35pt x 216.81pt>
 File: niedzwiedzkimichewiczraport2_files/figure-latex/hist-3-1.png Graphic file (type png)
 <use niedzwiedzkimichewiczraport2_files/figure-latex/hist-3-1.png>
 Package pdftex.def Info: niedzwiedzkimichewiczraport2_files/figure-latex/hist-3-1.png  used on input line 522.
-(pdftex.def)             Requested size: 433.61894pt x 289.07928pt.
-[9 <./niedzwiedzkimichewiczraport2_files/figure-latex/hist-2-1.png>] [10 <./niedzwiedzkimichewiczraport2_files/figure-latex/hist-3-1.png>] [11]
+(pdftex.def)             Requested size: 361.34912pt x 216.80946pt.
+[8 <./niedzwiedzkimichewiczraport2_files/figure-latex/hist-1-1.png> <./niedzwiedzkimichewiczraport2_files/figure-latex/hist-2-1.png>] [9 <./niedzwiedzkimichewiczraport2_files/figure-latex/hist-3-1.png>] [10]
 
-LaTeX Warning: Hyper reference `tab:choroba1' on page 12 undefined on input line 670.
+LaTeX Warning: Hyper reference `tab:choroba1' on page 11 undefined on input line 670.
 
 
-LaTeX Warning: Reference `tab:choroba1' on page 12 undefined on input line 670.
+LaTeX Warning: Reference `tab:choroba1' on page 11 undefined on input line 670.
 
 
 Underfull \hbox (badness 1867) in paragraph at lines 670--677
 []\OT1/lmr/m/n/10 Tabela []. przed-sta-wia ±red-ni czas »y-cia es-ty-mo-wa-ny me-to-da-mi Kaplana--Meiera oraz Fleminga--
  []
 
-[12] [13] [14] [15] (./niedzwiedzkimichewiczraport2.aux)
+[11] [12] [13] [14] (./niedzwiedzkimichewiczraport2.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
@@ -603,18 +599,18 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 12405 strings out of 469484
- 195077 string characters out of 5467098
- 614012 words of memory out of 5000000
+ 12404 strings out of 469484
+ 195070 string characters out of 5467098
+ 614051 words of memory out of 5000000
  40797 multiletter control sequences out of 15000+600000
  674331 words of font info for 82 fonts, out of 8000000 for 9000
  34 hyphenation exceptions out of 8191
  83i,8n,93p,533b,485s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmex10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi5.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr5.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb><c:/Users/Wiktor/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm7.pfb>
-Output written on niedzwiedzkimichewiczraport2.pdf (15 pages, 1180937 bytes).
+Output written on niedzwiedzkimichewiczraport2.pdf (14 pages, 946701 bytes).
 PDF statistics:
- 325 PDF objects out of 1000 (max. 8388607)
- 253 compressed objects within 3 object streams
- 47 named destinations out of 1000 (max. 500000)
+ 321 PDF objects out of 1000 (max. 8388607)
+ 250 compressed objects within 3 object streams
+ 46 named destinations out of 1000 (max. 500000)
  183 words of extra memory for PDF output out of 10000 (max. 10000000)
 
