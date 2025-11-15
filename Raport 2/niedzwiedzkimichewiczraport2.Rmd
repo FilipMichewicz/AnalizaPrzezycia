@@ -25,79 +25,370 @@ header-includes:
   - \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  dpi = 1200,
-  message = FALSE,
-  warning = FALSE,
-  error = TRUE,
-  eval = TRUE,
-  echo = FALSE,
-  fig.align="center",
-  fig.width = 7,
-  fig.height = 5,
-  fig.pos = "H",
-  out.extra = '')
-```
-
-```{r biblioteki+zmienne_pomocnicze}
+```{r biblioteki+zmienne_pomocnicze, include=FALSE}
 library(knitr)
-library(latex2exp)
-library(xtable)
 library(ggplot2)
+library(survival)
 library(survminer)
+library(xtable)
+library(bookdown)
+library(gridExtra)
+library(latex2exp)
 
+knitr::opts_chunk$set(fig.align='center', 
+                      fig.pos='H', 
+                      dev='png', 
+                      dpi=1200, 
+                      fig.width = 8, 
+                      fig.height = 4)
 set.seed(21370)
 ```
 
+```{r szajsz_z_poprzedniego_raportu, echo=FALSE}
+# Nieśmiertelne dane z lista 2 zadanie 3
+times.A <- c(0.03345514, 0.08656403, 0.08799947, 0.24385821, 0.27755032,
+            0.40787247, 0.58825664, 0.64125620, 0.90679161, 0.94222208, 
+            rep(1, 10))
+deltas.A <- c(rep(1,10), rep(0,10))
+
+df.A <- data.frame(times = times.A, deltas = deltas.A)
+
+times.B <- c(0.03788958, 0.12207257, 0.20319983, 0.24474299, 0.30492413,
+            0.34224462, 0.42950144, 0.44484582, 0.63805066, 0.69119721, 
+            rep(1, 10))
+deltas.B <- c(rep(1,10), rep(0,10))
+
+df.B <- data.frame(times = times.B, deltas = deltas.B)
+
+# Kwantyle, generator z EW, cenzurwator i cenzurator z GE
+EW_quantile <- function(p, alpha, beta, gamm) {
+  beta * (-log(1 - p^(1 / gamm)))^(1 / alpha)
+}
+
+EW_generator <- function(alpha, beta, gamm, size = 1) {
+  u <- runif(size)
+  EW_quantile(u, alpha, beta, gamm)
+}
+
+cenzurowanie_I_typu <- function(t0, data) {
+  censored_data <- ifelse(data <= t0, data, t0)
+  deltas <- ifelse(data <= t0, 1, 0)
+  list(times = censored_data, deltas = deltas)
+}
+
+GE_cenzurowanie_I_typu <- function(t0, alpha, lambd, n) {
+  data <- EW_generator(alpha = 1, beta = lambd, gamm = alpha, size = n)
+  cenzurowanie_I_typu(t0, data)
+}
+```
 
 \newpage
 # Lista 5
 
+Lista obejmuje estymatory funkcji przeżycia dla danych niecenzurowanych, w szczególności estymator Kaplana–Meiera oraz estymator Fleminga–Harringtona, zarówno bez korekty, jak i z ogonem estymowanym według propozycji Browna, Hollandera i Kowara. Dodatkowo przeprowadzono oszacowanie wartości funkcji przeżycia w chwili cenzurowania oraz w dwukrotności czasu cenzurowania, na podstawie symulacji dla danych generowanych z uogólnionego rozkładu wykładniczego $\mathcal{GE}(\lambda, \alpha)$.
+ 
 ## Zadanie 1
+
+W tym zadaniu wygenerowano wykres estymatorów Kaplana–Meiera oraz Fleminga–Harringtona funkcji przeżycia dla danych z zadania 3 z listy 2, których opis przedstawiono w poprzednim raporcie.
 
 ### Estymator Kaplana-Meiera
 
+Estymator Kaplana–Meiera jest nieparametrycznym estymatorem funkcji przeżycia, opartym na iloczynie warunkowych prawdopodobieństw przeżycia kolejnych chwil zdarzeń. Definiuje się go jako
+
+$$
+\hat{S}(t) = \prod_{i:\, t_{(i)} \le t} \left( 1 - \frac{d_i}{r_i} \right),
+$$
+
+gdzie
+
+$$
+r_i = \sum_{j=1}^n \mathbf{1}_{[\,t_{(i)},\infty\,)}(t_j), \qquad 
+d_i = \sum_{j=1}^n \mathbf{1}_{\{t_{(i)}\}}(t_j)\,\mathbf{1}_{\{1\}}(\delta_j).
+$$
+
+Wielkość $r_i$ to liczba obserwacji, które w chwili $t_{(i)}$ pozostają w stanie ryzyka, czyli dotrwały do czasu $t_{(i)}$ bez wcześniejszego zdarzenia ani cenzurowania i mogą jeszcze doświadczyć zdarzenia w tym momencie, natomiast $d_i$ to liczba zdarzeń (niezależnych od cenzurowania) zachodzących dokładnie w czasie $t_{(i)}$.
+
+Estymator Kaplana–Meiera nie został zdefiniowany ręcznie w tym raporcie, lecz jego implementacja znajduje się w bibliotece `survival` w pakiecie R. Funkcja `survfit` domyślnie dopasowuje dane w formacie `Surv`, czyli takim, w którym określone są czasy obserwacji oraz wskaźniki cenzurowania, i domyślnie używa estymatora Kaplana–Meiera.
+
+Poniżej przedstawiono blok kodu w R, który realizuje estymację funkcji przeżycia za pomocą tego estymatora:
+
+```{r Kaplan-Meier-estimator}
+surv.A <- Surv(df.A$times, df.A$deltas)
+surv.B <- Surv(df.B$times, df.B$deltas)
+
+# Estymator Kaplana-Meiera
+fit.KM.A <- survfit(surv.A ~ 1)
+fit.KM.B <- survfit(surv.B ~ 1)
+
+# Ramki danych do wykresu
+event_idx <- which(fit.KM.A$n.event > 0)
+plot.A <- data.frame(time = c(0, fit.KM.A$time[event_idx]), 
+                     surv = c(1, fit.KM.A$surv[event_idx]), 
+                     group = "A")
+
+event_idx <- which(fit.KM.B$n.event > 0)
+plot.B <- data.frame(time = c(0, fit.KM.B$time[event_idx]), 
+                     surv = c(1, fit.KM.B$surv[event_idx]), 
+                     group = "B")
+
+plot.df  <- rbind(plot.A, plot.B)
+```
+
+Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy użyciu estymatora Kaplana–Meiera dla danych z zadania 3 z listy 2.
+
+```{r KM-plot, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących leków"}
+ggplot(plot.df, aes(x = time, y = surv, color = group)) +
+  geom_step(linewidth = 1.2) +
+  scale_color_manual(values = c("A" = "tomato", "B" = "steelblue"),
+                     labels = c("Lek A", "Lek B")) +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(x = "Czas do remisji (t)",
+       y = "Estymowana wartość funkcji przeżycia S(t)",
+       color = "Grupa") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+\hyperref[fig:KM-plot]{Wykres \ref*{fig:KM-plot}.} przedstawia estymowaną funkcję przeżycia za pomocą estymatora Kaplana–Meiera. Dane w obu przypadkach są prawostronnie cenzurowane typu I, zatem największe wartości w zbiorach danych są niecenzurowane, a po ostatnim pełnym (niecenzurowanym) czasie występują obserwacje cenzurowane, przez co estymator nie jest określony dla $t > t_{(n)}$. Do czasu $t \le t_{(n)}$ estymator Kaplana–Meiera jest dobrze określony; w naszym przypadku ostatnia obserwacja jest cenzurowana, więc estymator nie jest określony dla $t > t^+$, gdzie $t^+$ odpowiada czasowi ostatniej obserwacji kompletnej (niecenzurowanej).
+
 ### Estymator Fleminga-Harringtona
 
+Estymator Fleminga–Harringtona jest estymatorem funkcji przeżycia, opartym na zależności między funkcją przeżycia a funkcją skumulowanego hazardu; wykorzystuje estymator funkcji hazardu, a w konsekwencji skumulowanej funkcji hazardu zaproponowany przez Nelsona–Aalena. Szczegóły dotyczące konstrukcji estymatora i jego relacji do funkcji skumulowanego hazardu przedstawiono na wykładzie. Funkcję przeżycia estymuje się według wzoru:
+
+$$
+\tilde{S}(t) = \exp\left(-\sum_{j:\, t_{(j)} \le t} \frac{d_j}{r_j}\right), \quad 0 \le t \le t_{(n)}
+$$
+
+gdzie $d_j$ to liczba zdarzeń w chwili $t_{(j)}$, a $r_j$ - liczba obserwacji pozostających w stanie ryzyka w czasie $t_{(j)}$.
+
+Podobnie jak w poprzednim podpunkcie, estymator Fleminga–Harringtona nie został zdefiniowany ręcznie w tym raporcie, lecz jego implementacja znajduje się w bibliotece `survival` w pakiecie R. Tym razem w funkcji `survfit` zastosowano opcję `type = "fleming-harrington"`.
+
+Poniżej przedstawiono blok kodu w R, który realizuje estymację funkcji przeżycia za pomocą tego estymatora:
+
+```{r FH-estimator}
+# Estymator Fleminga-Harringtona
+fit.FH.A <- survfit(surv.A ~ 1, type = "fleming-harrington")
+fit.FH.B <- survfit(surv.B ~ 1, type = "fleming-harrington")
+
+# Ramki danych do wykresu
+event_idx <- which(fit.FH.A$n.event > 0)
+plot.A <- data.frame(time = c(0, fit.FH.A$time[event_idx]), 
+                     surv = c(1, fit.FH.A$surv[event_idx]), 
+                     group = "A")
+
+event_idx <- which(fit.KM.B$n.event > 0)
+plot.B <- data.frame(time = c(0, fit.FH.B$time[event_idx]), 
+                     surv = c(1, fit.FH.B$surv[event_idx]), 
+                     group = "B")
+
+plot.df  <- rbind(plot.A, plot.B)
+```
+
+Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy użyciu estymatora Fleminga-Harringtona.
+
+```{r FH-plot, echo=FALSE, fig.cap="Estymator Fleminga-Harringtona dla danych dotyczących leków"}
+ggplot(plot.df, aes(x = time, y = surv, color = group)) +
+  geom_step(linewidth = 1.2) +
+  scale_color_manual(values = c("A" = "tomato", "B" = "steelblue"),
+                     labels = c("Lek A", "Lek B")) +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(x = "Czas do remisji (t)",
+       y = "Estymowana wartość funkcji przeżycia S(t)",
+       color = "Grupa") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+\hyperref[fig:FH-plot]{Wykres \ref*{fig:FH-plot}.} przedstawia estymowaną funkcję przeżycia za pomocą estymatora Fleminga-Harringtona. Uwagi dotyczące bycia dobrze określonym są analogiczne jak do estymatora Kaplana-Meiera.
+
+Obydwa estymatory dają podobne wyniki. W krótkim czasie lek B wydaje się korzystniejszy (wyższa funkcja przeżycia, dłuższy czas do remisji), natomiast dla $t > 0,5$ bardziej efektywny staje się lek A. Do dokładniejszej analizy warto zastosować test, np. Kołmogorowa–Smirnowa.
+
 ## Zadanie 2
+
+Zadanie dotyczy generowania wykresu funkcji przeżycia estymowanej metodą Kaplana–Meiera, z uwzględnieniem oszacowania ogona funkcji przeżycia, zaproponowanego przez Browna, Hollandera i Kowara.
+
+Brown, Hollander i Kowar (1974) sugerowali oszacowanie ogona funkcji przeżycia przez odpowiednio dobraną funkcję przeżycia rozkładu wykładniczego, taką, aby w punkcie $t^+$ (czasie ostatniej obserwacji kompletnej) była równa $S(t^+)$.
+
+Po krótkich obliczeniach przeprowadzonych na wykładzie otrzymuje się:
+
+$$
+\hat{S}(t) = \exp\left(\frac{\ln \hat{S}(t^+)}{t^+} t\right), \quad t > t^+.
+$$
+Dla $t \le t^+$ stosuje się klasyczny estymator Kaplana–Meiera.
+
+Poniżej przedstawiono blok kodu w R, który umożliwia estymację funkcji przeżycia wraz z uwzględnieniem ogona.
+
+```{r ogon-plot}
+BHK.tail <- function(df, end = 3, type = "kaplan-meier") {
+  # Estymator KM
+  fit <- survfit(Surv(df$times, df$deltas) ~ 1, type = type)
+  event_idx <- which(fit$n.event > 0)
+  df.complete <- data.frame(time = fit$time[event_idx], 
+                            surv = fit$surv[event_idx])
+  
+  # Sprawdzenie, czy można dodać ogon (ostatni punkt jest cenzurowany)
+  if (tail(fit$n.event, 1) == 0) {
+    t_plus <- tail(df.complete$time, 1)
+    S_plus <- tail(df.complete$surv, 1)
+    
+    theta <- -log(S_plus) / t_plus
+    
+    # Generowanie ogona
+    time_tail <- seq(t_plus, end, length.out = 1000)
+    surv_tail <- exp(-theta * time_tail)
+    df_tail <- data.frame(time = time_tail, surv = surv_tail)
+    
+    df.complete <- rbind(df.complete, df_tail)
+  }
+  # Dodanie punktu początkowego
+  df.complete <- rbind(data.frame(time = 0, surv = 1), df.complete)
+  return(df.complete)
+}
+```
+
+Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy użyciu estymatora Kaplana–Meiera wraz z ogonem dla danych z zadania 3 z listy 2.
+
+```{r KM-ogon-plot, echo=FALSE, fig.cap="Estymator Kaplana-Meiera wraz z ogonem Browna, Hollandera i Kowara dla danych dotyczących leków"}
+plot.A <- BHK.tail(df.A)
+plot.A$group <- "A"
+plot.B <- BHK.tail(df.B)
+plot.B$group <- "B"
+plot.df <- rbind(plot.A, plot.B)
+
+ggplot(plot.df, aes(x = time, y = surv, color = group)) +
+  geom_step(linewidth = 1.2) +
+  scale_color_manual(values = c("A" = "tomato", "B" = "steelblue"),
+                     labels = c("Lek A", "Lek B")) +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(x = "Czas do remisji (t)",
+       y = "Estymowana wartość funkcji przeżycia S(t)",
+       color = "Grupa") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+\hyperref[fig:KM-ogon-plot]{Wykres \ref*{fig:KM-ogon-plot}.} przedstawia estymator Kaplana–Meiera wraz z ogonem zaproponowanym przez Browna, Hollandera i Kowara dla danych dotyczących leków. Do czasu ostatniej obserwacji kompletnej wykorzystano klasyczny estymator Kaplana–Meiera, natomiast dla czasów przekraczających tę obserwację wartość funkcji przeżycia (tzw. ogon) estymowana jest przy użyciu odpowiednio dobranej funkcji wykładniczej.
 
 ## Zadanie 3
 
-### Estymacja wartości funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ 
+Zadanie polega na wygenerowaniu $M = 1000$ zbiorów danych cenzurowanych I-go typu z uogólnionego rozkładu wykładniczego $\mathcal{GE}(\lambda, \alpha)$ dla $\alpha = 2$ i $\lambda = 2$, przy licznośiach próby $n = 30, 50, 100$. Wartość $t_0$ przyjęto w przybliżeniu równą wartości oczekiwanej rozkładu:
 
-### Histogramy oszacowań $t_0$ oraz $2 t_0$ 
+$$
+t_0 = \lambda \cdot \Gamma\left(1 + \frac{1}{\alpha}\right),
+$$
 
-\newpage
-# Lista 6
+gdzie $\Gamma(\cdot)$ jest funkcją gamma.  
 
-## Zadanie 1
+Na podstawie wygenerowanych zbiorów danych oszacowano wartość funkcji przeżycia w punktach $t_0$ i $2 t_0$, korzystając z estymatora Kaplana–Meiera z uwzględnieniem ogona estymowanego zgodnie z propozycją Browna, Hollandera i Kowara. Ostatecznie wygenerowano histogramy oszacowań w tych punktach dla każdego $n$ i oceniono, czy istnieją podstawy do przypuszczenia, że estymator Kaplana–Meiera jest asymptotycznie normalny.
 
-### Estymator Kaplana-Meiera
+Konstrukcja estymatora Kaplana–Meiera wraz z "ogonem" została omówiona w dwóch poprzednich zadaniach i nie będzie tutaj ponownie przytaczana.
 
-### Estymator Fleminga-Harringtona
+Poniżej przedstawiono blok kodu w pakiecie R wyznaczający, za pomocą estymatora Kaplana–Meiera z "ogonem", estymowaną wartość funkcji przeżycia w punkcie $t$.
 
-## Zadanie 2
+```{r}
+KM.surv.value <- function(df, type = "kaplan-meier", t) {
+  # Estymator KM
+  fit <- survfit(Surv(df$times, df$deltas) ~ 1, type = type)
+  event_idx <- which(fit$n.event > 0)
+  df.complete <- data.frame(time = fit$time[event_idx], 
+                            surv = fit$surv[event_idx])
+  
+  t_plus <- tail(df.complete$time, 1)
+  
+  if (t <= t_plus) {
+    value <- df$surv[max(which(df$time <= t))]
+  } else {
+    S_plus <- tail(df.complete$surv, 1)
+    
+    theta <- -log(S_plus) / t_plus
+    
+    value <- exp(-theta * t)
+  }
+  return(value)
+}
+```
 
-\newpage
-# Lista 7
+Poniżej przedstawiono blok kodu w pakiecie R przeprowadzający opisaną na początku zadania symulację. W trakcie obliczeń zapisywane są estymowane wartości funkcji przeżycia w punktach $t_0$ oraz $2 t_0$. Na podstawie wyników sporządzono stosowne histogramy.
 
-## Zadanie 1
+```{r}
+M <- 10
+#M <- 1000 # CHUJ
+n_values <- c(30, 50, 100)
+alpha <- 2
+lambda <- 2
 
-## Zadanie 2
+t0 <- (digamma(alpha + 1) + 0.5772156649) / lambda # ja pierdole
 
-\newpage
-# lista 8
+results_t0 <- list()
+results_2t0 <- list()
 
-## Zadanie 1
+for (n in n_values) {
+  surv_t0 <- numeric(M)
+  surv_2t0 <- numeric(M)
+  
+  m <- 0
+  while (m < M) {
+    # generowanie danych cenzurowanych I typu
+    cenzurowane <- GE_cenzurowanie_I_typu(t0, alpha, lambda, n)
+    if (sum(cenzurowane$deltas) == 0) {
+      next
+      }
+    m <- m + 1
+    
+    # estymator KM z "ogonem" w t0
+    surv_t0[m] <- KM.surv.value(cenzurowane, t = t0)
+    
+    # estymator KM z "ogonem" w 2*t0
+    surv_2t0[m] <- KM.surv.value(cenzurowane, t = 2*t0)
+  }
+  
+  results_t0[[as.character(n)]] <- surv_t0
+  results_2t0[[as.character(n)]] <- surv_2t0
+}
+```
 
-## Zadanie 2
+```{r histogramy, echo=FALSE}
+histograms <- list()
 
-\newpage
-# Zadania dodatkowe
+for (n in n_values) {
+  df <- data.frame(
+    Surv = c(results_t0[[as.character(n)]], results_2t0[[as.character(n)]]),
+    Time = c(rep("t0", M), rep("2t0", M))
+  )
+  
+  p <- ggplot(df, aes(x = Surv, fill = Time)) +
+    geom_histogram(position = "identity", bins = 20, alpha = 0.6, color = "black") +
+    scale_fill_manual(values = c("t0" = "tomato", "2t0" = "steelblue"),
+                      labels = c("t0" = expression(t[0]), 
+                                 "2t0" = expression(2 * t[0]))) +
+    labs(x = "Estymacja funkcji przeżycia", 
+         y = "Liczba symulacji", 
+         fill = "Punkt czasu") +
+    theme_minimal() +
+    theme(legend.position = "bottom")
+  
+  histograms[[as.character(n)]] <- p
+}
+```
 
-## Zadanie 1
+```{r hist-1, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 30"}
+histograms$"30"
+```
 
-## Zadanie 2
+\hyperref[fig:hist-1]{Wykres \ref*{fig:hist-1}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 30$. Estymowane wartości dla $2 t_0$ są mniejsze niż dla $t_0$ co zgadza się z oczekiwaniami.
 
-## Zadanie 3
+
+```{r hist-2, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 50"}
+histograms$"50"
+```
+
+\hyperref[fig:hist-2]{Wykres \ref*{fig:hist-2}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 50$. W porównaniu z próbą o liczności $n = 30$ przedstawionej na \hyperref[fig:hist-1]{Wykresie \ref*{fig:hist-1}.} estymowane wartości przesunęły się ku mniejszym wartością.
+
+```{r hist-3, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 100"}
+histograms$"100"
+```
+
+\hyperref[fig:hist-3]{Wykres \ref*{fig:hist-3}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 30$. Podobnie jak na poprzednim \hyperref[fig:hist-2]{wykresie} wraz ze wzrostem próby wartości przesuneły się ku mniejszym wartością. 
+
+Histogramy z poprzednich wykresów układają się w kształt dzwonowy charakterystyczny dla rozkładu normalnego, co pozwala przypuszczać, że estymator Kaplana–Meiera jest asymptotycznie normalny w punktach $t_0$ oraz $2 t_0$.
+
