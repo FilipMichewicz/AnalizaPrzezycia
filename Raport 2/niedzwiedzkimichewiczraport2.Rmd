@@ -23,6 +23,8 @@ header-includes:
   - \definecolor{ForestGreen}{rgb}{0.1333, 0.5451, 0.1333}
   - \definecolor{SteelBlue}{rgb}{0.2745, 0.5098, 0.7059}
   - \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
+  - \usepackage{etoolbox}
+  - \pretocmd{\tableofcontents}{\clearpage}{}{}
 ---
 
 ```{r biblioteki+zmienne_pomocnicze, include=FALSE}
@@ -38,8 +40,20 @@ knitr::opts_chunk$set(fig.align='center',
                       fig.pos='H', 
                       dev='png', 
                       dpi=1200, 
-                      fig.width = 5, 
-                      fig.height = 3)
+                      fig.width = 6, 
+                      fig.height = 3.5)
+
+# ZMNIEJSZENIE FONTÓW GLOBALNIE
+theme_set(
+  theme_minimal() +
+    theme(
+      axis.text  = element_text(size = 7),
+      axis.title = element_text(size = 8),
+      legend.text  = element_text(size = 7),
+      legend.title = element_text(size = 8)
+    )
+)
+
 set.seed(21370)
 ```
 
@@ -481,18 +495,21 @@ Wyniki przedstawiono w tabelach poniżej.
 
 ```{r choroba, echo=FALSE}
 mean_times <- data.frame(
-  "Lek A" = c(
+  a = c(
     expected.life(df.A, type = "kaplan-meier", tail = TRUE),
     expected.life(df.A, type = "fleming-harrington", tail = TRUE)
   ),
-  "Lek B" = c(
+  b = c(
     expected.life(df.B, type = "kaplan-meier", tail = TRUE),
     expected.life(df.B, type = "fleming-harrington", tail = TRUE)
   )
 )
 
 rownames(mean_times) <- c("Kaplan-Meier", "Fleming-Harrington")
-kable(mean_times, digits = 3, row.names = TRUE,
+kable(mean_times, 
+      digits = 3, 
+      row.names = TRUE,
+      col.names = c("Lek A", "Lek B"),
       caption = "Średni czas życia estymowany metodami Kaplana-Meiera oraz Fleminga-Harringtona",
       label = "choroba1")
 ```
@@ -506,9 +523,197 @@ Lista polega na napisaniu funkcji która na podstawie danych cenzurowanych losow
 
 ## Zadanie 1
 
-TO DO
+Zadanie polega na zdefiniowaniu funkcji, która dla zadanych danych, poziomu istotności $\alpha$ oraz wartości $\tau$ (odzwierciedlającej naszą wiedzę a priori o maksymalnym czasie do wystąpienia zdarzenia) zwraca dolną i górną granicę przedziału ufności dla średniego czasu życia, na poziomie ufności $1-\alpha$.
+
+Do wyznaczenia przedziałów ufności korzystamy z twierdzenia że, jeśli $F$ i $G$ są dystrybuantami odpowiednio czasu życia i czasu cenzurowania, obie ciągłe na przedziale $[0,T]$, a ponadto $F(T) < 1$, to zachodzi zbieżność
+
+$$
+\frac{\hat\mu_\tau - \mu}{\sqrt{\widehat V(\hat\mu_\tau)}} \xrightarrow{d} N(0,1).
+$$
+
+Wynika z tego, że przedział ufności postaci $[T_L, T_U]$, gdzie
+
+$$
+T_L = \hat\mu_\tau - z(1-\alpha/2)\sqrt{\widehat V(\hat\mu_\tau)},
+$$
+
+$$
+T_U = \hat\mu_\tau + z(1-\alpha/2)\sqrt{\widehat V(\hat\mu_\tau)},
+$$
+
+jest asymptotycznym punktowym przedziałem ufności dla wartości średniej $\mu$ rozkładu czasu życia na poziomie ufności $1-\alpha$. Zmienna $z(q)$ oznacza kwantyl rzędu $q$ standardowego rozkładu normalnego.
+
+Estymator $\hat\mu_\tau$ średniego czasu życia ograniczonego do punktu $\tau$ (restricted mean survival time) jest definiowany jako:
+
+$$
+\hat\mu_\tau = \int_0^\tau \hat S(t)dt,
+$$
+
+gdzie $\hat S(t)$ oznacza estymator Kaplan–Meiera funkcji przeżycia.
+
+Wariancję estymatora $\hat\mu_\tau$ jest przybliżana za pomocą wzoru:
+
+$$
+\widehat V(\hat\mu_\tau)
+= \sum_{i=1}^{D}\biggl(\int_{s_i}^{\tau}\widehat S(t)\,\mathrm{d}t\biggr)^2
+\frac{d_i}{r_i(r_i - d_i)}.
+$$
+
+gdzie
+
+$$
+r_i = \sum_{j=1}^n \mathbf{1}_{[t_{(i)},\infty)}(t_j)\qquad
+d_i = \sum_{j=1}^n \mathbf{1}_{\{t_{(i)}\}}(t_j)\,\mathbf{1}_{\{1\}}(\delta_j),
+$$
+
+a $D$ oznacza liczbę zaobserwowanych (niecenzurowanych) zdarzeń, natomiast $s_i = t_{(i)}$ jest $i$-tą statystyką pozycyjną czasów zdarzeń.
+
+Wielkość $r_i$ to liczba jednostek znajdujących się w stanie ryzyka w chwili $t_{(i)}$, czyli obserwacji, które dotrwały do tego czasu bez wcześniejszego zdarzenia lub cenzurowania. Z kolei $d_i$ to liczba zdarzeń występujących dokładnie w chwili $t_{(i)}$.
+
+Poniżej przedstawiono blok kodu w języku R zawierający funkcję, która oblicza wartości $\int_{s_i}^{\tau} \hat S(t),dt$ oraz estymator wariancji $\widehat V(\hat\mu_\tau)$, a następnie wyznacza granicę dolną $T_L$ i górną $T_U$ asymptotycznego przedziału ufności dla średniego czasu życia, dla zadanego zbioru danych, poziomu istotności $\alpha$ oraz wartości $\tau$.
+
+```{r przedzialy_ufnosci}
+integrate.S <- function(df, a, b) {
+  
+  fit <- survfit(Surv(df$times, df$deltas) ~ 1)
+  event_idx <- which(fit$n.event > 0)
+  
+  df.complete <- data.frame(
+    time = c(0, fit$time[event_idx]),
+    surv = c(1, fit$surv[event_idx])
+  )
+  
+  Time <- df.complete$time
+  Surv <- df.complete$surv
+  
+  # a za ostatnim skokiem - całkowanie po stałej wartości
+  if (a >= tail(Time, 1))
+    return((b - a) * tail(Surv, 1))
+  
+  # Pierwszy punkt > a
+  t_idx_candidates <- which(Time > a)
+  t_idx <- min(t_idx_candidates)
+  prev_idx <- max(1, t_idx - 1) # KM(a) = wartość z poprzedniego skoku
+  
+  # pierwszy fragment całki: od a do najbliższego punktu siatki
+  integral_S <- Surv[prev_idx] * (Time[t_idx] - a)
+  
+  # b przed ostatnim skokiem
+  if (b <= tail(Time, 1)) {
+    # ostatni punkt < b
+    T_idx_candidates <- which(Time < b)
+    T_idx <- max(T_idx_candidates)
+    
+    # fragment końcowy: od ostatniego punktu < b do b
+    integral_S <- integral_S + Surv[T_idx] * (b - Time[T_idx])
+    
+    dt <- diff(df.complete$time)
+    surv_val <- head(df.complete$surv, -1)
+    
+    # środkowa część sumy prostokątów
+    if (T_idx - 1 >= t_idx)
+      integral_S <- integral_S + sum(surv_val[t_idx:(T_idx - 1)] * dt[t_idx:(T_idx - 1)])
+    
+  } else {
+    # jeżeli b poza zakresem KM - dopisujemy punkt (b, S_last)
+    df.complete <- rbind(df.complete, data.frame(time = b, surv = tail(Surv, 1)))
+    dt <- diff(df.complete$time)
+    surv_val <- head(df.complete$surv, -1)
+    
+    # całkowanie po całej reszcie przedziału
+    integral_S <- integral_S + sum(surv_val[t_idx:length(surv_val)] * dt[t_idx:length(dt)])
+  }
+  
+  return(integral_S)
+}
+
+var.estimator <- function(df, tau) {
+  Time <- df$times
+  Deltas <- df$deltas
+  event_times <- sort(unique(Time[Deltas == 1]))
+  result <- 0
+  
+  for (i in 1:length(event_times)) {
+    t_i <- event_times[i]
+    d <- 0
+    r <- sum(Time >= t_i)
+    for (j in 1:length(Time)) {
+      if (Time[j] == t_i & Deltas[j] == 1) {
+        d <- d + 1
+      }
+    }
+    if (r > d)
+      result <- result + (integrate.S(df, t_i, tau))^2 * d/(r * (r - d))
+  }
+  return(result)
+}
+
+confidence.interval <- function(df, alfa, tau) {
+  mu <- integrate.S(df, 0, tau)
+  kwantyl <- qnorm(1 - alfa /2)
+  std.dev <- sqrt(var.estimator(df, tau))
+  T_L <- mu - kwantyl * std.dev
+  T_U <- mu + kwantyl * std.dev
+  return(data.frame(T_L = T_L, T_U = T_U))
+}
+```
 
 ## Zadanie 2
+
+Zadanie polega na wyznaczeniu realizacji przedziałów ufności, na poziomie ufności $0.95$ ($\alpha = 0.05$), dla średniego czasu do progresji choroby w dwóch grupach pacjentek kliniki Mayo Clinic, obejmujących pacjentki chore na raka jajnika w II oraz IIIA stadium choroby.
+
+W przypadku pacjentek w stadium II czasy (w dniach) do progresji choroby były następujące:  28, 89, 175, 195, 309, 377+, 393+, 421+, 447+, 462, 709+, 744+, 770+, 1106+ ,1206+. Symbol „$+$” oznacza obserwację prawostronnie cenzurowaną.
+
+Dla pacjentek w stadium IIIA czasy (w dniach) wynosiły: 34, 88, 137, 199, 280, 291, 299+, 300+, 309, 351, 358, 369, 369, 370, 375, 382, 392, 429+, 451, 1119+.
+
+Wyznaczenia przedziałów ufności dokonano dla dwóch wartości parametru $\tau$: $\tau = 1500$ oraz $\tau = 2000$. Następnie porównano uzyskane realizacje przedziałów ufności dla obu grup i obu wartości $\tau$.
+
+``` {r raki}
+times.II <- c(28, 89, 175, 195, 309, 377, 393, 421, 447, 462, 709, 744, 770, 
+              1106, 1206)
+deltas.II <- c(1,1,1,1,1,0,0,0,0,1,0,0,0,0,0)
+df.II <- data.frame(times = times.II, deltas = deltas.II)
+
+times.III <- c(34, 88, 137, 199, 280, 291, 299, 300, 309, 351, 358, 369, 369, 
+               370, 375, 382, 392, 429, 451, 1119)
+deltas.III <- c(1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,0,1,0)
+df.III <- data.frame(times = times.III, deltas = deltas.III)
+
+tau = 1500
+Ci_II_1 <- confidence.interval(df.II, 0.05, tau)
+Ci_III_1 <- confidence.interval(df.III, 0.05, tau)
+
+tau = 2000
+Ci_II_2 <- confidence.interval(df.II, 0.05, tau)
+Ci_III_2 <- confidence.interval(df.III, 0.05, tau)
+```
+
+```{r nieboraki, echo=FALSE}
+raki1 <- data.frame(
+  a = c(Ci_II_1$T_L, Ci_III_1$T_L),
+  b = c(Ci_II_1$T_U, Ci_III_1$T_U))
+rownames(raki1) <- c("Typ II", "Typ IIIA")
+
+raki2 <- data.frame(
+  a = c(Ci_II_2$T_L, Ci_III_2$T_L),
+  b = c(Ci_II_2$T_U, Ci_III_2$T_U))
+
+rownames(raki2) <- c("Typ II", "Typ IIIA")
+
+kable(raki1, 
+      digits = 3, 
+      row.names = TRUE,
+      col.names = c("Grupa", "$T_L$", "$T_U$"),
+      caption = "Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1500$",
+      label = "raki1")
+
+kable(raki2, 
+      digits = 3, 
+      row.names = TRUE,
+      col.names = c("Grupa", "$T_L$", "$T_U$"),
+      caption = "Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 2000$",
+      label = "raki2")
+```
 
 TO DO
 
@@ -534,7 +739,474 @@ TO DO
 
 ## Zadanie 2
 
-TO DO
+Estymatory Kaplana-Meiera oraz Fleminga–Harringtona są funkcjami schodnowymi. W stosunkowo małych próbach często obserwuje się szerokie przedziały czasu w których estymator jest stały - praktycznie i interpretacyjnie bywa to niepożądane i statystykom trudno jest wytłumaczyć praktykom na przykładzie \hyperref[fig:KM-plot]{Wykresu \ref*{fig:KM-plot}.} grupy leku A dlaczego prawdopodobieńsgtwo przeżycia do chwili $t = 0.7$ jest równe prawdopodobieństwu przeżycia do chwili $t = 0.8$.
+
+Rossa i Zieliński (2002) zaproponowali lokalne „wygładzenie” estymatora Kaplana–Meiera poprzez dopasowanie funkcji gęstości rozkładu Weibulla w niewielkim otoczeniu każdego punktu skoku.
+
+**Zasada działania estymatora**
+
+**Krok 1.** Konstrukcja wartości środkowych
+
+1. Niech $T_{0} = 0$ oraz $KM(T_{0}) = 1$, a
+   $$
+   T_{(1)} < T_{(2)} < \dots < T_{(N-1)}
+   $$
+   będą uporządkowanymi czasami obserwacji, gdzie $T_{(1)}, \dots, T_{(N-1)}$ oznaczają momenty skoków klasycznego estymatora Kaplana–Meiera, natomiast $T_{(N)}$ jest ostatnim czasem w próbie (zdarzeniem lub cenzurowaniem).
+   Wartości $KM\left(T_{(j)}\right)$ oznaczają wartość estymatora Kaplana–Meiera w chwili $T_{(j)}$, tj. tuż po wystąpieniu skoku.
+
+2. Dla każdego $j = 1,\dots,N-1$ wartość środkową definiuje się jako średnią arytmetyczną dwóch kolejnych wartości estymatora:
+   $$
+   KM'_j = \frac{KM\left(T_{(j-1)}\right) + KM\left(T_{(j)}\right)}{2}.
+   $$
+
+3. W przypadku ostatniego czasu skoku $T_{(N)}$ wartość $KM'_N$ definiuje się jako:
+   $$
+   KM'_N =
+   \begin{cases}
+   \dfrac{KM\left(T_{(N)}\right)}{2}, & \delta_N = 1, \\
+   KM\left(T_{(N)}\right), & \delta_N = 0.
+   \end{cases}
+   $$
+
+**Krok 2.** Obliczanie wag
+
+Dla dowolnego $t\ge 0$ definiujemy wektor wag
+$$
+\mathbf{w}(t)=\left(w_1(t),\dots,w_N(t)\right).
+$$
+Wagi zależą od parametru $m$ — liczby "sąsiadów" (liczb całkowitych) — oraz od położenia $t$ względem przedziałów między momentami skoków estymatora. Wagi te będą użyte w następnych krokach przy regresji liniowej.
+
+Rozróżniamy trzy przypadki dla różych $m$:
+
+A) Gdy $m=2$ wagi są zawsze "punktowe", a sam estymator przyjmuje odmienną, uproszczoną postać. Szczegóły przedstawiono w dalszej części.
+
+B) Gdy $m$ jest nieparzyste tzn. $m=2k+1$ dla pewnego $k\in\mathbb{N}$. Wagi definiujemy następująco:
+
+Zdefiniujmy najpierw indeks $j$ opisujący, w którym przedziale znajduje się $t$:
+
+$$
+j =
+\begin{cases}
+0, & t \le T_{(1)}, \\
+N, & t > T_{(N)}, \\
+i\in{1,\dots,N-1}, & T_{(i)} < t \le T_{(i+1)}
+\end{cases}
+$$
+
+1. Jeżeli $j \le k$ (t blisko początku) - krawedź lewa:
+
+$$
+w_1(t)=w_2(t)=\dots=w_m(t)=1,
+$$
+oraz
+$$
+w_{m+1}(t)=\dots=w_N(t)=0.
+$$
+2. Jeżeli $j\ge N-k$ (t blisko końca) - krawedź prawa:
+
+$$
+w_{N-m+1}(t)=w_{N-m+2}(t)=\dots=w_N(t)=1,
+$$
+oraz
+$$
+w_1(t)=\dots=w_{N-m}(t)=0.
+$$
+3. Jeżeli $k< j < N-k$ ($t$ jest dostatecznie daleko od krawedzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
+
+1. Blok jednostkowy (dokładnie $m$ indeksów)
+   Dla indeksów $i\in{j-k,j-k+1,\dots,j+k}$ przyjmujemy $w_i(t)=1.$
+
+2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
+   Jeśli istnieje indeks lewy ($j - k \ge 1$)
+   $$
+   i_{\text{lewy}} = j-k,
+   $$
+   to jego waga zależy liniowo od położenia $t$ w przedziale $(T_{(j)},T_{(j+1)}]$:
+   $$
+   w_{i_{\text{lewy}}}(t)=\frac{T_{(j+1)}-t}{T_{(j+1)}-T_{(j)}}.
+   $$
+   Jeśli istnieje indeks prawy ($j+k+1\le N)$)
+   $$
+   i_{\text{prawy}} = j+k+1,
+   $$
+   to jego waga wynosi
+   $$
+   w_{i_{\text{prawy}}}(t)=\frac{t-T_{(j)}}{T_{(j+1)}-T_{(j)}}.
+   $$
+
+3. Pozostałe wagi
+
+   Wszystkie pozostałe składowe wektora wag przyjmują wartość $0$.
+
+Gdy $m$ jest parzyste tzn. $m=2k$ dla pewnego $k\in\mathbb{N_+}$. Wagi definiujemy następująco:
+
+Zdefiniujmy najpierw indeks $j$ opisujący, w którym przedziale znajduje się $t$:
+
+$$
+j =
+\begin{cases}
+0, & t \le T_{(1)} / 2, \\
+N, & t > (T_{(N-1)} + T_{(N)}) / 2, \\
+i\in{1,\dots,N-1}, & \left(T_{(i-1)}+T_{(i)}\right)/2 < t \le \left(T_{(i)}+T_{(i+1)}\right)/2
+\end{cases}
+$$
+1. Jeżeli $j \le k$ (t blisko początku) - krawedź lewa:
+
+$$
+w_1(t)=w_2(t)=\dots=w_m(t)=1,
+$$
+oraz
+$$
+w_{m+1}(t)=\dots=w_N(t)=0.
+$$
+2. Jeżeli $j\ge N-k+1$ (t blisko końca) - krawedź prawa:
+
+$$
+w_{N-m+1}(t)=w_{N-m+2}(t)=\dots=w_N(t)=1,
+$$
+oraz
+$$
+w_1(t)=\dots=w_{N-m}(t)=0.
+$$
+
+3. Jeżeli $k< j < N-k+1$ ($t$ jest dostatecznie daleko od krawedzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
+
+1. Blok jednostkowy (dokładnie $m$ indeksów)
+   Dla indeksów $i\in{j-k+1,j-k+2,\dots,j+k}$ przyjmujemy $w_i(t)=1.$
+
+2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
+   Jeśli istnieje indeks lewy ($j - k \ge 1$)
+   $$
+   i_{\text{lewy}} = j-k,
+   $$
+   to jego waga zależy liniowo od położenia $t$ w przedziale $(T_{(j)},T_{(j+1)}]$:
+   $$
+   w_{i_{\text{lewy}}}(t)= \frac{\frac{1}{2} \left(T_{(j)} + T_{(j+1)}\right)-t}{\frac{1}{2}\left(T_{(j+1)}-T_{(j-1)}\right)}.
+   $$
+   Jeśli istnieje indeks prawy ($j+k\le N)$)
+   $$
+   i_{\text{prawy}} = j+k,
+   $$
+   to jego waga wynosi
+   $$
+   w_{i_{\text{prawy}}}(t)=\frac{t-\frac{1}{2} \left(T_{(j)} + T_{(j+1)}\right)}{\frac{1}{2}\left(T_{(j+1)}-T_{(j-1)}\right)}.
+   $$
+
+3. Pozostałe wagi
+
+   Wszystkie pozostałe składowe wektora wag przyjmują wartość $0$.
+
+**Krok 3.** Interpolacja liniowa oraz ważona regresja liniowa
+
+W pierwszej kolejności obliczamy log-czasy zdarzeń oraz ich log-log przeżycia, które następnie stanowią dane wejściowe do lokalnej regresji liniowej budującej estymator Rossy-Zielińskiego.
+
+$$
+X_j = \log T_{(j)}, \qquad
+Y_j = \log\left(-\log(KM'_j)\right),
+$$
+W przypadku $m=2$ i w ustalonej chwili $t$ obliczamy log-t:
+
+$$
+X = \log t
+$$
+Estymator $S_2(t)$ jest liniową transformacją log-log:
+
+$$
+Y(t)=
+\begin{cases}
+Y_{1}
++\dfrac{X_{2}-X_{1}}{\,Y_{2}-Y_{1}\,}(X - X_{1}),& 0 < t \le T_{(1)},\\
+Y_{j}+\dfrac{X_{j+1}-X_{j}}{\,Y_{j+1}-Y_{j}\,}(X - X_{j-1}),& T_{(j)} < t \le T_{(j+1)},\\
+Y_{N-1}+\dfrac{X_{N}-X_{N-1}}{\,Y_{N}-Y_{N-1}\,}(X - X_{N-1}),& t > T_{(N)} \ \text{ i } \delta_{N}=1,\\
+\text{ nieokreślony }, & t > T_{(N)} \ \text{ i } \delta_{N}=0.
+\end{cases}
+$$
+
+W przypadku $m>2$ i w ustalonej chwili $t$, dysponujemy wektorem wag:
+
+$$
+\mathbf{w}(t)=\left(w_1(t),\dots,w_N(t)\right),
+$$
+
+Dopasowanie lokalnego modelu Weibulla odbywa się przez zastosowanie ważonej regresji liniowej w przestrzeni transformowanej:
+
+$$
+Y_i = a X_i + b + \varepsilon_i,
+$$
+
+gdzie parametry $a=a(t)$ i $b=b(t)$ wyznacza się jako rozwiązanie problemu:
+
+$$
+\min_{a,b} \sum_{i=1}^N w_i(t)\left[Y_i - (a X_i + b)\right]^2.
+$$
+
+Wynikiem są lokalne estymatory:
+
+$$
+\widehat{a}(t),\qquad \widehat{b}(t),
+$$
+
+które interpretujemy jako lokalne parametry kształtu i skali rozkładu Weibulla dopasowanego w "otoczeniu" punktu "t" przy użyciu wag opisanych wcześniej.
+
+**Krok 4.** Transformacja odwrotna
+
+W przypadku $m=2$ wartość estymatora Rossy-Zielińskiego definuje się jako:
+
+$$
+\widehat{S}_2(t) = \exp\left(-\exp(Y(t))\right).
+$$
+
+W przypadku $m>2$ rekonstruujemy lokalną funkcję przeżycia, korzystając z postaci funkcji przeżycia rozkładu Weibulla:
+
+$$
+S(t) = \exp\left(-\exp(a) t^{b}\right).
+$$
+
+Estymator Rossy–Zielińskiego definiuje się jako:
+
+$$
+\widehat{S}_m(t) = \exp\left(-\exp\left(\widehat{a}(t)\right)t^{\widehat{b}(t)}
+\right).
+$$
+
+Otrzymana funkcja jest lokalnie wygładzona, a stopień wygładzenia kontroluje parametr $m$, który określa szerokość okna oraz sposób formowania wag.
+
+Poniżej przedstawiono blok kodu w języku R implementujący estymator Rossy–Zielińskiego wraz z przykładowym generowaniem wykresów funkcji przeżycia.
+
+```{r ross-zielinski}
+rossa.zielinski.estimator <- function(df, m = 2) {
+  # Funkcja pomocnicza do liczenia wag (dla m > 2)
+  compute_weights <- function(Time, t, m) {
+    N <- length(Time)
+    w <- rep(0, N)
+    
+    # m = 2k + 1 - nieparzyste
+    if (m %% 2 == 1) {
+      k <- (m - 1) / 2
+      if (t <= Time[1]) {
+        j <- 0
+      } else if (t > Time[N]) {
+        j <- N
+      } else {
+        j <- max(which(Time < t))
+      }
+      # generowanie wag
+      if (j <= k) {
+        w[1:m] <- 1 
+      }
+      else if (j >= N - k) {
+        w[(N - m + 1):N] <- 1
+      }
+      else {
+        idx_unit <- (j - k + 1):(j + k)
+        w[idx_unit] <- 1
+        # przypadki brzegowe
+        if ((j - k) >= 1) {
+          w[j - k] <- (Time[j + 1] - t) / (Time[j + 1] - Time[j])
+        }
+        if ((j + k + 1) <= N) {
+          w[j + k + 1] <- (t - Time[j]) / (Time[j + 1] - Time[j])
+        }
+      }
+      # m = 2k - parzyste
+    } else {
+      k <- m / 2
+      if (t <= (Time[1]/2)) {
+        j <- 0
+      } else if (t > (Time[N-1] + Time[N])/2) {
+        j <- N
+      } else {
+        j <- which((Time[-1] + Time[-N])/2 >= t)[1]
+      }
+      # generowanie wag
+      if (j <= k) {
+        w[1:m] <- 1
+      } else if (j >= N - k + 1) {
+        w[(N - m + 1):N] <- 1
+      } else {
+        idx_unit <- (j - k + 1):(j + k - 1)
+        w[idx_unit] <- 1
+        
+        # przypadki brzegowe
+        if ((j - k) >= 1) {
+          w[j - k] <- (0.5*(Time[j] + Time[j + 1]) - t) / 
+            0.5 * (Time[j + 1] - Time[j - 1])
+        }
+        if ((j + k) <= N) {
+          w[j + k] <- (t - 0.5*(Time[j - 1] + Time[j])) / 
+            0.5 * (Time[j + 1] - Time[j - 1])
+        }
+      }
+    }
+    return(w)
+  }
+  
+  # wartości środkowe KM'
+  fit <- survfit(Surv(df$times, df$deltas) ~ 1)
+  Time <- fit$time[fit$n.event > 0]
+  Time <- c(Time, tail(fit$time, 1))
+  KM <- fit$surv[fit$n.event > 0]
+  KM <- c(KM, tail(fit$surv, 1))
+  N <- length(Time)
+  
+  KM0 <- numeric(N)
+  for (i in 1:(N-1)) {
+    if (i == 1) {
+      KM0[i] <- (1 + KM[i]) / 2
+    } else {
+      KM0[i] <- (KM[i-1] + KM[i]) / 2
+    }
+  }
+  last_delta <- fit$n.event[which(fit$time == Time[N])]
+  if (last_delta == 1) {
+    KM0[N] <- KM[N] / 2
+  } else {
+    KM0[N] <- KM[N]
+  }
+  
+  X <- log(Time)
+  Y <- log(-log(KM0))
+  
+  # Funkcja estymatora
+  estimator <- function(x.eval) {
+    S <- numeric(length(x.eval))
+    
+    for (i in seq_along(x.eval)) {
+      x <- x.eval[i]
+      Xx <- log(x)
+      
+      # Estymator dla m = 2
+      if (m == 2) {
+        if (x <= Time[1]) {
+          Yx <- Y[1] + (Y[2]-Y[1]) / (X[2]-X[1]) * (Xx - X[1])
+        } else if (x > Time[N]) {
+          last_delta <- fit$n.event[which(fit$time == Time[N])]
+          if (last_delta == 1) {
+            Yx <- Y[N-1] + (Y[N]-Y[N-1]) / (X[N]-X[N-1]) * (Xx - X[N-1])
+          } else {
+            Yx <- NA
+          }
+        } else {
+          j <- max(which(Time < x))
+          Yx <- Y[j] + (Y[j+1]-Y[j]) / (X[j+1]-X[j]) * (Xx - X[j])
+        }
+        if (is.na(Yx)) {
+          S[i] <- NA
+        } else {
+          S[i] <- exp(-exp(Yx))
+        }
+        
+      } else {
+        # Klasyczny przypadek m > 2 z wagami i regresją
+        w <- compute_weights(Time, x, m)
+        reg <- lm(Y ~ X, weights = w)
+        a <- coef(reg)[1]
+        b <- coef(reg)[2]
+        S[i] <- exp(-exp(a) * x^b)
+        S[i] <- max(min(S[i],1),0)
+      }
+    }
+    return(S)
+  }
+  return(estimator)
+}
+
+rz.estimator.plot <- function(df, m = 2, to = 3) {
+  estimator <- rossa.zielinski.estimator(df, m)
+  
+  time <- seq(0, to, length.out = 1000)
+  surv <- estimator(time)
+  
+  plot.df <- data.frame(time = time, surv = surv)
+  
+  ggplot(plot.df, aes(x = time, y = surv)) +
+    geom_line(color = "tomato", linewidth = 1) +
+    scale_y_continuous(limits = c(0, 1)) +
+    labs(title = "Estymator Rossa-Zieliński",
+         x = "Czas do zdarzenia (t)",
+         y = "Funkcja przeżycia S(t)") +
+    theme_minimal()
+}
+```
+
+Porównamy graficznie estmator Kaplana-Maiera z jego ulepszoną wersją estymatorem Rossy-Zielińskiego.
+
+W tym celu sporządzono wykresy dla danych klinicznych pacjentów przedstawionych w artykule Rossy-Zielińskiego, a także dla danych z zadania 3 z listy 2 oraz z zadania 2 z listy 7.
+
+```{r echo = FALSE}
+times <- c(6, 6, 6, 6, 7, 9, 10, 10, 11, 13, 16, 17, 19, 20, 22, 23, 25, 32, 32, 34, 35)
+deltas <- c(1,1,1,0,1,0,1,0,0,1,1,0,0,0,1,1,0,0,0,0,0)
+
+df.rz <- data.frame(times <- times, deltas <- deltas)
+
+rz_km_plot <- function(df, m1 = 2, m2 = 5, to = 3) {
+  
+  time_rz1 <- seq(0, to, length.out = 1000)
+  surv_rz1 <- rossa.zielinski.estimator(df, m1)(time_rz1)
+  df_rz1 <- data.frame(time = time_rz1, surv = surv_rz1, group = "RZ", panel = "M2")
+  
+  time_rz2 <- seq(0, to, length.out = 1000)
+  surv_rz2 <- rossa.zielinski.estimator(df, m2)(time_rz2)
+  df_rz2 <- data.frame(time = time_rz2, surv = surv_rz2, group = "RZ", panel = "M5")
+  
+  fit <- survfit(Surv(df$times, df$deltas) ~ 1)
+  idx <- which(fit$n.event > 0)
+  df_km1 <- data.frame(time = c(0, fit$time[idx]), surv = c(1, fit$surv[idx]), group = "KM", panel = "M2")
+  df_km2 <- data.frame(time = c(0, fit$time[idx]), surv = c(1, fit$surv[idx]), group = "KM", panel = "M5")
+  
+  plot_df <- rbind(df_rz1, df_rz2, df_km1, df_km2)
+  plot_df$panel <- factor(plot_df$panel, levels = c("M2", "M5"))
+  
+  ggplot(plot_df, aes(x = time, y = surv, color = group)) +
+    geom_step(data = subset(plot_df, group == "KM"), linewidth = 0.8) +
+    geom_line(data = subset(plot_df, group == "RZ"), linewidth = 0.8) +
+    facet_wrap(~panel, ncol = 2, scales = "free_x",
+               labeller = as_labeller(c("M2" = "m==2", "M5" = "m==5"), label_parsed)) +
+    scale_color_manual(values = c("KM" = "tomato", "RZ" = "steelblue"),
+                       labels = c("KM" = "Kaplana-Meiera", "RZ" = "Rossy-Zielińskiego")) +
+    scale_y_continuous(limits = c(0, 1)) +
+    labs(x = "Czas", y = "S(t)", color = "Estymator") +
+    theme_minimal() +
+    theme(
+      legend.position = "bottom",
+      axis.title.y.right = element_blank(),
+      axis.text.y.right = element_blank(),
+      axis.ticks.y.right = element_blank()
+    )
+}
+```
+
+```{r rossa-zielinski1, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych klinicznych pacjentów"}
+rz_km_plot(df.rz, to = 40)
+```
+
+Z \hyperref[fig:rossa-zielinski1]{wykresu \ref*{fig:rossa-zielinski1}.} można odczytać, że generowane wykresy są bardzo podobne do tych przedstawionych w artykule. Można przypuszczać, że opracowany algorytm działa poprawnie.
+
+```{r rossa-zielinski2, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek A"}
+rz_km_plot(df.A, to = 1.2)
+```
+
+\hyperref[fig:rossa-zielinski2]{Wykres \ref*{fig:rossa-zielinski2}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących leków - lek A.
+
+```{r rossa-zielinski3, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek B"}
+rz_km_plot(df.B, to = 1.2)
+```
+
+\hyperref[fig:rossa-zielinski3]{Wykres \ref*{fig:rossa-zielinski3}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących leków - lek B.
+
+```{r rossa-zielinski4, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ II"}
+rz_km_plot(df.II, to = 1500)
+```
+
+\hyperref[fig:rossa-zielinski4]{Wykres \ref*{fig:rossa-zielinski4}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących pacjentów z rakiem jajnika typu II.
+
+```{r rossa-zielinski5, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ IIIA"}
+rz_km_plot(df.III, to = 1500)
+```
+
+\hyperref[fig:rossa-zielinski5]{Wykres \ref*{fig:rossa-zielinski5}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących pacjentów z rakiem jajnika typu IIIA. Tym razem czasy są znacznie krótsze, a estymator dla wartości powyżej ostatniej obserwacji "odbija" w prawo. Można zauważyć, że dla $m = 5$ estymator "odbija” nieco wcześniej.
+
+Podsumowując, estymator Rossy-Zielińskiego sprawnie wygładza funkcję przeżycia estymowaną przez Kaplana–Meiera, dobrze dopasowując ją w okolicach czasów zdarzeń, jednocześnie eliminując nagłe skoki i fluktuacje wynikające z małych prób. Dzięki temu estymator daje bardziej stabilny i ciągły obraz ryzyka przeżycia, ułatwiając interpretację oraz porównania między grupami pacjentów.
 
 ## Zadanie 3
 
