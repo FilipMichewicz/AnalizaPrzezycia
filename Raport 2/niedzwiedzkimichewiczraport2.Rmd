@@ -421,10 +421,10 @@ df <- data.frame(t0 = c(shapiro.test(results_t0$"30")$p.value,
 colnames(df) <- c("$t_0$", "$2t_0$")
 rownames(df) <- c("n=30", "n=50", "n=100")
 
-kable(df, digits=3, escape=FALSE, caption="\\label{tab:testy-sw} $p-value$ testu Shapiro-Wilka na oszacowaniach funkcji przeżycia w punktach $t_0$ oraz $2 t_0$")
+kable(df, digits=3, escape=FALSE, caption="\\label{tab:testy-sw} $p$-value testu Shapiro-Wilka na oszacowaniach funkcji przeżycia w punktach $t_0$ oraz $2 t_0$")
 ```
 
-W \hyperref[tab:testy-sw]{tabeli \ref*{tab:testy-sw}.} widać, że (zaokrąglone) $p-value$ wynosi 0, zatem na dowolnym sensownym poziomie istotności $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
+W \hyperref[tab:testy-sw]{tabeli \ref*{tab:testy-sw}.} widać, że (zaokrąglone) $p$-value wynosi 0, zatem na dowolnym sensownym poziomie istotności $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
 
 \newpage
 # Lista 6
@@ -684,7 +684,7 @@ W przypadku pacjentek w stadium II czasy (w dniach) do progresji choroby były n
 
 Dla pacjentek w stadium IIIA czasy (w dniach) wynosiły: 34, 88, 137, 199, 280, 291, 299+, 300+, 309, 351, 358, 369, 369, 370, 375, 382, 392, 429+, 451, 1119+.
 
-Ze względu na to, że progresja chorób nowotworowych zależy od wielu czynników, w szczególności indywidualnych, trudno jest wybrać "sensowne" maksymalne czasy do progresji choroby. Dlatego wyznaczenia przedziałów ufności dokonano dla dwóch wartości parametru $\tau$: $\tau = 1460$ oraz $\tau = 1825$, które stanowią czas odpowiednio 4 oraz 5 lat (uproszczenie: 1 rok = 365 dni). Warto zauważyć, że wszystkieNastępnie porównano uzyskane realizacje przedziałów ufności dla obu grup i obu wartości $\tau$.
+Ze względu na to, że progresja chorób nowotworowych zależy od wielu czynników, w szczególności indywidualnych, trudno jest wybrać "sensowne" maksymalne czasy do progresji choroby. Dlatego wyznaczenia przedziałów ufności dokonano dla dwóch wartości parametru $\tau$: $\tau = 1460$ oraz $\tau = 1825$, które stanowią czas odpowiednio 4 oraz 5 lat (uproszczenie: 1 rok = 365 dni). Następnie porównano uzyskane realizacje przedziałów ufności dla obu grup i obu wartości $\tau$.
 
 ``` {r raki}
 times.II <- c(28, 89, 175, 195, 309, 377, 393, 421, 447, 462, 709, 744, 770, 
@@ -716,10 +716,10 @@ kable(raki1,
       digits = 3, 
       row.names = TRUE,
       col.names = c("Grupa", "$T_L$", "$T_U$"),
-      caption = "\\label{tab:raki1} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1500$")
+      caption = "\\label{tab:raki1} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1460$")
 ```
 
-\hyperref[tab:raki1]{Tabela \ref*{tab:raki1}.}
+\hyperref[tab:raki1]{Tabela \ref*{tab:raki1}.} pokazuje wyraźnie dłuższy przedział ufności dla pacjentek z rakiem typu II niż IIIA. Prawdopodobnie jest to spowodowane tym, że grupa ta ma mniej zarejestrowanych wszystkich obserwacji, jak i mniej obserwacji kompletnych. Dodatkowo, niższe stadium charakteryzuje się większymi wartościami czasu (różnica między minimalną wartością typu II a maksymalną typu IIIA wynosi jedynie `r round(Ci_III_1$T_U, 3) - round(Ci_II_1$T_L, 3)`), co znajduje odzwierciedlenie w rzeczywistych danych: wyższy stopień zaawansowania nowotworu wiąże się z szybszą progresją choroby.
 
 ```{r nieboraki2, echo=FALSE}
 raki2 <- data.frame(
@@ -731,12 +731,10 @@ kable(raki2,
       digits = 3, 
       row.names = TRUE,
       col.names = c("Grupa", "$T_L$", "$T_U$"),
-      caption = "\\label{tab:raki2} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 2000$")
+      caption = "\\label{tab:raki2} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1825$")
 ```
 
-\hyperref[tab:raki2]{Tabela \ref*{tab:raki2}.}
-
-TO DO
+\hyperref[tab:raki2]{Tabela \ref*{tab:raki2}.} wskazuje na odmienne zachowanie przedziałów ufności dla poszczególnych grup. W przypadku grupy kobiet z nowotworem typu II zarówno dolna, jak i górna granica zwiększyły swoje wartości, jednak ta druga prawie trzykrotnie więcej. W przypadku raka typu IIIA górna granica również wzrosła, jednak dolna zmalała. Również wartości zmian są mniejsze niż w niższym stadium, co sugeruje "stabilniejsze", a tym samym lepsze zachowanie estymatora funkcji przeżycia z ogonem. Patrząc na zachowanie estymacji należy również zauważyć, że dla raka typu II zaobserwowano większą wartość czasu przeżycia niż jego wariancję, a dla typu IIIA - na odwrót. Wspólną cechą dla obu grup jest wzrost długości przedziałów
 
 \newpage
 # Lista 8
@@ -745,63 +743,65 @@ Lista polega na weryfikacji hipotezy o jednakowym rozkładzie czasu do progresji
 
 ## Zadanie 1
 
-W tym zadaniu dokonano wyliczenia wartości $p-value$ dla hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, z podziałem na sposób dobierania wagi.
+W tym zadaniu dokonano wyliczenia wartości $p$-value dla hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, z podziałem na sposób dobierania wagi.
 
-Na początek łączymy poszczególne próby $\mathbb{X}_1,\dots,\mathbb{X}_k$, gdzie $\mathbb{X}_j = \left(X_{j1},\dots,X_{jn_j}\right)$, $j \in \{1,\dots,k\}$.  Z tak połączonych grup wyznaczamy (unikalne) czasy zdarzeń, których liczbę oznaczamy przed D, i porządkujemy je rosnąco: $t_1<t_2<\dots<t_D$.
+Na początek łączymy poszczególne próby $\mathbb{X}_1,\dots,\mathbb{X}_k$, gdzie $\mathbb{X}_j = (X_{j1},\dots,X_{jn_j})$, $j \in \{1,\dots,k\}$. Z tak połączonych grup wyznaczamy (unikalne) czasy zdarzeń, których liczbę oznaczamy przez $D$, i porządkujemy je rosnąco: $t_1 < t_2 < \dots < t_D$.
 
-Statystyka testowa opiera się na sumie ważonych różnic między oszacowanymi hazardami w momentach $t_i$. Oszacowania te wyznaczane są za pomocą estymatora Nelsona-Aalena funkcji hazardu:
-
-$$
-Z_j(\tau) = \sum^D_{i=1} W_j(t_i)\left(\frac{d_{ij}}{r_{ij}} - \frac{d_{i}}{r_{i}}\right), \ \text{gdzie:}
-$$
-
-* $d_{ij}$ - liczba zdarzeń w czasie $t_i$ z próbu $\mathbb{X}_j$,
-* $r_{ij}$ - liczba jednostek w stanie ryzyka w czasie $t_i$ w j-tej grupie,
-* $d_i = \sum^k_{j=1} d_{ij}$,
-* $r_i = \sum^k_{j=1} r_{ij}$.
-
-W zadaniu przyjęto funkcję wagi jako $W_j\left(t_i\right)=r_{ij}W\left(t_i\right)$, wtedy statystyka $Z_j(\tau)$ ma postać:
+Statystyka testowa opiera się na sumie ważonych różnic między oszacowanymi hazardami w momentach $t_i$. Oszacowania te wyznaczane są za pomocą estymatora Nelsona--Aalena funkcji hazardu:
 
 $$
-Z_j(\tau) = \sum^D_{i=1} W(t_i)\left(d_{ij} - r_{ij}\frac{d_{i}}{r_{i}}\right).
+Z_j(\tau) = \sum_{i=1}^D W_j(t_i) \left( \frac{d_{ij}}{r_{ij}} - \frac{d_i}{r_i} \right), \quad \text{gdzie:}
+$$
+
+\begin{itemize}
+\item $d_{ij}$ -- liczba zdarzeń w czasie $t_i$ z próby $\mathbb{X}_j$,
+\item $r_{ij}$ -- liczba jednostek w stanie ryzyka w czasie $t_i$ w $j$-tej grupie,
+\item $d_i = \sum_{j=1}^k d_{ij}$,
+\item $r_i = \sum_{j=1}^k r_{ij}$.
+\end{itemize}
+
+W zadaniu przyjęto funkcję wagi jako $W_j(t_i)=r_{ij}W(t_i)$, wtedy statystyka $Z_j(\tau)$ ma postać:
+
+$$
+Z_j(\tau) = \sum_{i=1}^D W(t_i)\left(d_{ij} - r_{ij}\frac{d_i}{r_i}\right).
 $$
 
 Wariancję takiej statystyki estymujemy przez:
 
 $$
-\hat{\sigma}_{jj} = \sum^D_{i=1}
+\hat{\sigma}_{jj} = \sum_{i=1}^D
 W^2(t_i)d_i\frac{r_{ij}}{r_i}\left(1 - \frac{r_{ij}}{r_i}\right)\left(\frac{r_i - d_i}{r_i - 1}\right),
 $$
 
 kowariancję natomiast szacujemy jako:
 
 $$
-\hat{\sigma}_{jg} = - \sum^D_{i=1}
+\hat{\sigma}_{jg} = - \sum_{i=1}^D
 W^2(t_i)d_i\frac{r_{ij}r_{ig}}{r_i^2}\left(\frac{r_i - d_i}{r_i - 1}\right).
 $$
 
-Statystyka testowa do weryfikacji rozpatrywanych hipotez konstruowana jest w oparciu o dowolne k−1 wybranych statystyk $Z_j(\tau)$ i jest postaci:
+Statystyka testowa do weryfikacji rozpatrywanych hipotez konstruowana jest w oparciu o dowolne $k-1$ wybranych statystyk $Z_j(\tau)$ i ma postać:
 
 $$
-Z^2 = \left(Z_1(\tau),\dots,Z_{k - 1}(\tau)\right) \Sigma^{-1} \left(Z_1(\tau),\dots,Z_{k - 1}(\tau)\right)^T,
+Z^2 = \left(Z_1(\tau),\dots,Z_{k-1}(\tau)\right) \Sigma^{-1} \left(Z_1(\tau),\dots,Z_{k-1}(\tau)\right)^T,
 $$
 
 gdzie macierz $\Sigma$ jest utworzona z odpowiednich elementów $\hat{\sigma}_{jj}$ oraz $\hat{\sigma}_{jg}$.
 
-Udowodniono, że jeżeli hipoteza $H_0$ jest spełniona, to rozkład statystyki $Z^2$ dąży według rozkładu do rozkładu chi-kwadrat z k-1 stopniami swobody, gdy $n_1 \rightarrow \infty,\dots,n_{k - 1} \rightarrow \infty$. Korzystając z tego faktu, można obliczyć wartość poziomu krytycznego:
+Udowodniono, że jeżeli hipoteza $H_0$ jest spełniona, to rozkład statystyki $Z^2$ dąży według rozkładu do rozkładu chi-kwadrat z $k-1$ stopniami swobody, gdy $n_1 \to \infty,\dots,n_{k-1} \to \infty$. Korzystając z tego faktu, można obliczyć wartość poziomu krytycznego:
 
 $$
-p = 1 - F_{\chi^2_{k - 1}} \left(z^2\right),
+p = 1 - F_{\chi^2_{k-1}}(z^2),
 $$
 
-gdzie $F_{\chi^2_{k - 1}}$ jest dystrybuantą rozkładu chi-kwadrat z k-1 stopniami swobody, a $z^2$ realizacją statystyki $Z^2$.
+gdzie $F_{\chi^2_{k-1}}$ jest dystrybuantą rozkładu chi-kwadrat z $k-1$ stopniami swobody, a $z^2$ realizacją statystyki $Z^2$.
 
-W zadaniu dokonano czterech testów ze względu na dobraną postać funkcji $W\left(t_i\right)$:
+W zadaniu dokonano czterech testów ze względu na dobraną postać funkcji $W(t_i)$:
 
-* test log-rank: $W\left(t_i\right) \equiv 1$,
-* test Gehana-Breslowa: $W\left(t_i\right)=r_i$,
-* test Peto-Peto: $W\left(t_i\right)=\prod_{t_j \leq t_i} \left(1-\frac{d_j}{r_j+1}\right)$,
-* test Tarone'a-Were'a: $W\left(t_i\right)=\sqrt{r_i}$.
+* test log-rank: $W(t_i) \equiv 1$,
+* test Gehana--Breslowa: $W(t_i)=r_i$,
+* test Peto--Peto: $W\left(t_i\right)=\prod_{t_j \leq t_i} \left(1-\frac{d_j}{r_j+1}\right)$,
+* test Tarone'a--Ware'a: $W(t_i)=\sqrt{r_i}$.
 
 ```{r testy-tabela, echo=FALSE}
 df.II$progresja <- "lekka"
@@ -818,17 +818,17 @@ PP <- logrank_test(Surv(times, deltas) ~ progresja,
 TW <- logrank_test(Surv(times, deltas) ~ progresja,
                    data=df.cancer, type="Tarone-Ware")
 
-df <- data.frame("$p-value$"=c(pvalue(lg),
+df <- data.frame("$p$-value"=c(pvalue(lg),
                                pvalue(GB),
                                pvalue(PP),
                                pvalue(TW)))
 
 rownames(df) <- c("logrank", "Gehan-Breslow", "Peto-Peto", "Tarone-Ware")
 
-kable(df, row.names=TRUE, digits=3, escape=FALSE, caption="\\label{tab:nieboraki} Wartości $p-value$ dla testów czasu do progresji choroby weryfikujących hipotezę o jednakowym rozkładzie w grupach pacjentek")
+kable(df, row.names=TRUE, digits=3, escape=FALSE, caption="\\label{tab:nieboraki} Wartości $p$-value dla testów czasu do progresji choroby weryfikujących hipotezę o jednakowym rozkładzie w grupach pacjentek")
 ```
 
-Z \hyperref[tab:nieboraki]{tabeli \ref*{tab:nieboraki}.} wynika, że na ustalonym poziomie ufności $\alpha=0.05$ hipoteza powinna zostać odrzucona jedynie w przypadku testu log-rank. Wartości $p-value$ dla poszczególnych funkcji wag różnią się od siebie. Wynika to bezpośrednio z ich konstrukcji:
+Z \hyperref[tab:nieboraki]{tabeli \ref*{tab:nieboraki}.} wynika, że na ustalonym poziomie ufności $\alpha=0.05$ hipoteza powinna zostać odrzucona jedynie w przypadku testu log-rank. Wartości $p$-value dla poszczególnych funkcji wag różnią się od siebie. Wynika to bezpośrednio z ich konstrukcji:
 
 * log-rank traktuje wszystkie zdarzenia równoważnie,
 * Gehan-Breslow większy nakład nadaje zdarzeniom wcześniejszym,
@@ -837,7 +837,7 @@ Z \hyperref[tab:nieboraki]{tabeli \ref*{tab:nieboraki}.} wynika, że na ustalony
 
 ## Zadanie 2
 
-TO DO
+Zadanie polega
 
 ```{r testy-wykres_przygotowanie}
 # Uzupełnienie danych o wartości r_i i d_i
@@ -908,6 +908,67 @@ ggplot(df.cancer_unique, aes(times)) +
 ```
 
 Na \hyperref[fig:testy-wykres]{wykresie \ref*{fig:testy-wykres}.} chuja widać.
+
+```{r Kaplan-Meier-rak1, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących nowotworów jajników 1"}
+df.all <- rbind(df.II, df.III)
+surv.all <- Surv(df.all$times, df.all$deltas)
+
+# Estymator Kaplana-Meiera
+fit.KM.all <- survfit(surv.all ~ 1)
+
+# Ramki danych do wykresu
+plot.all <- data.frame(time = c(0, fit.KM.all$time), 
+                     surv = c(1, fit.KM.all$surv))
+
+max.time <- max(df.all$times[df.all$deltas==1])
+
+ggplot(plot.all, aes(x = time, y = surv, color = "violet")) +
+  geom_step(linewidth = 1.2) +
+  scale_y_continuous(limits = c(0,1)) +
+  scale_x_continuous(limits = c(0, max.time)) +
+  labs(x = "Czas do progresji (t)",
+       y = "Estymowana wartość funkcji przeżycia S(t)") +
+  theme_minimal()
+```
+
+Na \hyperref[fig:Kaplan-Meier-rak1]{wykresie \ref*{fig:Kaplan-Meier-rak1}.} chuja widać.
+
+```{r Kaplan-Meier-rak, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących nowotworów jajników"}
+surv.II <- Surv(df.II$times, df.II$deltas)
+surv.IIIA <- Surv(df.III$times, df.III$deltas)
+
+# Estymator Kaplana-Meiera
+fit.KM.II <- survfit(surv.II ~ 1)
+fit.KM.IIIA <- survfit(surv.IIIA ~ 1)
+
+# Ramki danych do wykresu
+plot.II <- data.frame(time = c(0, fit.KM.II$time), 
+                     surv = c(1, fit.KM.II$surv), 
+                     group = "II")
+
+plot.IIIA <- data.frame(time = c(0, fit.KM.IIIA$time), 
+                     surv = c(1, fit.KM.IIIA$surv), 
+                     group = "IIIA")
+
+plot.df  <- rbind(plot.II, plot.IIIA)
+
+max.time <- max(max(df.II$times[df.II$deltas==1]),
+                max(df.III$times[df.III$deltas==1]))
+
+ggplot(plot.df, aes(x = time, y = surv, color = group)) +
+  geom_step(linewidth = 1.2) +
+  scale_color_manual(values = c("II" = "steelblue", "IIIA" = "tomato"),
+                     labels = c("Typ II", "Typ IIIA")) +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(x = "Czas do progresji (t)",
+       y = "Estymowana wartość funkcji przeżycia S(t)",
+       color = "Grupa") +
+  scale_x_continuous(limits = c(0, max.time)) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+Na \hyperref[fig:Kaplan-Meier-rak]{wykresie \ref*{fig:Kaplan-Meier-rak}.} chuja widać.
 
 \newpage
 # Zadania dodatkowe
