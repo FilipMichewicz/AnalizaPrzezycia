@@ -26,6 +26,7 @@ header-includes:
   - \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
   - \usepackage{etoolbox}
   - \pretocmd{\tableofcontents}{\clearpage}{}{}
+  - \patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
 ---
 
 ```{r biblioteki+zmienne_pomocnicze, include=FALSE}
@@ -281,13 +282,14 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
 
 ## Zadanie 3
 
-Zadanie polega na wygenerowaniu $M = 1000$ zbiorów danych cenzurowanych I-go typu z uogólnionego rozkładu wykładniczego $\mathcal{GE}(\lambda, \alpha)$ dla $\alpha = 2$ i $\lambda = 2$, przy licznościach próby $n = 30, 50, 100$. Wartość $t_0$ przyjęto w przybliżeniu równą wartości oczekiwanej rozkładu:
+Zadanie polega na wygenerowaniu $M = 1000$ zbiorów danych cenzurowanych I-go typu z uogólnionego rozkładu wykładniczego $\mathcal{GE}(\lambda, \alpha)$ dla $\alpha = 2$ i $\lambda = 2$, przy licznościach próby $n = 30, 50, 100$. Wartość $t_0$ przyjęto równą wartości oczekiwanej rozkładu $\mathcal{GE}(\lambda, \alpha)$ \cite{gupta1999}:
 
 $$
-t_0 = \lambda \cdot \Gamma\left(1 + \frac{1}{\alpha}\right),
+t_0 = \lambda \left( \psi(\alpha + 1) - \psi(1) \right)
 $$
 
-gdzie $\Gamma(\cdot)$ jest funkcją gamma.  
+gdzie $\psi(\cdot)$ jest funkcją digamma, tj. logarytmiczną pochodną funkcji gamma.
+
 
 Na podstawie wygenerowanych zbiorów danych oszacowano wartość funkcji przeżycia w punktach $t_0$ i $2 t_0$, korzystając z estymatora Kaplana–Meiera z uwzględnieniem ogona estymowanego zgodnie z propozycją Browna, Hollandera i Kowara. Ostatecznie wygenerowano histogramy oszacowań w tych punktach dla każdego $n$ i oceniono, czy istnieją podstawy do przypuszczenia, że estymator Kaplana–Meiera jest asymptotycznie normalny.
 
@@ -328,7 +330,7 @@ n_values <- c(30, 50, 100)
 alpha <- 2
 lambda <- 2
 
-t0 <- (digamma(alpha + 1) + 0.5772156649) / lambda
+t0 <- (digamma(alpha + 1) - digamma(1)) / lambda
 
 results_t0 <- list()
 results_2t0 <- list()
@@ -403,7 +405,7 @@ histograms$"50"
 histograms$"100"
 ```
 
-\hyperref[fig:hist-3]{Wykres \ref*{fig:hist-3}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 30$. Podobnie jak na poprzednim \hyperref[fig:hist-2]{wykresie} wraz ze wzrostem próby wartości przesunęły się ku mniejszym wartością. 
+\hyperref[fig:hist-3]{Wykres \ref*{fig:hist-3}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 30$. Podobnie jak na poprzednim \hyperref[fig:hist-2]{Wykresie} wraz ze wzrostem próby wartości przesunęły się ku mniejszym wartością. 
 
 Wraz ze wzrostem liczności próby, histogramy z poprzednich wykresów układają się w kształt dzwonowy charakterystyczny dla rozkładu normalnego. To z kolei pozwala przypuszczać, że estymator Kaplana–Meiera jest asymptotycznie normalny w punktach $t_0$ oraz $2 t_0$. Do dalszej analizy wykorzystano test Shapiro-Wilka, który w pakiecie R dostępny jest w funckji `shapiro.test` z pakietu `stats`.
 
@@ -731,7 +733,7 @@ kable(raki2,
       caption = "\\label{tab:raki2} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1825$")
 ```
 
-Z \hyperref[tab:raki2]{tabeli \ref*{tab:raki2}} można odczytać odmienne zachowanie przedziałów ufności dla poszczególnych grup. W przypadku pacjentek z nowotworem typu II zarówno dolna, jak i górna granica przedziału wzrosły, przy czym górna granica zwiększyła się wyraźnie bardziej niż dolna. W przypadku raka typu IIIA górna granica również wzrosła, natomiast dolna uległa obniżeniu. Zmiany w grupie typu IIIA są mniejsze niż w grupie typu II, co sugeruje bardziej stabilne zachowanie estymatora funkcji przeżycia w ogonie rozkładu.
+Z \hyperref[tab:raki2]{Tabeli \ref*{tab:raki2}} można odczytać odmienne zachowanie przedziałów ufności dla poszczególnych grup. W przypadku pacjentek z nowotworem typu II zarówno dolna, jak i górna granica przedziału wzrosły, przy czym górna granica zwiększyła się wyraźnie bardziej niż dolna. W przypadku raka typu IIIA górna granica również wzrosła, natomiast dolna uległa obniżeniu. Zmiany w grupie typu IIIA są mniejsze niż w grupie typu II, co sugeruje bardziej stabilne zachowanie estymatora funkcji przeżycia w ogonie rozkładu.
 
 Analizując estymacje można zauważyć, że dla raka typu II wartość czasu przeżycia była większa niż jego wariancja, natomiast dla typu IIIA sytuacja była odwrotna. Wspólną cechą obu grup jest wydłużenie przedziałów ufności, co wskazuje na zwiększoną niepewność estymacji przy dłuższym czasie obserwacji.
 
@@ -906,7 +908,7 @@ ggplot(df.cancer_unique, aes(x = times)) +
 
 ```
 
-Na \hyperref[fig:testy-wykres]{wykresie \ref*{fig:testy-wykres}} widać, jakie unormowane wagi przypisuje każdy z testów dla poszczególnych czasów. Dla $t \approx 320$ wagi testów Gehan-Breslow, Peto-Peto i Tarone-Ware przecinają krzywą wag testu logrank, co oznacza, że dla zdarzeń o czasie większym niż 320 przypisywane jest mniejsze znaczenie niż przy teście logrank.
+Na \hyperref[fig:testy-wykres]{Wykresie \ref*{fig:testy-wykres}} widać, jakie unormowane wagi przypisuje każdy z testów dla poszczególnych czasów. Dla $t \approx 320$ wagi testów Gehan-Breslow, Peto-Peto i Tarone-Ware przecinają krzywą wag testu logrank, co oznacza, że dla zdarzeń o czasie większym niż 320 przypisywane jest mniejsze znaczenie niż przy teście logrank.
 
 ```{r Kaplan-Meier-rak, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących pacjentek z rakiem jajnika - Mayo Clinic", warning=FALSE}
 surv.II <- Surv(df.II$times, df.II$deltas)
@@ -943,9 +945,9 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   theme(legend.position = "bottom")
 ```
 
-Z \hyperref[fig:Kaplan-Meier-rak]{Wykresu \ref*{fig:Kaplan-Meier-rak}.} można zauważyć, że estymatory przeżycia Kaplana-Meiera dla obu zbiorów danych pacjentek rakowych są dość zbliżone do czasu $t \approx 320$. Po tym punkcie funkcje przeżycia gwałtownie spadają, co oznacza, że w tym okresie występuje progresja choroby dla wielu pacjentek. To skutkuje spadkiem wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware w późniejszych momentach czasu, co oznacza, że późne zdarzenia mają mniejszy wpływ na wartość statystyki testowej w porównaniu do testu logrank. W konsekwencji główny wkład do obliczenia wartości $p$ pochodzi ze zdarzeń występujących wcześniej, zanim funkcje przeżycia drastycznie spadną.
+Na \hyperref[fig:Kaplan-Meier-rak]{Wykresie \ref*{fig:Kaplan-Meier-rak}.} można zauważyć, że estymatory przeżycia Kaplana-Meiera dla obu zbiorów danych pacjentek rakowych są dość zbliżone do czasu $t \approx 320$. Po tym punkcie funkcje przeżycia gwałtownie spadają, co oznacza, że w tym okresie występuje progresja choroby dla wielu pacjentek. To skutkuje spadkiem wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware w późniejszych momentach czasu, co oznacza, że późne zdarzenia mają mniejszy wpływ na wartość statystyki testowej w porównaniu do testu logrank. W konsekwencji główny wkład do obliczenia wartości $p$ pochodzi ze zdarzeń występujących wcześniej, zanim funkcje przeżycia drastycznie spadną.
 
-Ze względu na spadek wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware dla późnych czasów, istotność statystyczna opiera się głównie na wcześniejszych zdarzeniach. W tym przypadku najbardziej reprezentatywne jest $p$‑value z testu logrank, który równomiernie uwzględnia wszystkie zdarzenia, co widać na \hyperref[fig:Kaplan-Meier-rak]{wykresie \ref*{fig:Kaplan-Meier-rak}.} estymatorów Kaplana-Meiera.
+Ze względu na spadek wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware dla późnych czasów, istotność statystyczna opiera się głównie na wcześniejszych zdarzeniach. W tym przypadku najbardziej reprezentatywne jest $p$‑value z testu logrank, który równomiernie uwzględnia wszystkie zdarzenia, co widać na \hyperref[fig:Kaplan-Meier-rak]{Wykresie \ref*{fig:Kaplan-Meier-rak}.} estymatorów Kaplana-Meiera.
 
 \newpage
 # Zadania dodatkowe
@@ -970,7 +972,7 @@ GE_cenzurowanie_losowe <- function(theta, alpha, lambd, n) {
 
 Estymatory Kaplana-Meiera oraz Fleminga–Harringtona są funkcjami schodnowymi. W stosunkowo małych próbach często obserwuje się szerokie przedziały czasu w których estymator jest stały - praktycznie i interpretacyjnie bywa to niepożądane i statystykom trudno jest wytłumaczyć praktykom na przykładzie \hyperref[fig:KM-plot]{Wykresu \ref*{fig:KM-plot}.} grupy leku A dlaczego prawdopodobieńsgtwo przeżycia do chwili $t = 0.7$ jest równe prawdopodobieństwu przeżycia do chwili $t = 0.8$.
 
-Rossa i Zieliński (2002) zaproponowali lokalne „wygładzenie” estymatora Kaplana–Meiera poprzez dopasowanie funkcji gęstości rozkładu Weibulla w niewielkim otoczeniu każdego punktu skoku.
+Rossa i Zieliński \cite{rossa2002} zaproponowali lokalne „wygładzenie” estymatora Kaplana–Meiera poprzez dopasowanie funkcji gęstości rozkładu Weibulla w niewielkim otoczeniu każdego punktu skoku.
 
 **Zasada działania estymatora**
 
@@ -1409,7 +1411,7 @@ rz_km_plot <- function(df, m1 = 2, m2 = 5, to = 3) {
 rz_km_plot(df.rz, to = 40)
 ```
 
-Z \hyperref[fig:rossa-zielinski1]{wykresu \ref*{fig:rossa-zielinski1}.} można odczytać, że generowane wykresy są bardzo podobne do tych przedstawionych w artykule. Można przypuszczać, że opracowany algorytm działa poprawnie.
+Z \hyperref[fig:rossa-zielinski1]{Wykresu \ref*{fig:rossa-zielinski1}.} można odczytać, że generowane wykresy są bardzo podobne do tych przedstawionych w artykule. Można przypuszczać, że opracowany algorytm działa poprawnie.
 
 ```{r rossa-zielinski2, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek A"}
 rz_km_plot(df.A, to = 1.2)
@@ -1437,6 +1439,22 @@ rz_km_plot(df.III, to = 1500)
 
 Podsumowując, estymator Rossy-Zielińskiego sprawnie wygładza funkcję przeżycia estymowaną przez Kaplana–Meiera, dobrze dopasowując ją w okolicach czasów zdarzeń, jednocześnie eliminując nagłe skoki i fluktuacje wynikające z małych prób. Dzięki temu estymator daje bardziej stabilny i ciągły obraz ryzyka przeżycia, ułatwiając interpretację oraz porównania między grupami pacjentów.
 
-## Zadanie 3
+\newpage
 
-TO DO
+# Bibliografia
+
+\begin{thebibliography}{2}
+
+\bibitem{gupta1999}
+R. D. Gupta i D. Kundu,
+\textit{Generalized Exponential Distributions},
+Australian \& New Zealand Journal of Statistics, 41(2):173--188, 1999,
+\href{https://home.iitk.ac.in/~kundu/paper47.pdf}{PDF}.
+
+\bibitem{rossa2002}
+Agnieszka Rossa i Ryszard Zieliński,
+\textit{A Simple Improvement of the Kaplan-Meier Estimator},
+Communications in Statistics - Theory and Methods, 31(1):147-158, 2002,
+\href{https://doi.org/10.1081/STA-120002440}{DOI: 10.1081/STA-120002440}.
+
+\end{thebibliography}
