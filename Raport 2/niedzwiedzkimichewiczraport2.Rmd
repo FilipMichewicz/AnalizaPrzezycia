@@ -1,32 +1,33 @@
 ---
 title: "Analiza Przeżycia"
-subtitle: "Raport 2"
 author: "Wiktor Niedźwiedzki (258882)  \n  Filip Michewicz (282239)"
 date: "8 grudnia 2025 Anno Domini"
 output:
   pdf_document:
     number_sections: true
+  word_document: default
+subtitle: Raport 2
 toc: true
 lof: true
 lot: true
 header-includes:
-  - \usepackage[OT4]{polski}
-  - \usepackage[utf8]{inputenc}
-  - \usepackage{graphicx}
-  - \usepackage{float}
-  - \usepackage{hyperref}
-  - \renewcommand{\contentsname}{Spis treści}
-  - \renewcommand{\listfigurename}{Spis wykresów}
-  - \renewcommand{\listtablename}{Spis tabel}
-  - \renewcommand{\figurename}{Wykres}
-  - \renewcommand{\tablename}{Tabela}
-  - \usepackage{xcolor}
-  - \definecolor{ForestGreen}{rgb}{0.1333, 0.5451, 0.1333}
-  - \definecolor{SteelBlue}{rgb}{0.2745, 0.5098, 0.7059}
-  - \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
-  - \usepackage{etoolbox}
-  - \pretocmd{\tableofcontents}{\clearpage}{}{}
-  - \patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+- \usepackage[OT4]{polski}
+- \usepackage[utf8]{inputenc}
+- \usepackage{graphicx}
+- \usepackage{float}
+- \usepackage{hyperref}
+- \renewcommand{\contentsname}{Spis treści}
+- \renewcommand{\listfigurename}{Spis wykresów}
+- \renewcommand{\listtablename}{Spis tabel}
+- \renewcommand{\figurename}{Wykres}
+- \renewcommand{\tablename}{Tabela}
+- \usepackage{xcolor}
+- \definecolor{ForestGreen}{rgb}{0.1333, 0.5451, 0.1333}
+- \definecolor{SteelBlue}{rgb}{0.2745, 0.5098, 0.7059}
+- \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
+- \usepackage{etoolbox}
+- \pretocmd{\tableofcontents}{\clearpage}{}{}
+- \patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
 ---
 
 ```{r biblioteki+zmienne_pomocnicze, include=FALSE}
@@ -1407,31 +1408,31 @@ rz_km_plot <- function(df, m1 = 2, m2 = 5, to = 3) {
 }
 ```
 
-```{r rossa-zielinski1, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych klinicznych pacjentów"}
+```{r rossa-zielinski1, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych klinicznych pacjentów", warning=FALSE}
 rz_km_plot(df.rz, to = 40)
 ```
 
 Z \hyperref[fig:rossa-zielinski1]{Wykresu \ref*{fig:rossa-zielinski1}.} można odczytać, że generowane wykresy są bardzo podobne do tych przedstawionych w artykule. Można przypuszczać, że opracowany algorytm działa poprawnie.
 
-```{r rossa-zielinski2, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek A"}
+```{r rossa-zielinski2, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek A", warning=FALSE}
 rz_km_plot(df.A, to = 1.2)
 ```
 
 \hyperref[fig:rossa-zielinski2]{Wykres \ref*{fig:rossa-zielinski2}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących leków - lek A.
 
-```{r rossa-zielinski3, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek B"}
+```{r rossa-zielinski3, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek B", warning=FALSE}
 rz_km_plot(df.B, to = 1.2)
 ```
 
 \hyperref[fig:rossa-zielinski3]{Wykres \ref*{fig:rossa-zielinski3}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących leków - lek B.
 
-```{r rossa-zielinski4, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ II"}
+```{r rossa-zielinski4, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ II", warning=FALSE}
 rz_km_plot(df.II, to = 1500)
 ```
 
 \hyperref[fig:rossa-zielinski4]{Wykres \ref*{fig:rossa-zielinski4}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących pacjentów z rakiem jajnika typu II.
 
-```{r rossa-zielinski5, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ IIIA"}
+```{r rossa-zielinski5, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ IIIA", warning=FALSE}
 rz_km_plot(df.III, to = 1500)
 ```
 
