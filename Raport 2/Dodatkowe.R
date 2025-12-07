@@ -86,3 +86,5 @@ for (name in names(weights.df)){
 
 p_values_coin * 100
 p_values_students * 100
+
+# No wyszły inne a jak nie wiadomo o co chodzi to chodzi o Lemat Wilkinsona ;)
