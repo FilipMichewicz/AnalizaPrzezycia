@@ -93,7 +93,7 @@ cenzurowanie_I_typu <- function(t0, data) {
 }
 
 GE_cenzurowanie_I_typu <- function(t0, alpha, lambd, n) {
-  data <- EW_generator(alpha = 1, beta = lambd, gamm = alpha, size = n)
+  data <- EW_generator(alpha = 1, beta = 1/lambd, gamm = alpha, size = n)
   cenzurowanie_I_typu(t0, data)
 }
 ```
@@ -420,7 +420,7 @@ rownames(df) <- c("30", "50", "100")
 kable(df, digits=9, escape=FALSE, col.names = c("n", "$t_0$", "$2t_0$"), caption="\\label{tab:testy-sw} Wartości $p$ testu Shapiro-Wilka dla oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$")
 ```
 
-Z \hyperref[tab:testy-sw]{Tabeli \ref*{tab:testy-sw}.} można odczytać że dla wszystkich przypadku $p-value$ jest równe zeru lub bliskie zera, a zatem dla prawie każdego poziomu $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
+Z \hyperref[tab:testy-sw]{Tabeli \ref*{tab:testy-sw}.} można odczytać że dla wszystkich przypadku $p$-value jest równe zeru lub bliskie zera, a zatem dla prawie każdego poziomu $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
 
 \newpage
 # Lista 6
@@ -716,7 +716,7 @@ kable(raki1,
       caption = "\\label{tab:raki1} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1460$")
 ```
 
-Z \hyperref[tab:raki1]{Tabeli \ref*{tab:raki1}} wynika, że przedział ufności dla pacjentek z rakiem typu II jest szerszy niż dla pacjentek z rakiem typu IIIA. Prawdopodobnie wynika to z faktu, że grupa typu II obejmuje mniej zarejestrowanych obserwacji, w tym mniej obserwacji kompletnych. Dodatkowo, niższe stadium choroby charakteryzuje się większymi wartościami czasu - różnica między minimalną wartością dla typu II a maksymalną dla typu IIIA wynosi zaledwie `r round(Ci_III_1$T_U, 3) - round(Ci_II_1$T_L, 3)`. Obserwacja ta odpowiada rzeczywistym danym: wyższy stopień zaawansowania nowotworu wiąże się ze szybszą progresją choroby.
+Z \hyperref[tab:raki1]{Tabeli \ref*{tab:raki1}} wynika, że przedział ufności dla pacjentek z rakiem typu II jest szerszy niż dla pacjentek z rakiem typu IIIA. Prawdopodobnie wynika to z faktu, że grupa typu II obejmuje mniej zarejestrowanych obserwacji, w tym mniej obserwacji kompletnych. Dodatkowo, niższe stadium choroby charakteryzuje się większymi wartościami czasu - różnica między minimalną wartością dla typu II a maksymalną dla typu IIIA wynosi zaledwie `r round(Ci_III_1$T_U, 3) - round(Ci_II_1$T_L, 3)`. Obserwacja ta odpowiada rzeczywistym danym: wyższy stopień zaawansowania nowotworu wiąże się z szybszą progresją choroby.
 
 ```{r nieboraki2, echo=FALSE}
 raki2 <- data.frame(
@@ -733,12 +733,12 @@ kable(raki2,
 
 Z \hyperref[tab:raki2]{tabeli \ref*{tab:raki2}} można odczytać odmienne zachowanie przedziałów ufności dla poszczególnych grup. W przypadku pacjentek z nowotworem typu II zarówno dolna, jak i górna granica przedziału wzrosły, przy czym górna granica zwiększyła się wyraźnie bardziej niż dolna. W przypadku raka typu IIIA górna granica również wzrosła, natomiast dolna uległa obniżeniu. Zmiany w grupie typu IIIA są mniejsze niż w grupie typu II, co sugeruje bardziej stabilne zachowanie estymatora funkcji przeżycia w ogonie rozkładu.
 
-Analizując estymacje, można zauważyć, że dla raka typu II wartość czasu przeżycia była większa niż jego wariancja, natomiast dla typu IIIA sytuacja była odwrotna. Wspólną cechą obu grup jest wydłużenie przedziałów ufności, co wskazuje na zwiększoną niepewność estymacji przy dłuższym czasie obserwacji.
+Analizując estymacje można zauważyć, że dla raka typu II wartość czasu przeżycia była większa niż jego wariancja, natomiast dla typu IIIA sytuacja była odwrotna. Wspólną cechą obu grup jest wydłużenie przedziałów ufności, co wskazuje na zwiększoną niepewność estymacji przy dłuższym czasie obserwacji.
 
 \newpage
 # Lista 8
 
-Lista polega na weryfikacji hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, przy użyciu testów log-rank, Gehana-Breslowa, Tarone’a-Warego i Peto-Peto, porównaniu otrzymanych wartości poziomów krytycznych oraz na naszkicowaniu wykresów estymatorów Kaplana-Meiera funkcji przeżycia dla czasu do progresji choroby w obu grupach wraz z funkcjami wagowymi użytymi w statystykach testowych.
+Lista polega na weryfikacji hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, przy użyciu testów logrank, Gehana-Breslowa, Tarone’a-Warego i Peto-Peto, porównaniu otrzymanych wartości poziomów krytycznych oraz na naszkicowaniu wykresów estymatorów Kaplana-Meiera funkcji przeżycia dla czasu do progresji choroby w obu grupach wraz z funkcjami wagowymi użytymi w statystykach testowych.
 
 ## Zadanie 1
 
@@ -797,7 +797,7 @@ gdzie $F_{\chi^2_{k-1}}$ jest dystrybuantą rozkładu chi-kwadrat z $k-1$ stopni
 
 W zadaniu dokonano czterech testów ze względu na dobraną postać funkcji $W(t_i)$:
 
-* test log-rank: $W(t_i) \equiv 1$,
+* test logrank: $W(t_i) \equiv 1$,
 * test Gehana--Breslowa: $W(t_i)=r_i$,
 * test Peto--Peto: $W\left(t_i\right)=\prod_{t_j \leq t_i} \left(1-\frac{d_j}{r_j+1}\right)$,
 * test Tarone'a--Ware'a: $W(t_i)=\sqrt{r_i}$.
@@ -828,18 +828,18 @@ kable(df, row.names=TRUE, digits=3, escape=FALSE, col.names = c("Test", "p-value
 ```
 
 
-Z \hyperref[tab:nieboraki]{Tabeli \ref*{tab:nieboraki}} wynika, że na ustalonym poziomie istotności $\alpha = 0.05$ hipoteza o jednakowym rozkładzie czasu do progresji powinna zostać odrzucona jedynie w przypadku testu log-rank. Wartości $p$-value dla poszczególnych funkcji wag różnią się między sobą, co wynika bezpośrednio z ich konstrukcji:
+Z \hyperref[tab:nieboraki]{Tabeli \ref*{tab:nieboraki}} wynika, że na ustalonym poziomie istotności $\alpha = 0.05$ hipoteza o jednakowym rozkładzie czasu do progresji powinna zostać odrzucona jedynie w przypadku testu logrank. Wartości $p$-value dla poszczególnych funkcji wag różnią się między sobą, co wynika bezpośrednio z ich konstrukcji:
 
-* **log-rank** traktuje wszystkie zdarzenia równoważnie, wykrywając globalne różnice między grupami, nawet jeśli ujawniają się one późno,
+* **logrank** traktuje wszystkie zdarzenia równoważnie, wykrywając globalne różnice między grupami, nawet jeśli ujawniają się one późno,
 * **Gehan-Breslow** przypisuje większą wagę wcześniejszym czasom - jeżeli różnice między grupami pojawiają się późno, test staje się na nie mniej wrażliwy,
-* **Tarone-Ware** jest kompromisem między log-rank a Gehan-Breslow - zmniejsza różnice między wagami, nakładając na nie pierwiastek,
+* **Tarone-Ware** jest kompromisem między logrank a Gehan-Breslow - zmniejsza różnice między wagami, nakładając na nie pierwiastek,
 * **Peto-Peto** dla poszczególnych czasów uwzględnia nie tylko aktualne zdarzenie, ale również wszystkie wcześniejsze oraz informację o liczbie zdarzeń w połączonych próbach, które wystąpiły w tym samym czasie.
 
-Podsumowując, istotność wykazana przez test log-rank wskazuje na globalną różnicę w przebiegu czasu do zdarzenia między grupami, natomiast brak istotności w pozostałych testach odzwierciedla fakt, że lokalne lub czasowo rozłożone różnice są mniej wyraźne.
+Podsumowując, istotność wykazana przez test logrank wskazuje na globalną różnicę w przebiegu czasu do zdarzenia między grupami, natomiast brak istotności w pozostałych testach odzwierciedla fakt, że lokalne lub czasowo rozłożone różnice są mniej wyraźne.
 
 ## Zadanie 2
 
-Zadanie polega na naszkicowaniu wykresów estymatorów Kaplana–Meiera funkcji przeżycia dla dwóch grup oraz unormowanych funkcji wagowych testów log-rank, Gehan-Breslow, Tarone-Ware i Peto-Peto. Na podstawie wykresów należy przeanalizować, jak kształt funkcji przeżycia i przypisane wagi wpływają na wartości $p$-value oraz wnioski dotyczące istotności różnic między grupami.
+Zadanie polega na naszkicowaniu wykresów estymatorów Kaplana–Meiera funkcji przeżycia dla dwóch grup oraz unormowanych funkcji wagowych testów logrank, Gehan-Breslow, Tarone-Ware i Peto-Peto. Na podstawie wykresów należy przeanalizować, jak kształt funkcji przeżycia i przypisane wagi wpływają na wartości $p$-value oraz wnioski dotyczące istotności różnic między grupami.
 
 Poniżej przedstawiono blok kodu w R, który oblicza dla każdego zaobserwowanego czasu zdarzenia liczby jednostek w stanie ryzyka i liczby zdarzeń, a następnie na ich podstawie generuje unormowane funkcje wag.
 
@@ -857,7 +857,7 @@ for(i in 1:nrow(df.cancer)){
 df.cancer_unique <- df.cancer[!duplicated(df.cancer$times) &
                            df.cancer$deltas==1,]
 
-# Wagi testu log-rank
+# Wagi testu logrank
 df.cancer_unique$lg <- 1
 
 # Wagi testu Gehana-Breslowa
@@ -890,11 +890,11 @@ df.cancer_unique$TW <- df.cancer_unique$TW/sum(df.cancer_unique$TW)
 
 ```{r testy-wykres, echo=FALSE, fig.cap="\\label{fig:udbzddp} Wagi testów nieparametrycznych dla porównania rozkładów czasów przeżycia - Mayo Clinic"}
 ggplot(df.cancer_unique, aes(x = times)) +
-  geom_line(aes(y = lg, color = "Log-rank"), linewidth = 1.2) +
+  geom_line(aes(y = lg, color = "logrank"), linewidth = 1.2) +
   geom_line(aes(y = GB, color = "Gehan-Breslow"), linewidth = 1.2) +
   geom_line(aes(y = PP, color = "Peto-Peto"), linewidth = 1.2) +
   geom_line(aes(y = TW, color = "Tarone-Ware"), linewidth = 1.2) +
-  scale_color_manual(values = c("Log-rank"="tomato", 
+  scale_color_manual(values = c("logrank"="tomato", 
                                 "Gehan-Breslow"="steelblue",
                                 "Tarone-Ware"="darkgreen", 
                                 "Peto-Peto"="wheat")) +
@@ -906,7 +906,7 @@ ggplot(df.cancer_unique, aes(x = times)) +
 
 ```
 
-Na \hyperref[fig:testy-wykres]{wykresie \ref*{fig:testy-wykres}} widać, jakie unormowane wagi przypisuje każdy z testów dla poszczególnych czasów. Dla $t \approx 320$ wagi testów Gehan-Breslow, Peto-Peto i Tarone-Ware przecinają krzywą wag testu log-rank, co oznacza, że w tym przedziale czasu przypisują zdarzeniom mniejsze znaczenie niż test log-rank.
+Na \hyperref[fig:testy-wykres]{wykresie \ref*{fig:testy-wykres}} widać, jakie unormowane wagi przypisuje każdy z testów dla poszczególnych czasów. Dla $t \approx 320$ wagi testów Gehan-Breslow, Peto-Peto i Tarone-Ware przecinają krzywą wag testu logrank, co oznacza, że dla zdarzeń o czasie większym niż 320 przypisywane jest mniejsze znaczenie niż przy teście logrank.
 
 ```{r Kaplan-Meier-rak, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących pacjentek z rakiem jajnika - Mayo Clinic", warning=FALSE}
 surv.II <- Surv(df.II$times, df.II$deltas)
@@ -943,16 +943,28 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   theme(legend.position = "bottom")
 ```
 
-Z \hyperref[fig:Kaplan-Meier-rak]{Wykresu \ref*{fig:Kaplan-Meier-rak}.} można zauważyć, że estymatory przeżycia Kaplana-Meiera dla obu zbiorów danych pacjentek rakowych są dość zbliżone do czasu $t \approx 320$. Po tym punkcie funkcje przeżycia gwałtownie spadają, co oznacza, że w tym okresie występuje wiele zdarzeń (np. progresji choroby). To skutkuje spadkiem wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware w późniejszych momentach czasu, co oznacza, że późne zdarzenia mają mniejszy wpływ na wartość statystyki testowej w porównaniu do testu log-rank. W konsekwencji główny wkład do obliczenia wartości p pochodzi ze zdarzeń występujących wcześniej, zanim funkcje przeżycia drastycznie spadną.
+Z \hyperref[fig:Kaplan-Meier-rak]{Wykresu \ref*{fig:Kaplan-Meier-rak}.} można zauważyć, że estymatory przeżycia Kaplana-Meiera dla obu zbiorów danych pacjentek rakowych są dość zbliżone do czasu $t \approx 320$. Po tym punkcie funkcje przeżycia gwałtownie spadają, co oznacza, że w tym okresie występuje progresja choroby dla wielu pacjentek. To skutkuje spadkiem wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware w późniejszych momentach czasu, co oznacza, że późne zdarzenia mają mniejszy wpływ na wartość statystyki testowej w porównaniu do testu logrank. W konsekwencji główny wkład do obliczenia wartości $p$ pochodzi ze zdarzeń występujących wcześniej, zanim funkcje przeżycia drastycznie spadną.
 
-Ze względu na spadek wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware dla późnych czasów, istotność statystyczna opiera się głównie na wcześniejszych zdarzeniach. W tym przypadku najbardziej reprezentatywne jest $p$‑value z testu log-rank, który równomiernie uwzględnia wszystkie zdarzenia, co widać na Z \hyperref[fig:Kaplan-Meier-rak]{wykresie \ref*{fig:Kaplan-Meier-rak}.} estymatorów Kaplana-Meiera.
+Ze względu na spadek wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware dla późnych czasów, istotność statystyczna opiera się głównie na wcześniejszych zdarzeniach. W tym przypadku najbardziej reprezentatywne jest $p$‑value z testu logrank, który równomiernie uwzględnia wszystkie zdarzenia, co widać na \hyperref[fig:Kaplan-Meier-rak]{wykresie \ref*{fig:Kaplan-Meier-rak}.} estymatorów Kaplana-Meiera.
 
 \newpage
 # Zadania dodatkowe
 
 ## Zadanie 1
 
-TO DO
+```{r, echo=TRUE}
+cenzurowanie_losowe <- function(theta, data) {
+  censor_data <- rexp(length(data), rate=theta)
+  deltas <- as.numeric(data <= censor_data)
+  censored_data <- ifelse(data <= censor_data, data, censor_data)
+  list(times = censored_data, deltas = deltas)
+}
+
+GE_cenzurowanie_losowe <- function(theta, alpha, lambd, n) {
+  data <- EW_generator(alpha = 1, beta = lambd, gamm = alpha, size = n)
+  cenzurowanie_losowe(theta, data)
+}
+```
 
 ## Zadanie 2
 
