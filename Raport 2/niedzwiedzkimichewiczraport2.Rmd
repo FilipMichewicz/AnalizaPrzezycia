@@ -2,7 +2,7 @@
 title: "Analiza Przeżycia"
 subtitle: "Raport 2"
 author: "Wiktor Niedźwiedzki (258882)  \n  Filip Michewicz (282239)"
-date: "23 listopada 2025 Anno Domini"
+date: "8 grudnia 2025 Anno Domini"
 output:
   pdf_document:
     number_sections: true
@@ -40,7 +40,7 @@ library(latex2exp)
 
 knitr::opts_chunk$set(fig.align='center', 
                       fig.pos='H', 
-                      dev='png', 
+                      #dev='png', 
                       dpi=1200, 
                       fig.width = 6, 
                       fig.height = 3.5,
@@ -101,7 +101,7 @@ GE_cenzurowanie_I_typu <- function(t0, alpha, lambd, n) {
 \newpage
 # Lista 5
 
-Lista obejmuje estymatory funkcji przeżycia dla danych niecenzurowanych, w szczególności estymator \newline Kaplana–Meiera oraz estymator Fleminga–Harringtona, zarówno bez korekty, jak i z ogonem estymowanym według propozycji Browna, Hollandera i Kowara. Dodatkowo przeprowadzono oszacowanie wartości funkcji przeżycia w chwili cenzurowania oraz w dwukrotności czasu cenzurowania, na podstawie symulacji dla danych generowanych z uogólnionego rozkładu wykładniczego $\mathcal{GE}(\lambda, \alpha)$.
+Lista obejmuje estymatory funkcji przeżycia dla danych niecenzurowanych, w szczególności estymator Kaplana–Meiera oraz estymator Fleminga–Harringtona, zarówno bez korekty, jak i z ogonem estymowanym według propozycji Browna, Hollandera i Kowara. Dodatkowo przeprowadzono oszacowanie wartości funkcji przeżycia w chwili cenzurowania oraz w dwukrotności czasu cenzurowania, na podstawie symulacji dla danych generowanych z uogólnionego rozkładu wykładniczego $\mathcal{GE}(\lambda, \alpha)$.
  
 ## Zadanie 1
 
@@ -157,7 +157,7 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
                      labels = c("Lek A", "Lek B")) +
   scale_y_continuous(limits = c(0,1)) +
   labs(x = "Czas do remisji (t)",
-       y = "Estymowana wartość funkcji przeżycia S(t)",
+       y = expression(hat(S)(t)),
        color = "Grupa") +
   theme_minimal() +
   theme(legend.position = "bottom")
@@ -205,7 +205,7 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
                      labels = c("Lek A", "Lek B")) +
   scale_y_continuous(limits = c(0,1)) +
   labs(x = "Czas do remisji (t)",
-       y = "Estymowana wartość funkcji przeżycia S(t)",
+       y = expression(hat(S)(t)),
        color = "Grupa") +
   theme_minimal() +
   theme(legend.position = "bottom")
@@ -213,7 +213,7 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
 
 \hyperref[fig:FH-plot]{Wykres \ref*{fig:FH-plot}.} przedstawia estymowaną funkcję przeżycia za pomocą estymatora Fleminga-Harringtona. Uwagi dotyczące bycia dobrze określonym są analogiczne jak do estymatora Kaplana-Meiera.
 
-Obydwa estymatory dają podobne wyniki. W krótkim czasie lek B wydaje się korzystniejszy (wyższa funkcja przeżycia, dłuższy czas do remisji), natomiast dla $t > 0,5$ bardziej efektywny staje się lek A. Do dokładniejszej analizy warto zastosować test, np. Kołmogorowa–Smirnowa.
+Obydwa estymatory dają podobne wyniki. W krótkim czasie lek B wydaje się korzystniejszy (wyższa funkcja przeżycia, dłuższy czas do remisji), natomiast dla $t > 0,5$ bardziej efektywny staje się lek A. Do dokładniejszej analizy warto zastosować, np. test Kołmogorowa–Smirnowa.
 
 ## Zadanie 2
 
@@ -237,20 +237,19 @@ BHK.tail <- function(df, end = 3, type = "kaplan-meier") {
   df.complete <- data.frame(time = fit$time, 
                             surv = fit$surv)
 
-  # Sprawdzenie, czy można dodać ogon (ostatni punkt jest cenzurowany)
-  if (tail(fit$n.event, 1) == 0) {
-    t_plus <- tail(df.complete$time, 1)
-    S_plus <- tail(df.complete$surv, 1)
-    
-    theta <- -log(S_plus) / t_plus
-    
-    # Generowanie ogona
-    time_tail <- seq(t_plus, end, length.out = 1000)
-    surv_tail <- exp(-theta * time_tail)
-    df_tail <- data.frame(time = time_tail, surv = surv_tail)
-    
-    df.complete <- rbind(df.complete, df_tail)
-  }
+  # Ogin
+  t_plus <- tail(df.complete$time, 1)
+  S_plus <- tail(df.complete$surv, 1)
+  
+  theta <- -log(S_plus) / t_plus
+  
+  # Generowanie ogona
+  time_tail <- seq(t_plus, end, length.out = 1000)
+  surv_tail <- exp(-theta * time_tail)
+  df_tail <- data.frame(time = time_tail, surv = surv_tail)
+  
+  df.complete <- rbind(df.complete, df_tail)
+  
   # Dodanie punktu początkowego
   df.complete <- rbind(data.frame(time = 0, surv = 1), df.complete)
   return(df.complete)
@@ -329,7 +328,7 @@ n_values <- c(30, 50, 100)
 alpha <- 2
 lambda <- 2
 
-t0 <- (digamma(alpha + 1) + 0.5772156649) / lambda # ja pierdole
+t0 <- (digamma(alpha + 1) + 0.5772156649) / lambda
 
 results_t0 <- list()
 results_2t0 <- list()
@@ -406,9 +405,7 @@ histograms$"100"
 
 \hyperref[fig:hist-3]{Wykres \ref*{fig:hist-3}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 30$. Podobnie jak na poprzednim \hyperref[fig:hist-2]{wykresie} wraz ze wzrostem próby wartości przesunęły się ku mniejszym wartością. 
 
-Wraz ze wzrostem liczności próby, histogramy z poprzednich wykresów układają się w kształt dzwonowy charakterystyczny dla rozkładu normalnego. To z kolei pozwala przypuszczać, że estymator Kaplana–Meiera jest asymptotycznie normalny w punktach $t_0$ oraz $2 t_0$.
-
-Jednak test graficzny nie jest wystarczającym dowodem normalności rozkładu. Przeprowadźmy zatem test formalny Shapiro-Wilka, który w pakiecie R dostępny jest w funckji `shapiro.test` z pakietu `stats`.
+Wraz ze wzrostem liczności próby, histogramy z poprzednich wykresów układają się w kształt dzwonowy charakterystyczny dla rozkładu normalnego. To z kolei pozwala przypuszczać, że estymator Kaplana–Meiera jest asymptotycznie normalny w punktach $t_0$ oraz $2 t_0$. Do dalszej analizy wykorzystano test Shapiro-Wilka, który w pakiecie R dostępny jest w funckji `shapiro.test` z pakietu `stats`.
 
 ```{r shapiro-wilk, echo=FALSE}
 df <- data.frame(t0 = c(shapiro.test(results_t0$"30")$p.value,
@@ -418,18 +415,17 @@ df <- data.frame(t0 = c(shapiro.test(results_t0$"30")$p.value,
                          shapiro.test(results_2t0$"50")$p.value,
                          shapiro.test(results_2t0$"100")$p.value))
 
-colnames(df) <- c("$t_0$", "$2t_0$")
-rownames(df) <- c("n=30", "n=50", "n=100")
+rownames(df) <- c("30", "50", "100")
 
-kable(df, digits=3, escape=FALSE, caption="\\label{tab:testy-sw} $p$-value testu Shapiro-Wilka na oszacowaniach funkcji przeżycia w punktach $t_0$ oraz $2 t_0$")
+kable(df, digits=9, escape=FALSE, col.names = c("n", "$t_0$", "$2t_0$"), caption="\\label{tab:testy-sw} Wartości $p$ testu Shapiro-Wilka dla oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$")
 ```
 
-W \hyperref[tab:testy-sw]{tabeli \ref*{tab:testy-sw}.} widać, że (zaokrąglone) $p$-value wynosi 0, zatem na dowolnym sensownym poziomie istotności $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
+Z \hyperref[tab:testy-sw]{Tabeli \ref*{tab:testy-sw}.} można odczytać że dla wszystkich przypadku $p-value$ jest równe zeru lub bliskie zera, a zatem dla prawie każdego poziomu $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
 
 \newpage
 # Lista 6
 
-Lista dotyczy estymacji średniego czasu życia w oparciu o estymatory Kaplana–Meiera oraz \newline Fleminga–Harringtona, z uwzględnieniem szacowania "ogona" zaproponowanego przez Browna, Hollandera \newline i Kowara. Dodatkowo dokonano estymacji średniego czasu życia dla danych pochodzących \newline z zadania 3 z listy 2.
+Lista dotyczy estymacji średniego czasu życia w oparciu o estymatory Kaplana–Meiera oraz Fleminga–Harringtona, z uwzględnieniem szacowania "ogona" zaproponowanego przez Browna, Hollandera i Kowara. Dodatkowo dokonano estymacji średniego czasu życia dla danych pochodzących z zadania 3 z listy 2.
 
 ## Zadanie 1
 
@@ -573,7 +569,7 @@ Wariancja estymatora $\hat\mu_\tau$ jest przybliżana za pomocą wzoru:
 
 $$
 \widehat V(\hat\mu_\tau)
-= \sum_{i=1}^{D}\biggl(\int_{s_i}^{\tau}\widehat S(t)\,\mathrm{d}t\biggr)^2
+= \sum_{i=1}^{D}\left(\int_{s_i}^{\tau}\widehat S(t)\,\mathrm{d}t\right)^2
 \frac{d_i}{r_i(r_i - d_i)}.
 $$
 
@@ -684,7 +680,8 @@ W przypadku pacjentek w stadium II czasy (w dniach) do progresji choroby były n
 
 Dla pacjentek w stadium IIIA czasy (w dniach) wynosiły: 34, 88, 137, 199, 280, 291, 299+, 300+, 309, 351, 358, 369, 369, 370, 375, 382, 392, 429+, 451, 1119+.
 
-Ze względu na to, że progresja chorób nowotworowych zależy od wielu czynników, w szczególności indywidualnych, trudno jest wybrać "sensowne" maksymalne czasy do progresji choroby. Dlatego wyznaczenia przedziałów ufności dokonano dla dwóch wartości parametru $\tau$: $\tau = 1460$ oraz $\tau = 1825$, które stanowią czas odpowiednio 4 oraz 5 lat (uproszczenie: 1 rok = 365 dni). Następnie porównano uzyskane realizacje przedziałów ufności dla obu grup i obu wartości $\tau$.
+Ze względu na fakt, że progresja chorób nowotworowych zależy od wielu czynników, w szczególności indywidualnych, trudno jest ustalić jednoznacznie "sensowne" maksymalne czasy do progresji choroby. Dlatego przedziały ufności wyznaczono dla dwóch wartości parametru $\tau$: $\tau = 1460$ oraz $\tau = 1825$, odpowiadających odpowiednio 4 i 5 latom (przy przyjęciu uproszczenia: 1 rok = 365 dni). Następnie porównano uzyskane przedziały ufności dla obu grup i obu wartości $\tau$.
+
 
 ``` {r raki}
 times.II <- c(28, 89, 175, 195, 309, 377, 393, 421, 447, 462, 709, 744, 770, 
@@ -719,7 +716,7 @@ kable(raki1,
       caption = "\\label{tab:raki1} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1460$")
 ```
 
-\hyperref[tab:raki1]{Tabela \ref*{tab:raki1}.} pokazuje wyraźnie dłuższy przedział ufności dla pacjentek z rakiem typu II niż IIIA. Prawdopodobnie jest to spowodowane tym, że grupa ta ma mniej zarejestrowanych wszystkich obserwacji, jak i mniej obserwacji kompletnych. Dodatkowo, niższe stadium charakteryzuje się większymi wartościami czasu (różnica między minimalną wartością typu II a maksymalną typu IIIA wynosi jedynie `r round(Ci_III_1$T_U, 3) - round(Ci_II_1$T_L, 3)`), co znajduje odzwierciedlenie w rzeczywistych danych: wyższy stopień zaawansowania nowotworu wiąże się z szybszą progresją choroby.
+Z \hyperref[tab:raki1]{Tabeli \ref*{tab:raki1}} wynika, że przedział ufności dla pacjentek z rakiem typu II jest szerszy niż dla pacjentek z rakiem typu IIIA. Prawdopodobnie wynika to z faktu, że grupa typu II obejmuje mniej zarejestrowanych obserwacji, w tym mniej obserwacji kompletnych. Dodatkowo, niższe stadium choroby charakteryzuje się większymi wartościami czasu - różnica między minimalną wartością dla typu II a maksymalną dla typu IIIA wynosi zaledwie `r round(Ci_III_1$T_U, 3) - round(Ci_II_1$T_L, 3)`. Obserwacja ta odpowiada rzeczywistym danym: wyższy stopień zaawansowania nowotworu wiąże się ze szybszą progresją choroby.
 
 ```{r nieboraki2, echo=FALSE}
 raki2 <- data.frame(
@@ -734,7 +731,9 @@ kable(raki2,
       caption = "\\label{tab:raki2} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1825$")
 ```
 
-\hyperref[tab:raki2]{Tabela \ref*{tab:raki2}.} wskazuje na odmienne zachowanie przedziałów ufności dla poszczególnych grup. W przypadku grupy kobiet z nowotworem typu II zarówno dolna, jak i górna granica zwiększyły swoje wartości, jednak ta druga prawie trzykrotnie więcej. W przypadku raka typu IIIA górna granica również wzrosła, jednak dolna zmalała. Również wartości zmian są mniejsze niż w niższym stadium, co sugeruje "stabilniejsze", a tym samym lepsze zachowanie estymatora funkcji przeżycia z ogonem. Patrząc na zachowanie estymacji należy również zauważyć, że dla raka typu II zaobserwowano większą wartość czasu przeżycia niż jego wariancję, a dla typu IIIA - na odwrót. Wspólną cechą dla obu grup jest wzrost długości przedziałów
+Z \hyperref[tab:raki2]{tabeli \ref*{tab:raki2}} można odczytać odmienne zachowanie przedziałów ufności dla poszczególnych grup. W przypadku pacjentek z nowotworem typu II zarówno dolna, jak i górna granica przedziału wzrosły, przy czym górna granica zwiększyła się wyraźnie bardziej niż dolna. W przypadku raka typu IIIA górna granica również wzrosła, natomiast dolna uległa obniżeniu. Zmiany w grupie typu IIIA są mniejsze niż w grupie typu II, co sugeruje bardziej stabilne zachowanie estymatora funkcji przeżycia w ogonie rozkładu.
+
+Analizując estymacje, można zauważyć, że dla raka typu II wartość czasu przeżycia była większa niż jego wariancja, natomiast dla typu IIIA sytuacja była odwrotna. Wspólną cechą obu grup jest wydłużenie przedziałów ufności, co wskazuje na zwiększoną niepewność estymacji przy dłuższym czasie obserwacji.
 
 \newpage
 # Lista 8
@@ -743,7 +742,7 @@ Lista polega na weryfikacji hipotezy o jednakowym rozkładzie czasu do progresji
 
 ## Zadanie 1
 
-W tym zadaniu dokonano wyliczenia wartości $p$-value dla hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, z podziałem na sposób dobierania wagi.
+W zadaniu dokonano wyliczenia wartości $p$-value dla hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, z podziałem na sposób dobierania wagi.
 
 Na początek łączymy poszczególne próby $\mathbb{X}_1,\dots,\mathbb{X}_k$, gdzie $\mathbb{X}_j = (X_{j1},\dots,X_{jn_j})$, $j \in \{1,\dots,k\}$. Z tak połączonych grup wyznaczamy (unikalne) czasy zdarzeń, których liczbę oznaczamy przez $D$, i porządkujemy je rosnąco: $t_1 < t_2 < \dots < t_D$.
 
@@ -825,19 +824,24 @@ df <- data.frame("$p$-value"=c(pvalue(lg),
 
 rownames(df) <- c("logrank", "Gehan-Breslow", "Peto-Peto", "Tarone-Ware")
 
-kable(df, row.names=TRUE, digits=3, escape=FALSE, caption="\\label{tab:nieboraki} Wartości $p$-value dla testów czasu do progresji choroby weryfikujących hipotezę o jednakowym rozkładzie w grupach pacjentek")
+kable(df, row.names=TRUE, digits=3, escape=FALSE, col.names = c("Test", "p-value"), caption="\\label{tab:nieboraki} Wartości $p$-value dla testów czasu do progresji choroby weryfikujących hipotezę o jednakowym rozkładzie w grupach pacjentek rakowych kliniki Mayo Clinic")
 ```
 
-Z \hyperref[tab:nieboraki]{tabeli \ref*{tab:nieboraki}.} wynika, że na ustalonym poziomie ufności $\alpha=0.05$ hipoteza powinna zostać odrzucona jedynie w przypadku testu log-rank. Wartości $p$-value dla poszczególnych funkcji wag różnią się od siebie. Wynika to bezpośrednio z ich konstrukcji:
 
-* log-rank traktuje wszystkie zdarzenia równoważnie,
-* Gehan-Breslow większy nakład nadaje zdarzeniom wcześniejszym,
-* Peto-Peto dla poszczególnych czasów uwzględnia nie tylko obecne zdarzenie, ale również i wszystkie poprzednie oraz informację, ile zdarzeń z połączonych prób wydarzyło się w tym samym czasie,
-* Tarone-Ware, podobnie jak Gehan-Breslow, kładzie nacisk na wcześniejsze zdarzenia, jednakże zmniejsza różnice między wagami nakładając na nie pierwiastek.
+Z \hyperref[tab:nieboraki]{Tabeli \ref*{tab:nieboraki}} wynika, że na ustalonym poziomie istotności $\alpha = 0.05$ hipoteza o jednakowym rozkładzie czasu do progresji powinna zostać odrzucona jedynie w przypadku testu log-rank. Wartości $p$-value dla poszczególnych funkcji wag różnią się między sobą, co wynika bezpośrednio z ich konstrukcji:
+
+* **log-rank** traktuje wszystkie zdarzenia równoważnie, wykrywając globalne różnice między grupami, nawet jeśli ujawniają się one późno,
+* **Gehan-Breslow** przypisuje większą wagę wcześniejszym czasom - jeżeli różnice między grupami pojawiają się późno, test staje się na nie mniej wrażliwy,
+* **Tarone-Ware** jest kompromisem między log-rank a Gehan-Breslow - zmniejsza różnice między wagami, nakładając na nie pierwiastek,
+* **Peto-Peto** dla poszczególnych czasów uwzględnia nie tylko aktualne zdarzenie, ale również wszystkie wcześniejsze oraz informację o liczbie zdarzeń w połączonych próbach, które wystąpiły w tym samym czasie.
+
+Podsumowując, istotność wykazana przez test log-rank wskazuje na globalną różnicę w przebiegu czasu do zdarzenia między grupami, natomiast brak istotności w pozostałych testach odzwierciedla fakt, że lokalne lub czasowo rozłożone różnice są mniej wyraźne.
 
 ## Zadanie 2
 
-Zadanie polega
+Zadanie polega na naszkicowaniu wykresów estymatorów Kaplana–Meiera funkcji przeżycia dla dwóch grup oraz unormowanych funkcji wagowych testów log-rank, Gehan-Breslow, Tarone-Ware i Peto-Peto. Na podstawie wykresów należy przeanalizować, jak kształt funkcji przeżycia i przypisane wagi wpływają na wartości $p$-value oraz wnioski dotyczące istotności różnic między grupami.
+
+Poniżej przedstawiono blok kodu w R, który oblicza dla każdego zaobserwowanego czasu zdarzenia liczby jednostek w stanie ryzyka i liczby zdarzeń, a następnie na ich podstawie generuje unormowane funkcje wag.
 
 ```{r testy-wykres_przygotowanie}
 # Uzupełnienie danych o wartości r_i i d_i
@@ -884,56 +888,27 @@ df.cancer_unique$PP <- df.cancer_unique$PP/sum(df.cancer_unique$PP)
 df.cancer_unique$TW <- df.cancer_unique$TW/sum(df.cancer_unique$TW)
 ```
 
-```{r testy-wykres, echo=FALSE, fig.cap="\\label{fig:chuj} chuj"}
-ggplot(df.cancer_unique, aes(times)) +
-  geom_line(aes(y=lg, color = factor("logrank",
-                levels = c("logrank", "Gehan-Breslo", "Peto-Peto", "Tarone-Ware"))), lwd=1) +
-  geom_line(aes(y=GB, color = factor("Gehan-Breslo",
-                                     levels = c("logrank", "Gehan-Breslo", "Peto-Peto", "Tarone-Ware"))), lwd=1) +
-  geom_line(aes(y=PP, color = factor("Peto-Peto",
-                                     levels = c("logrank", "Gehan-Breslo", "Peto-Peto", "Tarone-Ware"))), lwd=1) +
-  geom_line(aes(y=TW, color = factor("Tarone-Ware",
-                                     levels = c("logrank", "Gehan-Breslo", "Peto-Peto", "Tarone-Ware"))), lwd=1) +
-  scale_color_manual(values = c("logrank" = "red",
-                                "Gehan-Breslo" = "violet",
-                                "Peto-Peto" = "cyan3",
-                                "Tarone-Ware" = "darkblue"),
-                     labels = c("logrank", "Gehan-Breslo",
-                                "Peto-Peto", "Tarone-Ware")) +
-  labs(x = "Czas", 
-       y = "Unormowana waga", 
-       color = "Rodzaj testu") +
+```{r testy-wykres, echo=FALSE, fig.cap="\\label{fig:udbzddp} Wagi testów nieparametrycznych dla porównania rozkładów czasów przeżycia - Mayo Clinic"}
+ggplot(df.cancer_unique, aes(x = times)) +
+  geom_line(aes(y = lg, color = "Log-rank"), linewidth = 1.2) +
+  geom_line(aes(y = GB, color = "Gehan-Breslow"), linewidth = 1.2) +
+  geom_line(aes(y = PP, color = "Peto-Peto"), linewidth = 1.2) +
+  geom_line(aes(y = TW, color = "Tarone-Ware"), linewidth = 1.2) +
+  scale_color_manual(values = c("Log-rank"="tomato", 
+                                "Gehan-Breslow"="steelblue",
+                                "Tarone-Ware"="darkgreen", 
+                                "Peto-Peto"="wheat")) +
+  labs(x = "Czas do progresji (t)", 
+       y = "Unormowana funkcja wagowa W(t)", 
+       color = "Test") +
   theme_minimal() +
   theme(legend.position = "bottom")
+
 ```
 
-Na \hyperref[fig:testy-wykres]{wykresie \ref*{fig:testy-wykres}.} chuja widać.
+Na \hyperref[fig:testy-wykres]{wykresie \ref*{fig:testy-wykres}} widać, jakie unormowane wagi przypisuje każdy z testów dla poszczególnych czasów. Dla $t \approx 320$ wagi testów Gehan-Breslow, Peto-Peto i Tarone-Ware przecinają krzywą wag testu log-rank, co oznacza, że w tym przedziale czasu przypisują zdarzeniom mniejsze znaczenie niż test log-rank.
 
-```{r Kaplan-Meier-rak1, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących nowotworów jajników 1"}
-df.all <- rbind(df.II, df.III)
-surv.all <- Surv(df.all$times, df.all$deltas)
-
-# Estymator Kaplana-Meiera
-fit.KM.all <- survfit(surv.all ~ 1)
-
-# Ramki danych do wykresu
-plot.all <- data.frame(time = c(0, fit.KM.all$time), 
-                     surv = c(1, fit.KM.all$surv))
-
-max.time <- max(df.all$times[df.all$deltas==1])
-
-ggplot(plot.all, aes(x = time, y = surv, color = "violet")) +
-  geom_step(linewidth = 1.2) +
-  scale_y_continuous(limits = c(0,1)) +
-  scale_x_continuous(limits = c(0, max.time)) +
-  labs(x = "Czas do progresji (t)",
-       y = "Estymowana wartość funkcji przeżycia S(t)") +
-  theme_minimal()
-```
-
-Na \hyperref[fig:Kaplan-Meier-rak1]{wykresie \ref*{fig:Kaplan-Meier-rak1}.} chuja widać.
-
-```{r Kaplan-Meier-rak, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących nowotworów jajników"}
+```{r Kaplan-Meier-rak, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących pacjentek z rakiem jajnika - Mayo Clinic", warning=FALSE}
 surv.II <- Surv(df.II$times, df.II$deltas)
 surv.IIIA <- Surv(df.III$times, df.III$deltas)
 
@@ -958,17 +933,19 @@ max.time <- max(max(df.II$times[df.II$deltas==1]),
 ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   geom_step(linewidth = 1.2) +
   scale_color_manual(values = c("II" = "steelblue", "IIIA" = "tomato"),
-                     labels = c("Typ II", "Typ IIIA")) +
+                     labels = c("II", "IIIA")) +
   scale_y_continuous(limits = c(0,1)) +
   labs(x = "Czas do progresji (t)",
-       y = "Estymowana wartość funkcji przeżycia S(t)",
-       color = "Grupa") +
+       y = expression(hat(S)(t)),
+       color = "Typ nowotworu") +
   scale_x_continuous(limits = c(0, max.time)) +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
 
-Na \hyperref[fig:Kaplan-Meier-rak]{wykresie \ref*{fig:Kaplan-Meier-rak}.} chuja widać.
+Z \hyperref[fig:Kaplan-Meier-rak]{Wykresu \ref*{fig:Kaplan-Meier-rak}.} można zauważyć, że estymatory przeżycia Kaplana-Meiera dla obu zbiorów danych pacjentek rakowych są dość zbliżone do czasu $t \approx 320$. Po tym punkcie funkcje przeżycia gwałtownie spadają, co oznacza, że w tym okresie występuje wiele zdarzeń (np. progresji choroby). To skutkuje spadkiem wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware w późniejszych momentach czasu, co oznacza, że późne zdarzenia mają mniejszy wpływ na wartość statystyki testowej w porównaniu do testu log-rank. W konsekwencji główny wkład do obliczenia wartości p pochodzi ze zdarzeń występujących wcześniej, zanim funkcje przeżycia drastycznie spadną.
+
+Ze względu na spadek wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware dla późnych czasów, istotność statystyczna opiera się głównie na wcześniejszych zdarzeniach. W tym przypadku najbardziej reprezentatywne jest $p$‑value z testu log-rank, który równomiernie uwzględnia wszystkie zdarzenia, co widać na Z \hyperref[fig:Kaplan-Meier-rak]{wykresie \ref*{fig:Kaplan-Meier-rak}.} estymatorów Kaplana-Meiera.
 
 \newpage
 # Zadania dodatkowe
@@ -1405,7 +1382,7 @@ rz_km_plot <- function(df, m1 = 2, m2 = 5, to = 3) {
     scale_color_manual(values = c("KM" = "tomato", "RZ" = "steelblue"),
                        labels = c("KM" = "Kaplana-Meiera", "RZ" = "Rossy-Zielińskiego")) +
     scale_y_continuous(limits = c(0, 1)) +
-    labs(x = "Czas", y = "S(t)", color = "Estymator") +
+    labs(x = "Czas", y = expression(hat(S)(t)), color = "Estymator") +
     theme_minimal() +
     theme(
       legend.position = "bottom",
