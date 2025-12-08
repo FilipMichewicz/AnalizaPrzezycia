@@ -764,7 +764,7 @@ Lista polega na weryfikacji hipotezy o jednakowym rozkładzie czasu do progresji
 
 W zadaniu dokonano wyliczenia wartości $p$-value dla hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, z podziałem na sposób dobierania wagi.
 
-Na początek dokonano konkatenacji poszczególnych prób $\mathbb{X}_1,\dots,\mathbb{X}_k$, gdzie $\mathbb{X}_j = (X_{j1},\dots,X_{jn_j})$, $j \in \{1,\dots,k\}$. Z tak połączonych prób wyznaczono (unikalne) czasy zdarzeń, których liczbę oznaczono przez $D$, i uporzątkowano je rosnąco: $t_1 < t_2 < \dots < t_D$.
+Na początek dokonano konkatenacji poszczególnych prób $\mathbb{X}_1,\dots,\mathbb{X}_k$, gdzie $\mathbb{X}_j = (X_{j1},\dots,X_{jn_j})$, $j \in \{1,\dots,k\}$. Z tak połączonych prób wyznaczono (unikalne) czasy zdarzeń, których liczbę oznaczono przez $D$, i uporządkowano je rosnąco: $t_1 < t_2 < \dots < t_D$.
 
 Statystyka testowa opiera się na sumie ważonych różnic między oszacowanymi hazardami w momentach $t_i$. Oszacowania te wyznaczane są za pomocą estymatora Nelsona--Aalena funkcji hazardu:
 
@@ -1013,7 +1013,7 @@ $$
 \sqrt{n}\left(g\left(X_n\right)-g\left(\vartheta\right)\right) \xrightarrow{d}
 \mathcal{N}\left(0, \left[g'\left(\vartheta\right)\right]^2\sigma^2\right).
 $$
-W przypadku połączenia metody delta z własnościami asymptotycznymi estymatora Kaplana-Meiera, dochodzi się do następującego wnioseku:
+W przypadku połączenia metody delta z własnościami asymptotycznymi estymatora Kaplana-Meiera, dochodzi się do następującego wniosku:
 
 $$
 \frac{g\left(\hat{S}_n(t)\right)-g\left(S(t)\right)}{g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)} \xrightarrow{d} \mathcal{N}(0,1).
@@ -1246,7 +1246,7 @@ $$
 3. Jeżeli $k< j < N-k$ ($t$ jest dostatecznie daleko od krawędzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
 
     1. Blok jednostkowy (dokładnie $m$ indeksów)
-       Dla indeksów $i\in{j-k,j-k+1,\dots,j+k}$ przyjmje się $w_i(t)=1.$
+       Dla indeksów $i\in{j-k,j-k+1,\dots,j+k}$ przyjmuje się $w_i(t)=1.$
 
     2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
        Jeśli istnieje indeks lewy ($j - k \ge 1$)
@@ -1642,7 +1642,7 @@ Podsumowując, estymator Rossy-Zielińskiego sprawnie wygładza funkcję przeży
 
 ## Zadanie 3
 
-Zadanie wyprowadzenia ścisłych własności asymptotycznych dla tego estymatora jest bardzo trudne, a autorzy \cite{rossa2002} wręcz sugerują, że może być niemożliwe do uzyskania w interesującej formie. Jednak twierdzą oni, że dla dużej liczności próby $n$, tym samym dla dużej liczby $N$, ich estymator będzie zachowywał się jak estymator Kaplana-Meiera, tym samym zachowując jego asymptotyczne własności.
+Zadanie wyprowadzenia ścisłych własności asymptotycznych dla tego estymatora jest bardzo trudne, a autorzy \cite{rossa2002} wręcz sugerują, że może być niemożliwe do uzyskania w interesującej formie. Jednak twierdzą oni, że dla dużej liczności próby $n$, tym samym dla dużej liczby $N$, ich estymator będzie zachowywał się jak estymator Kaplana-Meiera, tym samym zachowując jego asymptotyczne własności. Informacja ta znajduje się na końcu trzeciej sekcji, strona 10.
 
 \newpage
 # Bibliografia
@@ -1665,4 +1665,5 @@ Communications in Statistics - Theory and Methods, 31(1):147-158, 2002,
 
 ```{r adrian, echo=FALSE}
 # Hej Adrian jak to czytasz to hej.
+# Filip i Wiktor
 ```
