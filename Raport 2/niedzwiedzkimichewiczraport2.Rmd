@@ -182,7 +182,7 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:KM-plot]{Wykres \ref*{fig:KM-plot}.} przedstawia estymowaną funkcję przeżycia za pomocą estymatora Kaplana–Meiera. Dane w obu przypadkach są prawostronnie cenzurowane typu I, zatem największe wartości w zbiorach danych są cenzurowane, a po ostatnim pełnym (niecenzurowanym) czasie występują obserwacje cenzurowane, przez co estymator nie jest określony dla $t > t_{(n)}$. Dlatego do czasu $t \leq t_{(n)}$ estymator Kaplana–Meiera jest dobrze określony. W przypadku gdyby obserwacja $t_{(n)}$ była kompletna, to dla $t > t_{(n)}$  mielibyśmy $\hat{S}(t)=0$.
+\hyperref[fig:KM-plot]{Wykres \ref*{fig:KM-plot}.} przedstawia estymowaną funkcję przeżycia za pomocą estymatora Kaplana–Meiera. Dane w obu przypadkach są prawostronnie cenzurowane typu I, zatem największe wartości w zbiorach danych są cenzurowane, a po ostatnim pełnym (niecenzurowanym) czasie występują obserwacje cenzurowane, przez co estymator nie jest określony dla $t > t_{(n)}$. Dlatego do czasu $t \leq t_{(n)}$ estymator Kaplana–Meiera jest dobrze określony. W przypadku gdyby obserwacja $t_{(n)}$ była kompletna, to dla $t > t_{(n)}$  estymator wynosiłby $\hat{S}(t)=0$.
 
 ### Estymator Fleminga-Harringtona
 
@@ -238,7 +238,7 @@ Obydwa estymatory dają podobne wyniki. W krótkim czasie lek B wydaje się korz
 
 Zadanie dotyczy generowania wykresu funkcji przeżycia estymowanej metodą Kaplana–Meiera, z uwzględnieniem oszacowania ogona funkcji przeżycia, zaproponowanego przez Browna, Hollandera i Kowara.
 
-Brown, Hollander i Kowar (1974) sugerowali oszacowanie ogona funkcji przeżycia przez odpowiednio dobraną funkcję przeżycia rozkładu wykładniczego, taką, aby w punkcie $t^+$ (ostatnim zarejestrowanym czasie) była równa $S(t^+)$.
+Brown, Hollander i Kowar sugerowali oszacowanie ogona funkcji przeżycia przez odpowiednio dobraną funkcję przeżycia rozkładu wykładniczego, taką, aby w punkcie $t^+$ (ostatnim zarejestrowanym czasie) była równa $S(t^+)$.
 
 Po krótkich obliczeniach przeprowadzonych na wykładzie otrzymuje się:
 
@@ -440,7 +440,7 @@ rownames(df) <- c("30", "50", "100")
 kable(df, digits=9, escape=FALSE, col.names = c("n", "$t_0$", "$2t_0$"), caption="\\label{tab:testy-sw} Wartości $p$ testu Shapiro-Wilka dla oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$")
 ```
 
-Z \hyperref[tab:testy-sw]{Tabeli \ref*{tab:testy-sw}.} można odczytać że dla wszystkich przypadków $p$-value jest równe zeru lub bliskie zera, a zatem dla prawie każdego poziomu $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
+Z \hyperref[tab:testy-sw]{Tabeli \ref*{tab:testy-sw}.} można odczytać że dla wszystkich przypadków $p$-value jest równe zeru lub bliskie zera, a zatem dla prawie każdego poziomu $\alpha$ powinno się odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
 
 \newpage
 # Lista 6
@@ -559,7 +559,7 @@ Lista polega na napisaniu funkcji która na podstawie danych cenzurowanych losow
 
 Zadanie polega na zdefiniowaniu funkcji, która dla zadanych danych, poziomu istotności $\alpha$ oraz wartości $\tau$ (odzwierciedlającej naszą wiedzę a priori o maksymalnym czasie do wystąpienia zdarzenia) zwraca dolną i górną granicę przedziału ufności dla średniego czasu życia, na poziomie ufności $1-\alpha$.
 
-Do wyznaczenia przedziałów ufności korzystamy z twierdzenia że, jeśli $F$ i $G$ są dystrybuantami odpowiednio czasu życia i czasu cenzurowania, ciągłymi na przedziale $[0,T]$, a ponadto $F(T) < 1$, to zachodzi zbieżność
+Do wyznaczenia przedziałów ufności skorzystano z twierdzenia że, jeśli $F$ i $G$ są dystrybuantami odpowiednio czasu życia i czasu cenzurowania, ciągłymi na przedziale $[0,T]$, a ponadto $F(T) < 1$, to zachodzi zbieżność
 
 $$
 \frac{\hat\mu_\tau - \mu}{\sqrt{\widehat V(\hat\mu_\tau)}} \xrightarrow{d} N(0,1).
@@ -764,7 +764,7 @@ Lista polega na weryfikacji hipotezy o jednakowym rozkładzie czasu do progresji
 
 W zadaniu dokonano wyliczenia wartości $p$-value dla hipotezy o jednakowym rozkładzie czasu do progresji choroby w dwóch badanych grupach pacjentek, z podziałem na sposób dobierania wagi.
 
-Na początek łączymy poszczególne próby $\mathbb{X}_1,\dots,\mathbb{X}_k$, gdzie $\mathbb{X}_j = (X_{j1},\dots,X_{jn_j})$, $j \in \{1,\dots,k\}$. Z tak połączonych grup wyznaczamy (unikalne) czasy zdarzeń, których liczbę oznaczamy przez $D$, i porządkujemy je rosnąco: $t_1 < t_2 < \dots < t_D$.
+Na początek dokonano konkatenacji poszczególnych prób $\mathbb{X}_1,\dots,\mathbb{X}_k$, gdzie $\mathbb{X}_j = (X_{j1},\dots,X_{jn_j})$, $j \in \{1,\dots,k\}$. Z tak połączonych prób wyznaczono (unikalne) czasy zdarzeń, których liczbę oznaczono przez $D$, i uporzątkowano je rosnąco: $t_1 < t_2 < \dots < t_D$.
 
 Statystyka testowa opiera się na sumie ważonych różnic między oszacowanymi hazardami w momentach $t_i$. Oszacowania te wyznaczane są za pomocą estymatora Nelsona--Aalena funkcji hazardu:
 
@@ -785,14 +785,14 @@ $$
 Z_j(\tau) = \sum_{i=1}^D W(t_i)\left(d_{ij} - r_{ij}\frac{d_i}{r_i}\right).
 $$
 
-Wariancję takiej statystyki estymujemy przez:
+Wariancję takiej statystyki estymuje się przez:
 
 $$
 \hat{\sigma}_{jj} = \sum_{i=1}^D
 W^2(t_i)d_i\frac{r_{ij}}{r_i}\left(1 - \frac{r_{ij}}{r_i}\right)\left(\frac{r_i - d_i}{r_i - 1}\right),
 $$
 
-kowariancję natomiast szacujemy jako:
+kowariancję natomiast estymuje się przez:
 
 $$
 \hat{\sigma}_{jg} = - \sum_{i=1}^D
@@ -1013,13 +1013,13 @@ $$
 \sqrt{n}\left(g\left(X_n\right)-g\left(\vartheta\right)\right) \xrightarrow{d}
 \mathcal{N}\left(0, \left[g'\left(\vartheta\right)\right]^2\sigma^2\right).
 $$
-W przypadku połączenia metody delta z własnościami asymptotycznymi estymatora Kaplana-Meiera, otrzymujemy następujący wniosek:
+W przypadku połączenia metody delta z własnościami asymptotycznymi estymatora Kaplana-Meiera, dochodzi się do następującego wnioseku:
 
 $$
 \frac{g\left(\hat{S}_n(t)\right)-g\left(S(t)\right)}{g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)} \xrightarrow{d} \mathcal{N}(0,1).
 $$
 
-W powyższym przekształceniu składnik $\sqrt{n}$ został pominięty, gdyż ta "informacja zawiera się" w estymatorze $\hat{\sigma}_n(t)=\sqrt{\hat{\sigma}^2_n(t)}$. Na jego podstawie jesteśmy w stanie wyznaczyć asymptotycznie punktowy przedział ufności dla wartości funkcji przeżycia $S$ w punkcie $t$ na poziomie ufności $1-\alpha$, który jest postaci:
+W powyższym przekształceniu składnik $\sqrt{n}$ został pominięty, gdyż ta "informacja zawiera się" w estymatorze $\hat{\sigma}_n(t)=\sqrt{\hat{\sigma}^2_n(t)}$. Na jego podstawie można wyznaczyć asymptotycznie punktowy przedział ufności dla wartości funkcji przeżycia $S$ w punkcie $t$ na poziomie ufności $1-\alpha$, który jest postaci:
 
 $$
 T_L = g^{-1}\left(g\left(\hat{S}_n(t)\right)-z\left(1-\frac{\alpha}{2}\right)g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)\right),
@@ -1153,7 +1153,7 @@ kable(df1, digits=3, escape=FALSE,
       caption="\\label{tab:symulacje-długość} Porównanie asymptotycznych punktowo przedziałów ufności funkcji przeżycia - długość przedziału")
 ```
 
-Wyniki przedstawione w \hyperref[tab:symulacje-długość]{Tabeli \ref*{tab:symulacje-długość}.} pokazują, że długość przedziału ufności maleje wraz ze wzrostem liczności próby. Świadczy to o rosnącej precyzji estymacji funkcji przeżycia metodą Kaplana–Meiera. Dla dowolnej próby o długości $n$ najszersze przedziały uzyskujemy przy zastosowaniu przekształcenia logarytmicznego, natomiast najwęższe - po zastosowaniu transformacji logit.
+Wyniki przedstawione w \hyperref[tab:symulacje-długość]{Tabeli \ref*{tab:symulacje-długość}.} pokazują, że długość przedziału ufności maleje wraz ze wzrostem liczności próby. Świadczy to o rosnącej precyzji estymacji funkcji przeżycia metodą Kaplana–Meiera. Dla dowolnej próby o długości $n$ najszersze przedziały uzyskano przy zastosowaniu przekształcenia logarytmicznego, natomiast najwęższe - po zastosowaniu transformacji logit.
 
 ```{r symulacje-przedziały-prawdopodobienstwo, echo=FALSE}
 kable(df2, digits=3, escape=FALSE,
@@ -1200,19 +1200,19 @@ Rossa i Zieliński \cite{rossa2002} zaproponowali lokalne „wygładzenie” est
 
 **Krok 2.** Obliczanie wag
 
-Dla dowolnego $t\ge 0$ definiujemy wektor wag
+Dla dowolnego $t\ge 0$ definiuje się wektor wag
 $$
 \mathbf{w}(t)=\left(w_1(t),\dots,w_N(t)\right).
 $$
 Wagi zależą od parametru $m$ — liczby "sąsiadów" (liczb całkowitych) — oraz od położenia $t$ względem przedziałów między momentami skoków estymatora. Wagi te będą użyte w następnych krokach przy regresji liniowej.
 
-Rozróżniamy trzy przypadki dla różych $m$:
+Rozróżnia się trzy przypadki dla różych $m$:
 
 A) Gdy $m=2$ wagi są zawsze "punktowe", a sam estymator przyjmuje odmienną, uproszczoną postać. Szczegóły przedstawiono w dalszej części.
 
-B) Gdy $m$ jest nieparzyste tzn. $m=2k+1$ dla pewnego $k\in\mathbb{N}$. Wagi definiujemy następująco:
+B) Gdy $m$ jest nieparzyste tzn. $m=2k+1$ dla pewnego $k\in\mathbb{N}$. Wagi definiuje się następująco:
 
-Zdefiniujmy najpierw indeks $j$ opisujący, w którym przedziale znajduje się $t$:
+W pierwszej kolejności zdefiniowano indeks $j$ opisujący, w którym przedziale znajduje się $t$:
 
 $$
 j =
@@ -1246,7 +1246,7 @@ $$
 3. Jeżeli $k< j < N-k$ ($t$ jest dostatecznie daleko od krawędzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
 
     1. Blok jednostkowy (dokładnie $m$ indeksów)
-       Dla indeksów $i\in{j-k,j-k+1,\dots,j+k}$ przyjmujemy $w_i(t)=1.$
+       Dla indeksów $i\in{j-k,j-k+1,\dots,j+k}$ przyjmje się $w_i(t)=1.$
 
     2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
        Jeśli istnieje indeks lewy ($j - k \ge 1$)
@@ -1270,9 +1270,9 @@ $$
 
        Wszystkie pozostałe składowe wektora wag przyjmują wartość $0$.
 
-C) Gdy $m$ jest parzyste tzn. $m=2k$ dla pewnego $k\in\mathbb{N_+}$. Wagi definiujemy następująco:
+C) Gdy $m$ jest parzyste tzn. $m=2k$ dla pewnego $k\in\mathbb{N_+}$. Wagi definiuje się następująco:
 
-Zdefiniujmy najpierw indeks $j$ opisujący, w którym przedziale znajduje się $t$:
+W pierwszej kolejności zdefiniowano indeks $j$ opisujący, w którym przedziale znajduje się $t$:
 
 $$
 j =
@@ -1304,7 +1304,7 @@ $$
 3. Jeżeli $k< j < N-k+1$ ($t$ jest dostatecznie daleko od krawędzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
 
     1. Blok jednostkowy (dokładnie $m$ indeksów)
-       Dla indeksów $i\in{j-k+1,j-k+2,\dots,j+k}$ przyjmujemy $w_i(t)=1.$
+       Dla indeksów $i\in{j-k+1,j-k+2,\dots,j+k}$ przyjmuje się $w_i(t)=1.$
 
     2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
        Jeśli istnieje indeks lewy ($j - k \ge 1$)
@@ -1330,13 +1330,13 @@ $$
 
 **Krok 3.** Interpolacja liniowa oraz ważona regresja liniowa
 
-W pierwszej kolejności obliczamy log-czasy zdarzeń oraz ich log-log przeżycia, które następnie stanowią dane wejściowe do lokalnej regresji liniowej budującej estymator Rossy-Zielińskiego.
+W pierwszej kolejności obliczono log-czasy zdarzeń oraz ich log-log przeżycia, które następnie stanowią dane wejściowe do lokalnej regresji liniowej budującej estymator Rossy-Zielińskiego.
 
 $$
 X_j = \log T_{(j)}, \qquad
 Y_j = \log\left(-\log(KM'_j)\right),
 $$
-W przypadku $m=2$ i w ustalonej chwili $t$ obliczamy log-t:
+W przypadku $m=2$ i w ustalonej chwili $t$ obliczono log-t:
 
 $$
 X = \log t
@@ -1354,7 +1354,7 @@ Y_{N-1}+\dfrac{Y_{N}-Y_{N-1}}{\,X_{N}-X_{N-1}\,}(X - X_{N-1}),& t > T_{(N)} \ \t
 \end{cases}
 $$
 
-W przypadku $m>2$ i w ustalonej chwili $t$, dysponujemy wektorem wag:
+W przypadku $m>2$ i w ustalonej chwili $t$, dysponuje się wektorem wag:
 
 $$
 \mathbf{w}(t)=\left(w_1(t),\dots,w_N(t)\right),
@@ -1378,7 +1378,7 @@ $$
 \widehat{a}(t),\qquad \widehat{b}(t),
 $$
 
-które interpretujemy jako lokalne parametry kształtu i skali rozkładu Weibulla dopasowanego w "otoczeniu" punktu "t" przy użyciu wag opisanych wcześniej.
+które interpretuje się jako lokalne parametry kształtu i skali rozkładu Weibulla dopasowanego w "otoczeniu" punktu $t$ przy użyciu wag opisanych wcześniej.
 
 **Krok 4.** Transformacja odwrotna
 
@@ -1388,7 +1388,7 @@ $$
 \widehat{S}_2(t) = \exp\left(-\exp(Y(t))\right).
 $$
 
-W przypadku $m>2$ rekonstruujemy lokalną funkcję przeżycia, korzystając z postaci funkcji przeżycia rozkładu Weibulla:
+W przypadku $m>2$ rekonstruuje się lokalną funkcję przeżycia, korzystając z postaci funkcji przeżycia rozkładu Weibulla:
 
 $$
 S(t) = \exp\left(-\exp(a) t^{b}\right).
@@ -1561,7 +1561,7 @@ rz.estimator.plot <- function(df, m = 2, to = 3) {
 }
 ```
 
-Porównamy graficznie estymator Kaplana-Maiera z jego ulepszoną wersją: estymatorem Rossy-Zielińskiego.
+Porównano graficznie estymator Kaplana-Maiera z jego ulepszoną wersją: estymatorem Rossy-Zielińskiego.
 
 W tym celu sporządzono wykresy dla danych klinicznych pacjentów przedstawionych w artykule Rossy-Zielińskiego, a także dla danych z zadania 3 z listy 2 oraz z zadania 2 z listy 7.
 
@@ -1642,10 +1642,9 @@ Podsumowując, estymator Rossy-Zielińskiego sprawnie wygładza funkcję przeży
 
 ## Zadanie 3
 
-Zadanie wyprowadzenia ścisłych własności asymptotycznych dla tego estymatora jest bardzo trudne, a autorzy \cite{rossa2002} wręcz sugerują, że może być niemożliwe do uzyskania w interesującej formie. Jednak twierdzą oni, że dla dużej liczności próby $n$, tym samym dla dużej liczby $N$, ich estymator będzie zachowywał się jak estymator Kaplana-Meiera, tym samym zachowując jego asymptotyczne własności. Cytat:
+Zadanie wyprowadzenia ścisłych własności asymptotycznych dla tego estymatora jest bardzo trudne, a autorzy \cite{rossa2002} wręcz sugerują, że może być niemożliwe do uzyskania w interesującej formie. Jednak twierdzą oni, że dla dużej liczności próby $n$, tym samym dla dużej liczby $N$, ich estymator będzie zachowywał się jak estymator Kaplana-Meiera, tym samym zachowując jego asymptotyczne własności.
 
-$\phantom{cc}$"Like the original Kaplan-Meier estimator, the smoothed estimators (3.2) and (3.3) are difficult for theoretical analysis. For large $n$ and in consequence for large $N$, the estimators will behave like KM, however in an asymptotic setup one can hardly expect new interesting results. \newline$\phantom{cc}$In small and moderate samples the smoothed estimator may considerably differ from the original KM, in such situations however general theoretical conclusions seem to be impossible."
-
+\newpage
 # Bibliografia
 
 \begin{thebibliography}{2}
@@ -1663,3 +1662,7 @@ Communications in Statistics - Theory and Methods, 31(1):147-158, 2002,
 \href{https://doi.org/10.1081/STA-120002440}{DOI: 10.1081/STA-120002440}.
 
 \end{thebibliography}
+
+```{r adrian, echo=FALSE}
+# Hej Adrian jak to czytasz to hej.
+```

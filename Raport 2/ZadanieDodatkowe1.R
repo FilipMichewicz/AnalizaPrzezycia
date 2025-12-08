@@ -1,3 +1,6 @@
+# Wiktor Niedźwiedzki
+# Filip Michewicz
+
 library(survminer)
 library(survival)
 library(coin)
