@@ -303,7 +303,7 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
 Zadanie polega na wygenerowaniu $M = 1000$ zbiorów danych cenzurowanych I-go typu z uogólnionego rozkładu wykładniczego $\mathcal{GE}(\lambda, \alpha)$ dla $\alpha = 2$ i $\lambda = 2$, przy licznościach próby $n = 30, 50, 100$. Wartość $t_0$ przyjęto równą wartości oczekiwanej rozkładu $\mathcal{GE}(\lambda, \alpha)$ \cite{gupta1999}:
 
 $$
-t_0 = \lambda \left( \psi(\alpha + 1) - \psi(1) \right)
+t_0 = \frac{\left( \psi(\alpha + 1) - \psi(1) \right)}{\lambda}
 $$
 
 gdzie $\psi(\cdot)$ jest funkcją digamma, tj. logarytmiczną pochodną funkcji gamma.
@@ -417,13 +417,13 @@ histograms$"30"
 histograms$"50"
 ```
 
-\hyperref[fig:hist-2]{Wykres \ref*{fig:hist-2}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 50$. W porównaniu z próbą o liczności $n = 30$ przedstawionej na \hyperref[fig:hist-1]{Wykresie \ref*{fig:hist-1}.} estymowane wartości przesunęły się ku mniejszym wartością.
+\hyperref[fig:hist-2]{Wykres \ref*{fig:hist-2}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 50$. W porównaniu z próbą o liczności $n = 30$ przedstawionej na \hyperref[fig:hist-1]{Wykresie \ref*{fig:hist-1}.} estymowane wartości przesunęły się ku mniejszym wartościom.
 
 ```{r hist-3, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 100"}
 histograms$"100"
 ```
 
-\hyperref[fig:hist-3]{Wykres \ref*{fig:hist-3}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 30$. Podobnie jak na poprzednim \hyperref[fig:hist-2]{Wykresie} wraz ze wzrostem próby wartości przesunęły się ku mniejszym wartością. 
+\hyperref[fig:hist-3]{Wykres \ref*{fig:hist-3}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 30$. Podobnie jak na poprzednim \hyperref[fig:hist-2]{Wykresie} wraz ze wzrostem próby wartości przesunęły się ku mniejszym wartościom. 
 
 Wraz ze wzrostem liczności próby, histogramy z poprzednich wykresów układają się w kształt dzwonowy charakterystyczny dla rozkładu normalnego. To z kolei pozwala przypuszczać, że estymator Kaplana–Meiera jest asymptotycznie normalny w punktach $t_0$ oraz $2 t_0$. Do dalszej analizy wykorzystano test Shapiro-Wilka, który w pakiecie R dostępny jest w funckji `shapiro.test` z pakietu `stats`.
 
@@ -440,7 +440,7 @@ rownames(df) <- c("30", "50", "100")
 kable(df, digits=9, escape=FALSE, col.names = c("n", "$t_0$", "$2t_0$"), caption="\\label{tab:testy-sw} Wartości $p$ testu Shapiro-Wilka dla oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$")
 ```
 
-Z \hyperref[tab:testy-sw]{Tabeli \ref*{tab:testy-sw}.} można odczytać że dla wszystkich przypadku $p$-value jest równe zeru lub bliskie zera, a zatem dla prawie każdego poziomu $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
+Z \hyperref[tab:testy-sw]{Tabeli \ref*{tab:testy-sw}.} można odczytać że dla wszystkich przypadków $p$-value jest równe zeru lub bliskie zera, a zatem dla prawie każdego poziomu $\alpha$ powinniśmy odrzucić hipotezę o normalności rozkładów, zarówno dla punktu $t_0$, jak i $2t_0$.
 
 \newpage
 # Lista 6
@@ -471,17 +471,17 @@ $$
 \hat{\mu} = \int_0^{\infty} \hat{S}(x)dx,
 $$
 
-gdzie $\hat{S}(x)$ oznacza estymowaną funkcję przeżycia.
+gdzie $\hat{S}(x)$ oznacza estymowaną funkcję przeżycia, a $\hat{\mu}$ - średni czas życia.
 
 Ze względu na to że $\hat{S}(x)$ na przedziale $(0, t^+)$ jest funkcją schodkową, dlatego $\hat{\mu}$ będzie obliczana według wzoru:
 
 $$
-\hat{\mu} \phantom{cc} = \sum_{i:, t_{(i)} \le t^+} \hat{S}\left(t_{(i)}\right)\left(t_{(i)} - t_{(i-1)}\right), \quad t_{(0)} := 0,
+\hat{\mu} \phantom{cc} = \sum_{i: t_{(i)} \le t^+} \hat{S}\left(t_{(i-1)}\right)\left(t_{(i)} - t_{(i-1)}\right), \quad t_{(0)} := 0,
 $$
 
 gdzie $\hat{S}(t_{(i)})$ to wartość estymatora funkcji przeżycia w chwili $t_{(i)}$, a sumowanie jest wykonywane tylko do czasu ostatniej obserwacji $t^+$. Powyżej $t^+$ obydwa estymatory są nieokreślone.
 
-Jeżeli natomiast estymator będzie zawierał "ogon" według propozycji Browna, Hollandera i Kowara należy powiększyć wartość $\mu$ o wartość oczekiwaną na tym właśnie "ogonie".
+Jeżeli natomiast estymator będzie zawierał "ogon" według propozycji Browna, Hollandera i Kowara należy powiększyć wartość $\hat{\mu}$ o wartość oczekiwaną na tym właśnie "ogonie".
 
 $$
 \begin{aligned}
@@ -548,7 +548,7 @@ kable(mean_times,
       caption = "\\label{tab:choroba} Średni czas życia estymowany metodami Kaplana-Meiera oraz Fleminga-Harringtona")
 ```
 
-\hyperref[tab:choroba]{Tabela \ref*{tab:choroba}.} przedstawia średni czas życia estymowany metodami Kaplana–Meiera oraz Fleminga–Harringtona. W obu grupach estymatory wskazują, że średni czas życia w grupie przyjmującej lek A jest większy niż w grupie przyjmującej lek B. Estymator Fleminga-Harringtona zwraca nieco wyższe wartości średniego czasu życia niż estymator Kaplana–Meiera, co wynika z samej konstrukcji estymatora i sposobu ważenia obserwacji cenzurowanych.
+\hyperref[tab:choroba]{Tabela \ref*{tab:choroba}.} przedstawia średni czas życia estymowany metodami Kaplana–Meiera oraz Fleminga–Harringtona, wraz z szacowanym ogonem sposobem Browna, Hollandera i Kowara. W obu grupach estymatory wskazują, że średni czas życia w grupie przyjmującej lek A jest większy niż w grupie przyjmującej lek B. Estymator Fleminga-Harringtona zwraca nieco wyższe wartości średniego czasu życia niż estymator Kaplana–Meiera, co wynika z samej konstrukcji estymatora i sposobu ważenia obserwacji cenzurowanych.
 
 \newpage
 # Lista 7
@@ -751,7 +751,7 @@ kable(raki2,
       caption = "\\label{tab:raki2} Realizacje przedziałów przeżycia dla pacjentek z rakiem jajnika typu II i typu IIIA - Mayo Clinic - $\\tau = 1825$")
 ```
 
-Z \hyperref[tab:raki2]{Tabeli \ref*{tab:raki2}} można odczytać odmienne zachowanie przedziałów ufności dla poszczególnych grup. W przypadku pacjentek z nowotworem typu II zarówno dolna, jak i górna granica przedziału wzrosły, przy czym górna granica zwiększyła się wyraźnie bardziej niż dolna. W przypadku raka typu IIIA górna granica również wzrosła, natomiast dolna uległa obniżeniu. Zmiany w grupie typu IIIA są mniejsze niż w grupie typu II, co sugeruje bardziej stabilne zachowanie estymatora funkcji przeżycia w ogonie rozkładu.
+Z \hyperref[tab:raki2]{Tabeli \ref*{tab:raki2}.} można odczytać odmienne zachowanie przedziałów ufności dla poszczególnych grup. W przypadku pacjentek z nowotworem typu II zarówno dolna, jak i górna granica przedziału wzrosły, przy czym górna granica zwiększyła się wyraźnie bardziej niż dolna. W przypadku raka typu IIIA górna granica również wzrosła, natomiast dolna uległa obniżeniu. Zmiany w grupie typu IIIA są mniejsze niż w grupie typu II, co sugeruje bardziej stabilne zachowanie estymatora funkcji przeżycia w ogonie rozkładu.
 
 Analizując estymacje można zauważyć, że dla raka typu II wartość czasu przeżycia była większa niż jego wariancja, natomiast dla typu IIIA sytuacja była odwrotna. Wspólną cechą obu grup jest wydłużenie przedziałów ufności, co wskazuje na zwiększoną niepewność estymacji przy dłuższym czasie obserwacji.
 
@@ -848,7 +848,7 @@ kable(df, row.names=TRUE, digits=3, escape=FALSE, col.names = c("Test", "p-value
 ```
 
 
-Z \hyperref[tab:nieboraki]{Tabeli \ref*{tab:nieboraki}} wynika, że na ustalonym poziomie istotności $\alpha = 0.05$ hipoteza o jednakowym rozkładzie czasu do progresji powinna zostać odrzucona jedynie w przypadku testu logrank. Wartości $p$-value dla poszczególnych funkcji wag różnią się między sobą, co wynika bezpośrednio z ich konstrukcji:
+Z \hyperref[tab:nieboraki]{Tabeli \ref*{tab:nieboraki}.} wynika, że na ustalonym poziomie istotności $\alpha = 0.05$ hipoteza o jednakowym rozkładzie czasu do progresji powinna zostać odrzucona jedynie w przypadku testu logrank. Wartości $p$-value dla poszczególnych funkcji wag różnią się między sobą, co wynika bezpośrednio z ich konstrukcji:
 
 * **logrank** traktuje wszystkie zdarzenia równoważnie, wykrywając globalne różnice między grupami, nawet jeśli ujawniają się one późno,
 * **Gehan-Breslow** przypisuje większą wagę wcześniejszym czasom - jeżeli różnice między grupami pojawiają się późno, test staje się na nie mniej wrażliwy,
@@ -926,7 +926,7 @@ ggplot(df.cancer_unique, aes(x = times)) +
 
 ```
 
-Na \hyperref[fig:testy-wykres]{Wykresie \ref*{fig:testy-wykres}} widać, jakie unormowane wagi przypisuje każdy z testów dla poszczególnych czasów. Dla $t \approx 320$ wagi testów Gehan-Breslow, Peto-Peto i Tarone-Ware przecinają krzywą wag testu logrank, co oznacza, że dla zdarzeń o czasie większym niż 320 przypisywane jest mniejsze znaczenie niż przy teście logrank.
+Na \hyperref[fig:testy-wykres]{Wykresie \ref*{fig:testy-wykres}.} widać, jakie unormowane wagi przypisuje każdy z testów dla poszczególnych czasów. Dla $t \approx 320$ wagi testów Gehan-Breslow, Peto-Peto i Tarone-Ware przecinają krzywą wag testu logrank, co oznacza, że dla zdarzeń o czasie większym niż 320 przypisywane jest mniejsze znaczenie niż przy teście logrank.
 
 ```{r Kaplan-Meier-rak, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących pacjentek z rakiem jajnika - Mayo Clinic", warning=FALSE}
 surv.II <- Surv(df.II$times, df.II$deltas)
@@ -984,7 +984,7 @@ $$
 \frac{\hat{S}_n(t)-S(t)}{\sigma_n(t)} \xrightarrow{d} \mathcal{N}(0,1).
 $$
 
-Jednakże wartość odchylenia standardowego $\sigma_n(t)$ nie jest znana. Można jednakże oszacować wariancję asymptotyczną $\sigma^2_n(t)$ przez formułę Greenwooda:
+Jednakże wartość odchylenia standardowego $\sigma_n(t)$ nie jest znana. Rozwiązaniem tego problemu jest oszacowanie asymptotycznej wariancji $\sigma^2_n(t)$ przez formułę Greenwooda:
 
 \begin{equation}
 \label{eq:greenwood1}
@@ -1019,7 +1019,7 @@ $$
 \frac{g\left(\hat{S}_n(t)\right)-g\left(S(t)\right)}{g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)} \xrightarrow{d} \mathcal{N}(0,1).
 $$
 
-W powyższym przekształceniu składnik $\sqrt{n}$ został pominięty, gdyż ta "informacja zawiera się" w estymatorze $\hat{\sigma}_n(t)=\sqrt{\hat{\sigma}^2_n(t)}$. Na jego podstawie jesteśmy w stanie jednak wyznaczyć asymptotycznie punktowy przedział ufności dla wartości funkcji przeżycia $S$ w punkcie $t$ na poziomie ufności $1-\alpha$, który jest postaci:
+W powyższym przekształceniu składnik $\sqrt{n}$ został pominięty, gdyż ta "informacja zawiera się" w estymatorze $\hat{\sigma}_n(t)=\sqrt{\hat{\sigma}^2_n(t)}$. Na jego podstawie jesteśmy w stanie wyznaczyć asymptotycznie punktowy przedział ufności dla wartości funkcji przeżycia $S$ w punkcie $t$ na poziomie ufności $1-\alpha$, który jest postaci:
 
 $$
 T_L = g^{-1}\left(g\left(\hat{S}_n(t)\right)-z\left(1-\frac{\alpha}{2}\right)g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)\right),
@@ -1153,7 +1153,7 @@ kable(df1, digits=3, escape=FALSE,
       caption="\\label{tab:symulacje-długość} Porównanie asymptotycznych punktowo przedziałów ufności funkcji przeżycia - długość przedziału")
 ```
 
-Wyniki przedstawione w \hyperref[tab:symulacje-długość]{Tabeli \ref*{tab:symulacje-długość}} pokazują, że długość przedziału ufności maleje wraz ze wzrostem liczności próby. Świadczy to o rosnącej precyzji estymacji funkcji przeżycia metodą Kaplana–Meiera. Dla dowolnej próby o długości $n$ najszersze przedziały uzyskujemy przy zastosowaniu przekształcenia logarytmicznego, natomiast najwęższe - po zastosowaniu transformacji logit.
+Wyniki przedstawione w \hyperref[tab:symulacje-długość]{Tabeli \ref*{tab:symulacje-długość}.} pokazują, że długość przedziału ufności maleje wraz ze wzrostem liczności próby. Świadczy to o rosnącej precyzji estymacji funkcji przeżycia metodą Kaplana–Meiera. Dla dowolnej próby o długości $n$ najszersze przedziały uzyskujemy przy zastosowaniu przekształcenia logarytmicznego, natomiast najwęższe - po zastosowaniu transformacji logit.
 
 ```{r symulacje-przedziały-prawdopodobienstwo, echo=FALSE}
 kable(df2, digits=3, escape=FALSE,
@@ -1161,7 +1161,7 @@ kable(df2, digits=3, escape=FALSE,
       caption="\\label{tab:symulacje-prawd} Porównanie asymptotycznych punktowo przedziałów ufności funkcji przeżycia - prawdopodobieństwo pokrycia")
 ```
 
-Wyniki przedstawione w \hyperref[tab:symulacje-prawd]{Tabeli \ref*{tab:symulacje-prawd}} pokazują, że wraz ze wzrostem liczności próby prawdopodobieństwo pokrycia może zarówno rosnąć, jak i maleć, co świadczy o stabilizacji wyników.  
+Wyniki przedstawione w \hyperref[tab:symulacje-prawd]{Tabeli \ref*{tab:symulacje-prawd}.} pokazują, że wraz ze wzrostem liczności próby prawdopodobieństwo pokrycia może zarówno rosnąć, jak i maleć, co świadczy o stabilizacji wyników.  
 Na poziomie ufności 95% przekształcenie logit wykazuje niewielkie przeszacowanie, natomiast transformacje liniowa i logarytmiczna - niedoszacowanie. Można jednak przypuszczać, że wraz ze wzrostem liczby prób wyniki zbliżą się do zadanego poziomu ufności. Podobnie jak wcześniej, transformacja logit pozostaje najlepszym wyborem.
 
 Podsumowując wyniki z obu tabel, najbardziej korzystną transformacją jest funkcja logit. Wybór między brakiem przekształcenia a przekształceniem logarytmicznym zależy od priorytetu: krótszego przedziału ufności czy większego prawdopodobieństwa pokrycia.
@@ -1169,7 +1169,7 @@ Podsumowując wyniki z obu tabel, najbardziej korzystną transformacją jest fun
 \newpage
 ## Zadanie 2
 
-Estymatory Kaplana-Meiera oraz Fleminga–Harringtona są funkcjami schodnowymi. W stosunkowo małych próbach często obserwuje się szerokie przedziały czasu w których estymator jest stały - praktycznie i interpretacyjnie bywa to niepożądane i statystykom trudno jest wytłumaczyć praktykom na przykładzie \hyperref[fig:KM-plot]{Wykresu \ref*{fig:KM-plot}.} grupy leku A dlaczego prawdopodobieńsgtwo przeżycia do chwili $t = 0.7$ jest równe prawdopodobieństwu przeżycia do chwili $t = 0.8$.
+Estymatory Kaplana-Meiera oraz Fleminga–Harringtona są funkcjami schodkowymi. W stosunkowo małych próbach często obserwuje się szerokie przedziały czasu, w których estymator jest stały - praktycznie i interpretacyjnie bywa to niepożądane i statystykom trudno jest wytłumaczyć praktykom na przykładzie \hyperref[fig:KM-plot]{Wykresu \ref*{fig:KM-plot}.} grupy leku A dlaczego prawdopodobieństwo przeżycia do chwili $t = 0.7$ jest równe prawdopodobieństwu przeżycia do chwili $t = 0.8$.
 
 Rossa i Zieliński \cite{rossa2002} zaproponowali lokalne „wygładzenie” estymatora Kaplana–Meiera poprzez dopasowanie funkcji gęstości rozkładu Weibulla w niewielkim otoczeniu każdego punktu skoku.
 
@@ -1223,7 +1223,7 @@ i\in{1,\dots,N-1}, & T_{(i)} < t \le T_{(i+1)}
 \end{cases}
 $$
 
-1. Jeżeli $j \le k$ (t blisko początku) - krawedź lewa:
+1. Jeżeli $j \le k$ (t blisko początku) - krawędź lewa:
 
 $$
 w_1(t)=w_2(t)=\dots=w_m(t)=1,
@@ -1232,7 +1232,7 @@ oraz
 $$
 w_{m+1}(t)=\dots=w_N(t)=0.
 $$
-2. Jeżeli $j\ge N-k$ (t blisko końca) - krawedź prawa:
+2. Jeżeli $j\ge N-k$ (t blisko końca) - krawędź prawa:
 
 $$
 w_{N-m+1}(t)=w_{N-m+2}(t)=\dots=w_N(t)=1,
@@ -1241,34 +1241,36 @@ oraz
 $$
 w_1(t)=\dots=w_{N-m}(t)=0.
 $$
-3. Jeżeli $k< j < N-k$ ($t$ jest dostatecznie daleko od krawedzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
+3. Jeżeli $k< j < N-k$ ($t$ jest dostatecznie daleko od krawędzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
 
-1. Blok jednostkowy (dokładnie $m$ indeksów)
-   Dla indeksów $i\in{j-k,j-k+1,\dots,j+k}$ przyjmujemy $w_i(t)=1.$
+3. Jeżeli $k< j < N-k$ ($t$ jest dostatecznie daleko od krawędzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
 
-2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
-   Jeśli istnieje indeks lewy ($j - k \ge 1$)
-   $$
-   i_{\text{lewy}} = j-k,
-   $$
-   to jego waga zależy liniowo od położenia $t$ w przedziale $(T_{(j)},T_{(j+1)}]$:
-   $$
-   w_{i_{\text{lewy}}}(t)=\frac{T_{(j+1)}-t}{T_{(j+1)}-T_{(j)}}.
-   $$
-   Jeśli istnieje indeks prawy ($j+k+1\le N)$)
-   $$
-   i_{\text{prawy}} = j+k+1,
-   $$
-   to jego waga wynosi
-   $$
-   w_{i_{\text{prawy}}}(t)=\frac{t-T_{(j)}}{T_{(j+1)}-T_{(j)}}.
-   $$
+    1. Blok jednostkowy (dokładnie $m$ indeksów)
+       Dla indeksów $i\in{j-k,j-k+1,\dots,j+k}$ przyjmujemy $w_i(t)=1.$
 
-3. Pozostałe wagi
+    2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
+       Jeśli istnieje indeks lewy ($j - k \ge 1$)
+       $$
+       i_{\text{lewy}} = j-k,
+       $$
+       to jego waga zależy liniowo od położenia $t$ w przedziale $(T_{(j)},T_{(j+1)}]$:
+       $$
+       w_{i_{\text{lewy}}}(t)=\frac{T_{(j+1)}-t}{T_{(j+1)}-T_{(j)}}.
+       $$
+       Jeśli istnieje indeks prawy ($j+k+1\le N)$)
+       $$
+       i_{\text{prawy}} = j+k+1,
+       $$
+       to jego waga wynosi
+       $$
+       w_{i_{\text{prawy}}}(t)=\frac{t-T_{(j)}}{T_{(j+1)}-T_{(j)}}.
+       $$
 
-   Wszystkie pozostałe składowe wektora wag przyjmują wartość $0$.
+    3. Pozostałe wagi
 
-Gdy $m$ jest parzyste tzn. $m=2k$ dla pewnego $k\in\mathbb{N_+}$. Wagi definiujemy następująco:
+       Wszystkie pozostałe składowe wektora wag przyjmują wartość $0$.
+
+C) Gdy $m$ jest parzyste tzn. $m=2k$ dla pewnego $k\in\mathbb{N_+}$. Wagi definiujemy następująco:
 
 Zdefiniujmy najpierw indeks $j$ opisujący, w którym przedziale znajduje się $t$:
 
@@ -1280,7 +1282,7 @@ N, & t > (T_{(N-1)} + T_{(N)}) / 2, \\
 i\in{1,\dots,N-1}, & \left(T_{(i-1)}+T_{(i)}\right)/2 < t \le \left(T_{(i)}+T_{(i+1)}\right)/2
 \end{cases}
 $$
-1. Jeżeli $j \le k$ (t blisko początku) - krawedź lewa:
+1. Jeżeli $j \le k$ (t blisko początku) - krawędź lewa:
 
 $$
 w_1(t)=w_2(t)=\dots=w_m(t)=1,
@@ -1289,7 +1291,7 @@ oraz
 $$
 w_{m+1}(t)=\dots=w_N(t)=0.
 $$
-2. Jeżeli $j\ge N-k+1$ (t blisko końca) - krawedź prawa:
+2. Jeżeli $j\ge N-k+1$ (t blisko końca) - krawędź prawa:
 
 $$
 w_{N-m+1}(t)=w_{N-m+2}(t)=\dots=w_N(t)=1,
@@ -1299,32 +1301,32 @@ $$
 w_1(t)=\dots=w_{N-m}(t)=0.
 $$
 
-3. Jeżeli $k< j < N-k+1$ ($t$ jest dostatecznie daleko od krawedzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
+3. Jeżeli $k< j < N-k+1$ ($t$ jest dostatecznie daleko od krawędzi i otoczenie o rozmiarze $m$ mieści się w zakresie indeksów) - przypadek środkowy:
 
-1. Blok jednostkowy (dokładnie $m$ indeksów)
-   Dla indeksów $i\in{j-k+1,j-k+2,\dots,j+k}$ przyjmujemy $w_i(t)=1.$
+    1. Blok jednostkowy (dokładnie $m$ indeksów)
+       Dla indeksów $i\in{j-k+1,j-k+2,\dots,j+k}$ przyjmujemy $w_i(t)=1.$
 
-2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
-   Jeśli istnieje indeks lewy ($j - k \ge 1$)
-   $$
-   i_{\text{lewy}} = j-k,
-   $$
-   to jego waga zależy liniowo od położenia $t$ w przedziale $(T_{(j)},T_{(j+1)}]$:
-   $$
-   w_{i_{\text{lewy}}}(t)= \frac{\frac{1}{2} \left(T_{(j)} + T_{(j+1)}\right)-t}{\frac{1}{2}\left(T_{(j+1)}-T_{(j-1)}\right)}.
-   $$
-   Jeśli istnieje indeks prawy ($j+k\le N)$)
-   $$
-   i_{\text{prawy}} = j+k,
-   $$
-   to jego waga wynosi
-   $$
-   w_{i_{\text{prawy}}}(t)=\frac{t-\frac{1}{2} \left(T_{(j)} + T_{(j+1)}\right)}{\frac{1}{2}\left(T_{(j+1)}-T_{(j-1)}\right)}.
-   $$
+    2. Dwa brzegowe indeksy sąsiednie (ewentualne wagi ułamkowe)
+       Jeśli istnieje indeks lewy ($j - k \ge 1$)
+       $$
+       i_{\text{lewy}} = j-k,
+       $$
+       to jego waga zależy liniowo od położenia $t$ w przedziale $(T_{(j)},T_{(j+1)}]$:
+       $$
+       w_{i_{\text{lewy}}}(t)= \frac{\frac{1}{2} \left(T_{(j)} + T_{(j+1)}\right)-t}{\frac{1}{2}\left(T_{(j+1)}-T_{(j-1)}\right)}.
+       $$
+       Jeśli istnieje indeks prawy ($j+k\le N)$)
+       $$
+       i_{\text{prawy}} = j+k,
+       $$
+       to jego waga wynosi
+       $$
+       w_{i_{\text{prawy}}}(t)=\frac{t-\frac{1}{2} \left(T_{(j)} + T_{(j+1)}\right)}{\frac{1}{2}\left(T_{(j+1)}-T_{(j-1)}\right)}.
+       $$
 
-3. Pozostałe wagi
+    3. Pozostałe wagi
 
-   Wszystkie pozostałe składowe wektora wag przyjmują wartość $0$.
+       Wszystkie pozostałe składowe wektora wag przyjmują wartość $0$.
 
 **Krok 3.** Interpolacja liniowa oraz ważona regresja liniowa
 
@@ -1345,10 +1347,10 @@ $$
 Y(t)=
 \begin{cases}
 Y_{1}
-+\dfrac{X_{2}-X_{1}}{\,Y_{2}-Y_{1}\,}(X - X_{1}),& 0 < t \le T_{(1)},\\
-Y_{j}+\dfrac{X_{j+1}-X_{j}}{\,Y_{j+1}-Y_{j}\,}(X - X_{j-1}),& T_{(j)} < t \le T_{(j+1)},\\
-Y_{N-1}+\dfrac{X_{N}-X_{N-1}}{\,Y_{N}-Y_{N-1}\,}(X - X_{N-1}),& t > T_{(N)} \ \text{ i } \delta_{N}=1,\\
-\text{ nieokreślony }, & t > T_{(N)} \ \text{ i } \delta_{N}=0.
++\dfrac{Y_{2}-Y_{1}}{\,X_{2}-X_{1}\,}(X - X_{1}),& 0 < t \le T_{(1)},\\
+Y_{j}+\dfrac{Y_{j+1}-Y_{j}}{\,X_{j+1}-X_{j}\,}(X - X_{j}),& T_{(j)} < t \le T_{(j+1)},\\
+Y_{N-1}+\dfrac{Y_{N}-Y_{N-1}}{\,X_{N}-X_{N-1}\,}(X - X_{N-1}),& t > T_{(N)} \ \text{ i } \ \delta_{N}=1,\\
+\text{ nieokreślony }, & t > T_{(N)} \ \text{ i } \ \delta_{N}=0.
 \end{cases}
 $$
 
@@ -1559,7 +1561,7 @@ rz.estimator.plot <- function(df, m = 2, to = 3) {
 }
 ```
 
-Porównamy graficznie estmator Kaplana-Maiera z jego ulepszoną wersją estymatorem Rossy-Zielińskiego.
+Porównamy graficznie estymator Kaplana-Maiera z jego ulepszoną wersją: estymatorem Rossy-Zielińskiego.
 
 W tym celu sporządzono wykresy dla danych klinicznych pacjentów przedstawionych w artykule Rossy-Zielińskiego, a także dla danych z zadania 3 z listy 2 oraz z zadania 2 z listy 7.
 
@@ -1640,9 +1642,9 @@ Podsumowując, estymator Rossy-Zielińskiego sprawnie wygładza funkcję przeży
 
 ## Zadanie 3
 
-Zadanie wyprowadzenia ścisłych własności asymptotycznych dla tego estymatora jest bardzo trudne, a autorzy wręcz sugerują, że może być niemożliwe do uzyskania w interesującej formie.
+Zadanie wyprowadzenia ścisłych własności asymptotycznych dla tego estymatora jest bardzo trudne, a autorzy \cite{rossa2002} wręcz sugerują, że może być niemożliwe do uzyskania w interesującej formie. Jednak twierdzą oni, że dla dużej liczności próby $n$, tym samym dla dużej liczby $N$, ich estymator będzie zachowywał się jak estymator Kaplana-Meiera, tym samym zachowując jego asymptotyczne własności. Cytat:
 
-\newpage
+$\phantom{cc}$"Like the original Kaplan-Meier estimator, the smoothed estimators (3.2) and (3.3) are difficult for theoretical analysis. For large $n$ and in consequence for large $N$, the estimators will behave like KM, however in an asymptotic setup one can hardly expect new interesting results. \newline$\phantom{cc}$In small and moderate samples the smoothed estimator may considerably differ from the original KM, in such situations however general theoretical conclusions seem to be impossible."
 
 # Bibliografia
 
