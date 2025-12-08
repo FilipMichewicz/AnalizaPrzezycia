@@ -1665,5 +1665,4 @@ Communications in Statistics - Theory and Methods, 31(1):147-158, 2002,
 
 ```{r adrian, echo=FALSE}
 # Hej Adrian jak to czytasz to hej.
-# Filip i Wiktor
 ```
