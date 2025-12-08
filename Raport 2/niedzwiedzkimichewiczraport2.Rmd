@@ -972,9 +972,7 @@ Ze względu na spadek wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware dla pó
 
 ## Zadanie 1
 
-Zadanie polega na zdefiniowaniu funkcji obliczającej średni czas życia w oparciu o estymatory Kaplana–Meiera oraz Fleminga–Harringtona, z uwzględnieniem ogona wykładniczego według propozycji Browna, Hollandera i Kowara. Ze względu na podobieństwo wyglądu wynikowego estymatora dla obu metod, obliczenia zostaną przeprowadzone w uogólnionym przypadku.
-
-Zadanie polega na dokonaniu symulacji porównujących asymptotyczne punktowo przedziały ufności, które oparte będą na własnościach asymptotycznych estymatora Kaplana-Meiera oraz metodzie delta. Rozważanę będą trzy przekształcenia:
+Zadanie polega na dokonaniu symulacji porównujących asymptotyczne punktowo przedziały ufności, które oparte będą na własnościach asymptotycznych estymatora Kaplana-Meiera oraz metodzie delta. Rozważane będą trzy przekształcenia:
 
 * liniowe: $g(x)=x$
 * logarytmiczne: $g(x)=\ln(x)$
@@ -988,20 +986,28 @@ $$
 
 Jednakże wartość odchylenia standardowego $\sigma_n(t)$ nie jest znana. Można jednakże oszacować wariancję asymptotyczną $\sigma^2_n(t)$ przez formułę Greenwooda:
 
-$$
-1) \ \hat{\sigma}^2_n(t) = \hat{S}^2(t) \sum_{i: t_{(i)} \leq t} \frac{\delta_{(i)}}{(n-i+1)(n-i)} \\
-2) \ \hat{\sigma}^2_n(t) = \hat{S}^2(t) \sum_{i: t_{(i)} \leq t} \frac{d_i}{r_i(r_i-d_i)}
-$$
+\begin{equation}
+\label{eq:greenwood1}
+\hat{\sigma}^2_n(t)
+  = \hat{S}^2(t)\sum_{i: t_{(i)} \le t}
+    \frac{\delta_{(i)}}{(n-i+1)(n-i)}
+\end{equation}
 
-dla każdego $t<t_{(n)}$. Wzór 1) stanowi szczególny przypadek, gdy z prawdopodobieństwem 1 obserwacje się nie powtarzają, w 2) natomiast niektóre już mogą.
 
-Metoda delta mówi nam, że jeżeli ciąg $\left(X_n\right)$, $n\geq1$, zmiennych losowych spełnia:
+\begin{equation}
+\label{eq:greenwood2}
+\hat{\sigma}^2_n(t) = \hat{S}^2(t) \sum_{i: t_{(i)} \leq t} \frac{d_i}{r_i(r_i-d_i)}
+\end{equation}
+
+dla każdego $t<t_{(n)}$. Wzór (\ref{eq:greenwood1}) stanowi szczególny przypadek, gdy z prawdopodobieństwem 1 obserwacje się nie powtarzają, w (\ref{eq:greenwood2}) natomiast niektóre już mogą.
+
+Metoda delta mówi nam, że jeżeli ciąg estymatorów $\left(X_n\right)_{n \ge 1}$ spełnia asymptotyczną normalność:
 
 $$
 \sqrt{n}\left(X_n-\vartheta\right) \xrightarrow{d} \mathcal{N}\left(0, \sigma^2\right),
 $$
 
-gdzie $\vartheta$ i $\sigma^2$ są pewnymi stałymi, oraz funkcja g jest różniczkowalna w punkcie $\vartheta$ i $g'\left(\vartheta\right)\neq0$, to ciąg $\left(g\left(X_n\right)\right)$, $n\geq1$ jest taki, że:
+gdzie $\vartheta$ i $\sigma^2$ są pewnymi stałymi, oraz funkcja g jest różniczkowalna w punkcie $\vartheta$ i $g'\left(\vartheta\right)\neq0$, to ciąg $\left(g\left(X_n\right)\right)_{n\ge 1}$, spełnia:
 
 $$
 \sqrt{n}\left(g\left(X_n\right)-g\left(\vartheta\right)\right) \xrightarrow{d}
@@ -1016,13 +1022,17 @@ $$
 W powyższym przekształceniu składnik $\sqrt{n}$ został pominięty, gdyż ta "informacja zawiera się" w estymatorze $\hat{\sigma}_n(t)=\sqrt{\hat{\sigma}^2_n(t)}$. Na jego podstawie jesteśmy w stanie jednak wyznaczyć asymptotycznie punktowy przedział ufności dla wartości funkcji przeżycia $S$ w punkcie $t$ na poziomie ufności $1-\alpha$, który jest postaci:
 
 $$
-T_L = g^{-1}\left(g\left(\hat{S}_n(t)\right)-z\left(1-\frac{\alpha}{2}\right)g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)\right), \\
+T_L = g^{-1}\left(g\left(\hat{S}_n(t)\right)-z\left(1-\frac{\alpha}{2}\right)g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)\right),
+$$
+$$
 T_U = g^{-1}\left(g\left(\hat{S}_n(t)\right)+z\left(1-\frac{\alpha}{2}\right)g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)\right),
 $$
 
-gdzie $z$ jest funkcją kwantylową standardowego rozkładu normalnego.
+gdzie $z(\cdot)$ jest funkcją kwantylową standardowego rozkładu normalnego.
 
-Symulacja została przeprowadzona dla danych generowanych z rozkładu $\mathcal{G}\mathcal{E}(1, 2)$, cenzurowanych losowo za pomocą zmiennych losowych z rozkładu $\mathcal{E}(0.7)$, dla $t=1.2$, liczności próbek $n \in \left\{30,50,100\right\}$, ilości powtórzeń równej 1000 i $\alpha=0.05$. Dla dodatkowej wiarygodności, przedziały dla poszczególnych przekształceń były wyliczane na tych samych danych. Poniżej przedstawiony jest kod realizujący tę symulację.
+Symulację przeprowadzono dla danych generowanych z rozkładu $\mathcal{G}\mathcal{E}(1, 2)$, losowo cenzurowanych zmiennymi z rozkładu $\mathcal{E}(0.7)$, przy $t=1.2$, dla próbek o liczności $n \in \left\{30,50,100\right\}$, wykonując 1000 powtórzeń przy poziomie istotności $\alpha=0.05$. Dla zwiększenia wiarygodności przedziały dla różnych przekształceń wyznaczano na tych samych danych.
+
+Poniżej przedstawiono blok kodu w R realizujący symulację:
 
 ```{r symulacje-przedziały, echo=TRUE}
 interval <- function(data, t, type="x", alpha=0.05){
@@ -1143,7 +1153,7 @@ kable(df1, digits=3, escape=FALSE,
       caption="\\label{tab:symulacje-długość} Porównanie asymptotycznych punktowo przedziałów ufności funkcji przeżycia - długość przedziału")
 ```
 
-Wyniki z \hyperref[tab:symulacje-długość]{tabeli \ref*{tab:symulacje-długość}.} wskazują skracanie się przedziału wraz z licznością próby. To z kolei świadczy o rosnącej precyzji estymacji funkcji przeżycia metodą Kaplana-Meiera. Dla dowolnej próby długości n najszersze przedziały otrzymujemy za pomocą przekształcenia logarytmicznego, najwęższe zaś po zastosowaniu transformacji logit.
+Wyniki przedstawione w \hyperref[tab:symulacje-długość]{Tabeli \ref*{tab:symulacje-długość}} pokazują, że długość przedziału ufności maleje wraz ze wzrostem liczności próby. Świadczy to o rosnącej precyzji estymacji funkcji przeżycia metodą Kaplana–Meiera. Dla dowolnej próby o długości $n$ najszersze przedziały uzyskujemy przy zastosowaniu przekształcenia logarytmicznego, natomiast najwęższe - po zastosowaniu transformacji logit.
 
 ```{r symulacje-przedziały-prawdopodobienstwo, echo=FALSE}
 kable(df2, digits=3, escape=FALSE,
@@ -1151,10 +1161,12 @@ kable(df2, digits=3, escape=FALSE,
       caption="\\label{tab:symulacje-prawd} Porównanie asymptotycznych punktowo przedziałów ufności funkcji przeżycia - prawdopodobieństwo pokrycia")
 ```
 
-\hyperref[tab:symulacje-prawd]{Tabela \ref*{tab:symulacje-prawd}.} pokazują, że wraz ze wzrostem liczebności próby prawdopodobieństwo pokrycia może maleć lub rosnąć. Oznacza to stabilizację wyników. Na poziomie ufności 95% przekształcenie logit wykazuje lekkie przeszacowanie, natomiast liniowe i logarytmiczne - niedoszacowanie. Można jednak przypuszczać, że wraz z większą liczbą próbek wyniki zbliżą się do zadanego poziomu ufności. Podobnie jak wcześniej transformacja logit jest najlepszym wyborem.
+Wyniki przedstawione w \hyperref[tab:symulacje-prawd]{Tabeli \ref*{tab:symulacje-prawd}} pokazują, że wraz ze wzrostem liczności próby prawdopodobieństwo pokrycia może zarówno rosnąć, jak i maleć, co świadczy o stabilizacji wyników.  
+Na poziomie ufności 95% przekształcenie logit wykazuje niewielkie przeszacowanie, natomiast transformacje liniowa i logarytmiczna - niedoszacowanie. Można jednak przypuszczać, że wraz ze wzrostem liczby prób wyniki zbliżą się do zadanego poziomu ufności. Podobnie jak wcześniej, transformacja logit pozostaje najlepszym wyborem.
 
-Podsumowując wyniki z obu tabel, najlepszą transformacją okazuje się funkcja logit. Wybór między brakiem przekształcenia a przekształceniem logarytmicznym zależy od tego, na czym bardziej komu zależy - odpowiednio na krótszym przedziale, czy na większym prawdopodobieństwie pokrycia.
+Podsumowując wyniki z obu tabel, najbardziej korzystną transformacją jest funkcja logit. Wybór między brakiem przekształcenia a przekształceniem logarytmicznym zależy od priorytetu: krótszego przedziału ufności czy większego prawdopodobieństwa pokrycia.
 
+\newpage
 ## Zadanie 2
 
 Estymatory Kaplana-Meiera oraz Fleminga–Harringtona są funkcjami schodnowymi. W stosunkowo małych próbach często obserwuje się szerokie przedziały czasu w których estymator jest stały - praktycznie i interpretacyjnie bywa to niepożądane i statystykom trudno jest wytłumaczyć praktykom na przykładzie \hyperref[fig:KM-plot]{Wykresu \ref*{fig:KM-plot}.} grupy leku A dlaczego prawdopodobieńsgtwo przeżycia do chwili $t = 0.7$ jest równe prawdopodobieństwu przeżycia do chwili $t = 0.8$.
@@ -1625,6 +1637,10 @@ rz_km_plot(df.III, to = 1500)
 \hyperref[fig:rossa-zielinski5]{Wykres \ref*{fig:rossa-zielinski5}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących pacjentów z rakiem jajnika typu IIIA. Tym razem czasy są znacznie krótsze, a estymator dla wartości powyżej ostatniej obserwacji "odbija" w prawo. Można zauważyć, że dla $m = 5$ estymator "odbija” nieco wcześniej.
 
 Podsumowując, estymator Rossy-Zielińskiego sprawnie wygładza funkcję przeżycia estymowaną przez Kaplana–Meiera, dobrze dopasowując ją w okolicach czasów zdarzeń, jednocześnie eliminując nagłe skoki i fluktuacje wynikające z małych prób. Dzięki temu estymator daje bardziej stabilny i ciągły obraz ryzyka przeżycia, ułatwiając interpretację oraz porównania między grupami pacjentów.
+
+## Zadanie 3
+
+Zadanie wyprowadzenia ścisłych własności asymptotycznych dla tego estymatora jest bardzo trudne, a autorzy wręcz sugerują, że może być niemożliwe do uzyskania w interesującej formie.
 
 \newpage
 
