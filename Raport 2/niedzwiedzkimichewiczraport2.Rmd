@@ -597,7 +597,7 @@ gdzie
 
 $$
 r_i = \sum_{j=1}^n \mathbf{1}_{[s_i,\infty)}(t_j)\qquad
-d_i = \sum_{j=1}^n \mathbf{1}_{\{s_i}\}}(t_j)\,\mathbf{1}_{\{1\}}(\delta_j),
+d_i = \sum_{j=1}^n \mathbf{1}_{\{s_i\}}(t_j)\,\mathbf{1}_{\{1\}}(\delta_j),
 $$
 
 a $D$ oznacza liczbę zaobserwowanych (niecenzurowanych) zdarzeń, natomiast $s_i = t_{(i)}$ jest $i$-tą statystyką pozycyjną czasów zdarzeń.
