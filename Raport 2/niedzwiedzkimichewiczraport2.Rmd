@@ -45,8 +45,7 @@ knitr::opts_chunk$set(fig.align='center',
                       #dev='png', 
                       dpi=1200, 
                       fig.width = 6, 
-                      fig.height = 3.5,
-                      cache=TRUE)
+                      fig.height = 3.5)
 
 # ZMNIEJSZENIE FONTÓW GLOBALNIE
 theme_set(
@@ -78,7 +77,9 @@ deltas.B <- c(rep(1,10), rep(0,10))
 
 df.B <- data.frame(times = times.B, deltas = deltas.B)
 
-# Kwantyle, generator z EW, cenzurwator i cenzurator z GE
+# Kwantyle, generator z EW, cenzurowanie I typu, cenzurowanie losowe
+# rozkładem wykładniczym i funkcja przeżycia rozkładu GE
+
 EW_quantile <- function(p, alpha, beta, gamm) {
   beta * (-log(1 - p^(1 / gamm)))^(1 / alpha)
 }
@@ -97,6 +98,22 @@ cenzurowanie_I_typu <- function(t0, data) {
 GE_cenzurowanie_I_typu <- function(t0, alpha, lambd, n) {
   data <- EW_generator(alpha = 1, beta = 1/lambd, gamm = alpha, size = n)
   cenzurowanie_I_typu(t0, data)
+}
+
+cenzurowanie_losowe <- function(theta, data) {
+  censor_data <- rexp(length(data), rate=theta)
+  deltas <- as.numeric(data <= censor_data)
+  censored_data <- ifelse(data <= censor_data, data, censor_data)
+  data.frame(times = censored_data, deltas = deltas)
+}
+
+GE_cenzurowanie_losowe <- function(theta, alpha, lambd, n) {
+  data <- EW_generator(alpha = 1, beta = 1/lambd, gamm = alpha, size = n)
+  cenzurowanie_losowe(theta, data)
+}
+
+EW_survival <- function(t, alpha, beta, gamm){
+  1 - (1 - exp(-t/beta)^alpha)^gamm
 }
 ```
 
@@ -955,19 +972,188 @@ Ze względu na spadek wag testów Gehan-Breslow, Peto-Peto i Tarone-Ware dla pó
 
 ## Zadanie 1
 
-```{r, echo=TRUE}
-cenzurowanie_losowe <- function(theta, data) {
-  censor_data <- rexp(length(data), rate=theta)
-  deltas <- as.numeric(data <= censor_data)
-  censored_data <- ifelse(data <= censor_data, data, censor_data)
-  list(times = censored_data, deltas = deltas)
+Zadanie polega na zdefiniowaniu funkcji obliczającej średni czas życia w oparciu o estymatory Kaplana–Meiera oraz Fleminga–Harringtona, z uwzględnieniem ogona wykładniczego według propozycji Browna, Hollandera i Kowara. Ze względu na podobieństwo wyglądu wynikowego estymatora dla obu metod, obliczenia zostaną przeprowadzone w uogólnionym przypadku.
+
+Zadanie polega na dokonaniu symulacji porównujących asymptotyczne punktowo przedziały ufności, które oparte będą na własnościach asymptotycznych estymatora Kaplana-Meiera oraz metodzie delta. Rozważanę będą trzy przekształcenia:
+
+* liniowe: $g(x)=x$
+* logarytmiczne: $g(x)=\ln(x)$
+* logit: $g(x)=\ln\left(\frac{x}{1-x}\right)$
+
+Jeżeli $F$ i $G$ są odpowiednio dystrybuantami czasu życia i czasu cenzury ciągłymi na przedziale $\left[0;T\right]$, oraz $F\left(T\right)<1$, to dla każdego $t \in \left(0;T\right)$:
+
+$$
+\frac{\hat{S}_n(t)-S(t)}{\sigma_n(t)} \xrightarrow{d} \mathcal{N}(0,1).
+$$
+
+Jednakże wartość odchylenia standardowego $\sigma_n(t)$ nie jest znana. Można jednakże oszacować wariancję asymptotyczną $\sigma^2_n(t)$ przez formułę Greenwooda:
+
+$$
+1) \ \hat{\sigma}^2_n(t) = \hat{S}^2(t) \sum_{i: t_{(i)} \leq t} \frac{\delta_{(i)}}{(n-i+1)(n-i)} \\
+2) \ \hat{\sigma}^2_n(t) = \hat{S}^2(t) \sum_{i: t_{(i)} \leq t} \frac{d_i}{r_i(r_i-d_i)}
+$$
+
+dla każdego $t<t_{(n)}$. Wzór 1) stanowi szczególny przypadek, gdy z prawdopodobieństwem 1 obserwacje się nie powtarzają, w 2) natomiast niektóre już mogą.
+
+Metoda delta mówi nam, że jeżeli ciąg $\left(X_n\right)$, $n\geq1$, zmiennych losowych spełnia:
+
+$$
+\sqrt{n}\left(X_n-\vartheta\right) \xrightarrow{d} \mathcal{N}\left(0, \sigma^2\right),
+$$
+
+gdzie $\vartheta$ i $\sigma^2$ są pewnymi stałymi, oraz funkcja g jest różniczkowalna w punkcie $\vartheta$ i $g'\left(\vartheta\right)\neq0$, to ciąg $\left(g\left(X_n\right)\right)$, $n\geq1$ jest taki, że:
+
+$$
+\sqrt{n}\left(g\left(X_n\right)-g\left(\vartheta\right)\right) \xrightarrow{d}
+\mathcal{N}\left(0, \left[g'\left(\vartheta\right)\right]^2\sigma^2\right).
+$$
+W przypadku połączenia metody delta z własnościami asymptotycznymi estymatora Kaplana-Meiera, otrzymujemy następujący wniosek:
+
+$$
+\frac{g\left(\hat{S}_n(t)\right)-g\left(S(t)\right)}{g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)} \xrightarrow{d} \mathcal{N}(0,1).
+$$
+
+W powyższym przekształceniu składnik $\sqrt{n}$ został pominięty, gdyż ta "informacja zawiera się" w estymatorze $\hat{\sigma}_n(t)=\sqrt{\hat{\sigma}^2_n(t)}$. Na jego podstawie jesteśmy w stanie jednak wyznaczyć asymptotycznie punktowy przedział ufności dla wartości funkcji przeżycia $S$ w punkcie $t$ na poziomie ufności $1-\alpha$, który jest postaci:
+
+$$
+T_L = g^{-1}\left(g\left(\hat{S}_n(t)\right)-z\left(1-\frac{\alpha}{2}\right)g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)\right), \\
+T_U = g^{-1}\left(g\left(\hat{S}_n(t)\right)+z\left(1-\frac{\alpha}{2}\right)g'\left(\hat{S}_n(t)\right)\hat{\sigma}_n(t)\right),
+$$
+
+gdzie $z$ jest funkcją kwantylową standardowego rozkładu normalnego.
+
+Symulacja została przeprowadzona dla danych generowanych z rozkładu $\mathcal{G}\mathcal{E}(1, 2)$, cenzurowanych losowo za pomocą zmiennych losowych z rozkładu $\mathcal{E}(0.7)$, dla $t=1.2$, liczności próbek $n \in \left\{30,50,100\right\}$, ilości powtórzeń równej 1000 i $\alpha=0.05$. Dla dodatkowej wiarygodności, przedziały dla poszczególnych przekształceń były wyliczane na tych samych danych. Poniżej przedstawiony jest kod realizujący tę symulację.
+
+```{r symulacje-przedziały, echo=TRUE}
+interval <- function(data, t, type="x", alpha=0.05){
+  
+  if(t >= max(data$times)) stop("t must be less than the
+                                maximum time in the data")
+  if(type == "x"){
+    g <- function(x) return(x)
+    g_inv <- function(y) return(y)
+    g_der <- function(x) return(1)
+  }
+  else if(type == "log"){
+    g <- function(x) return(log(x))
+    g_inv <- function(y) return(exp(y))
+    g_der <- function(x) return(1/x)
+  }
+  else if(type == "logit"){
+    g <- function(x) return(log(x/(1-x)))
+    g_inv <- function(y) return(1-1/(exp(y)+1))
+    g_der <- function(x) return(1/(x*(1-x)))
+  }
+  else stop("Invalid option, choose one of the following:
+            \"x\", \"log\", \"logit\"")
+  
+  fit <- survfit(Surv(times, deltas) ~ 1, data = data)
+  fit <- data.frame(n.event = fit$n.event,
+                    times = fit$time,
+                    surv = fit$surv)
+  fit_subset <- fit[fit$times <= t,] 
+  sum <- 0
+  
+  if(length(unique(data$times)) != nrow(data)){
+    for(time in fit_subset$time){
+      r <- sum(data$times >= time)
+      d <- sum(data$times == time & data$deltas == 1)
+      sum <- sum + d/(r*(r-d))
+    }
+  }
+  else{
+    n <- nrow(fit)
+    for(i in 1:nrow(fit_subset)){
+      sum <- sum + fit_subset$n.event[i]/((n-i+1)*(n-i))
+    }
+  }
+  
+  St_estimation <- min(fit_subset$surv)
+  variance <- sum * min(St_estimation)^2
+  g_St_estimation <- g(St_estimation)
+  g_der_St_estimation <- g_der(St_estimation)
+  quantile <- qnorm(1-alpha/2)
+  aux_variable <- quantile*g_der_St_estimation*sqrt(variance)
+  
+  TL <- g_St_estimation - aux_variable
+  TU <- g_St_estimation + aux_variable
+  
+  return(c(g_inv(TL), g_inv(TU)))
 }
 
-GE_cenzurowanie_losowe <- function(theta, alpha, lambd, n) {
-  data <- EW_generator(alpha = 1, beta = lambd, gamm = alpha, size = n)
-  cenzurowanie_losowe(theta, data)
+# Symulacje
+simulation <- function(theta, alpha1, lambd, t, n, M=1000, alpha=0.05){
+  m <- 0
+  length_x <- 0
+  interval_x <- 0
+  length_log <- 0
+  interval_log <- 0
+  length_logit <- 0
+  interval_logit <- 0
+  St <- EW_survival(t, alpha=1, beta=1/lambd, gamm=alpha1)
+  
+  while(m<M){
+    generated_data <- GE_cenzurowanie_losowe(theta, alpha1, lambd, n)
+    if(t >= max(generated_data$times)) next
+    
+    # type="x"
+    est_interval <- interval(generated_data, t, type="x", alpha=alpha)
+    lower <- est_interval[1]
+    upper <- est_interval[2]
+    if(lower <= St & St <= upper) interval_x <- interval_x+1
+    length_x <- length_x + (upper-lower)
+    
+    # type="log"
+    est_interval <- interval(generated_data, t, type="log", alpha=alpha)
+    lower <- est_interval[1]
+    upper <- est_interval[2]
+    if(lower <= St & St <= upper) interval_log <- interval_log+1
+    length_log <- length_log + (upper-lower)
+    m <- m+1
+    
+    # type="logit"
+    est_interval <- interval(generated_data, t, type="logit", alpha=alpha)
+    lower <- est_interval[1]
+    upper <- est_interval[2]
+    if(lower <= St & St <= upper) interval_logit <- interval_logit+1
+    length_logit <- length_logit + (upper-lower)
+  }
+  return(list("length" = c(length_x/M, length_log/M, length_logit/M),
+              "interval" = c(interval_x/M, interval_log/M, interval_logit/M)))
 }
 ```
+
+```{r, symulacje-przedziały-wyniki}
+df1 <- data.frame()
+df2 <- data.frame()
+number_of_observations <- c(30, 50, 100)
+for(n in number_of_observations){
+    wynik <- simulation(0.7, 2, 1, 1.2, n)
+    df1 <- rbind(df1, wynik[[1]])
+    df2 <- rbind(df2, wynik[[2]])
+}
+
+rownames(df1) <- as.character(number_of_observations)
+rownames(df2) <- as.character(number_of_observations)
+```
+
+```{r symulacje-przedziały-długość, echo=FALSE}
+kable(df1, digits=3, escape=FALSE,
+      col.names = c("n", "$g(x)=x$", "$g(x)=\\ln(x)$", "$g(x)=\\ln(\\frac{x}{1-x})$"),
+      caption="\\label{tab:symulacje-długość} Porównanie asymptotycznych punktowo przedziałów ufności funkcji przeżycia - długość przedziału")
+```
+
+Wyniki z \hyperref[tab:symulacje-długość]{tabeli \ref*{tab:symulacje-długość}.} wskazują skracanie się przedziału wraz z licznością próby. To z kolei świadczy o rosnącej precyzji estymacji funkcji przeżycia metodą Kaplana-Meiera. Dla dowolnej próby długości n najszersze przedziały otrzymujemy za pomocą przekształcenia logarytmicznego, najwęższe zaś po zastosowaniu transformacji logit.
+
+```{r symulacje-przedziały-prawdopodobienstwo, echo=FALSE}
+kable(df2, digits=3, escape=FALSE,
+      col.names = c("n", "$g(x)=x$", "$g(x)=\\ln(x)$", "$g(x)=\\ln(\\frac{x}{1-x})$"),
+      caption="\\label{tab:symulacje-prawd} Porównanie asymptotycznych punktowo przedziałów ufności funkcji przeżycia - prawdopodobieństwo pokrycia")
+```
+
+\hyperref[tab:symulacje-prawd]{Tabela \ref*{tab:symulacje-prawd}.} pokazują, że wraz ze wzrostem liczebności próby prawdopodobieństwo pokrycia może maleć lub rosnąć. Oznacza to stabilizację wyników. Na poziomie ufności 95% przekształcenie logit wykazuje lekkie przeszacowanie, natomiast liniowe i logarytmiczne - niedoszacowanie. Można jednak przypuszczać, że wraz z większą liczbą próbek wyniki zbliżą się do zadanego poziomu ufności. Podobnie jak wcześniej transformacja logit jest najlepszym wyborem.
+
+Podsumowując wyniki z obu tabel, najlepszą transformacją okazuje się funkcja logit. Wybór między brakiem przekształcenia a przekształceniem logarytmicznym zależy od tego, na czym bardziej komu zależy - odpowiednio na krótszym przedziale, czy na większym prawdopodobieństwie pokrycia.
 
 ## Zadanie 2
 
