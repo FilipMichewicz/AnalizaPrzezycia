@@ -134,7 +134,7 @@ $$
 \hat{S}(t) = \prod_{i:\, t_{(i)} \le t} \left( 1 - \frac{d_i}{r_i} \right),
 $$
 
-gdzie
+gdzie:
 
 $$
 r_i = \sum_{j=1}^n \mathbf{1}_{[\,t_{(i)},\infty\,)}(t_j), \qquad 
@@ -596,8 +596,8 @@ $$
 gdzie
 
 $$
-r_i = \sum_{j=1}^n \mathbf{1}_{[t_{(i)},\infty)}(t_j)\qquad
-d_i = \sum_{j=1}^n \mathbf{1}_{\{t_{(i)}\}}(t_j)\,\mathbf{1}_{\{1\}}(\delta_j),
+r_i = \sum_{j=1}^n \mathbf{1}_{[s_i,\infty)}(t_j)\qquad
+d_i = \sum_{j=1}^n \mathbf{1}_{\{s_i}\}}(t_j)\,\mathbf{1}_{\{1\}}(\delta_j),
 $$
 
 a $D$ oznacza liczbę zaobserwowanych (niecenzurowanych) zdarzeń, natomiast $s_i = t_{(i)}$ jest $i$-tą statystyką pozycyjną czasów zdarzeń.
@@ -978,7 +978,7 @@ Zadanie polega na dokonaniu symulacji porównujących asymptotyczne punktowo prz
 * logarytmiczne: $g(x)=\ln(x)$
 * logit: $g(x)=\ln\left(\frac{x}{1-x}\right)$
 
-Jeżeli $F$ i $G$ są odpowiednio dystrybuantami czasu życia i czasu cenzury ciągłymi na przedziale $\left[0;T\right]$, oraz $F\left(T\right)<1$, to dla każdego $t \in \left(0;T\right)$:
+Jeżeli $F$ i $G$ są odpowiednio dystrybuantami czasu życia i czasu cenzury ciągłymi na przedziale $\left[0;T\right]$, oraz $F\left(T\right)<1$, to dla każdego $t \in \left(0,T\right)$:
 
 $$
 \frac{\hat{S}_n(t)-S(t)}{\sigma_n(t)} \xrightarrow{d} \mathcal{N}(0,1).
