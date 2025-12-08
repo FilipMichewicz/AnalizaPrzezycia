@@ -1,0 +1,130 @@
+---
+title: "Analiza Przeżycia"
+author: "Wiktor Niedźwiedzki (258882)  \n  Filip Michewicz (282239)"
+date: "30 grudnia 2025 Anno Domini"
+output:
+  pdf_document:
+    number_sections: true
+  word_document: default
+subtitle: Raport 3
+toc: true
+lof: true
+lot: true
+header-includes:
+- \usepackage[OT4]{polski}
+- \usepackage[utf8]{inputenc}
+- \usepackage{graphicx}
+- \usepackage{float}
+- \usepackage{hyperref}
+- \renewcommand{\contentsname}{Spis treści}
+- \renewcommand{\listfigurename}{Spis wykresów}
+- \renewcommand{\listtablename}{Spis tabel}
+- \renewcommand{\figurename}{Wykres}
+- \renewcommand{\tablename}{Tabela}
+- \usepackage{xcolor}
+- \definecolor{ForestGreen}{rgb}{0.1333, 0.5451, 0.1333}
+- \definecolor{SteelBlue}{rgb}{0.2745, 0.5098, 0.7059}
+- \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
+- \usepackage{etoolbox}
+- \pretocmd{\tableofcontents}{\clearpage}{}{}
+- \patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+---
+
+```{r biblioteki+zmienne_pomocnicze, include=FALSE}
+library(knitr)
+library(ggplot2)
+library(survival)
+library(survminer)
+library(coin)
+library(xtable)
+library(gridExtra)
+library(latex2exp)
+
+knitr::opts_chunk$set(fig.align='center', 
+                      fig.pos='H', 
+                      #dev='png', 
+                      dpi=1200, 
+                      fig.width = 6, 
+                      fig.height = 3.5,
+                      cache=TRUE)
+
+# ZMNIEJSZENIE FONTÓW GLOBALNIE
+theme_set(
+  theme_minimal() +
+    theme(
+      axis.text  = element_text(size = 7),
+      axis.title = element_text(size = 8),
+      legend.text  = element_text(size = 7),
+      legend.title = element_text(size = 8)
+    )
+)
+
+set.seed(21370)
+```
+
+\newpage
+# Lista 9
+
+TO DO
+
+## Zadanie 1
+
+TO DO
+
+## Zadanie 2
+
+TO DO
+
+\newpage
+# Lista 10
+
+TO DO
+
+## Zadanie 1
+
+TO DO
+
+## Zadanie 2
+
+TO DO
+
+\newpage
+# Lista 11
+
+TO DO
+
+## Zadanie 1
+
+TO DO
+
+## Zadanie 2
+
+TO DO
+
+\newpage
+# Lista 12
+
+TO DO
+
+## Zadanie 1
+
+TO DO
+
+## Zadanie 2
+
+TO DO
+
+\newpage
+
+# Zadanie dodatkowe
+
+## Zadanie 1
+
+TO DO
+
+## Zadanie 2
+
+TO DO
+
+\newpage
+# Bibliografia
