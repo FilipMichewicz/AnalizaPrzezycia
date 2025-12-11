@@ -75,6 +75,34 @@ TO DO
 
 TO DO
 
+## Zadanie 3
+
+TO DO
+
+## Zadanie 4
+
+TO DO
+
+## Zadanie 5
+
+TO DO
+
+## Zadanie 6
+
+TO DO
+
+## Zadanie 7
+
+TO DO
+
+## Zadanie 8
+
+TO DO
+
+## Zadanie 9
+
+TO DO
+
 \newpage
 # Lista 10
 
@@ -102,20 +130,6 @@ TO DO
 TO DO
 
 \newpage
-# Lista 12
-
-TO DO
-
-## Zadanie 1
-
-TO DO
-
-## Zadanie 2
-
-TO DO
-
-\newpage
-
 # Zadanie dodatkowe
 
 ## Zadanie 1
