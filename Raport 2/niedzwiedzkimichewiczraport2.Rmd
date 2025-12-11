@@ -165,6 +165,20 @@ plot.B <- data.frame(time = c(0, fit.KM.B$time),
                      group = "B")
 
 plot.df  <- rbind(plot.A, plot.B)
+
+points.A <- data.frame(
+  time  = fit.KM.A$time,
+  surv  = fit.KM.A$surv,
+  group = "A"
+)
+
+points.B <- data.frame(
+  time  = fit.KM.B$time,
+  surv  = fit.KM.B$surv,
+  group = "B"
+)
+
+points.KM.df <- rbind(points.A, points.B)
 ```
 
 Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy użyciu estymatora Kaplana–Meiera dla danych z zadania 3 z listy 2.
@@ -172,6 +186,9 @@ Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy uży
 ```{r KM-plot, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących leków"}
 ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   geom_step(linewidth = 1.2) +
+  geom_point(data = points.KM.df,
+             aes(time, surv, color = group),
+             shape = 3, size = 2) +
   scale_color_manual(values = c("A" = "steelblue", "B" = "tomato"),
                      labels = c("Lek A", "Lek B")) +
   scale_y_continuous(limits = c(0,1)) +
@@ -213,6 +230,20 @@ plot.B <- data.frame(time = c(0, fit.FH.B$time),
                      group = "B")
 
 plot.df  <- rbind(plot.A, plot.B)
+
+points.A <- data.frame(
+  time  = fit.FH.A$time,
+  surv  = fit.FH.A$surv,
+  group = "A"
+)
+
+points.B <- data.frame(
+  time  = fit.FH.B$time,
+  surv  = fit.FH.B$surv,
+  group = "B"
+)
+
+points.FH.df <- rbind(points.A, points.B)
 ```
 
 Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy użyciu estymatora Fleminga-Harringtona.
@@ -220,6 +251,9 @@ Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy uży
 ```{r FH-plot, echo=FALSE, fig.cap="Estymator Fleminga-Harringtona dla danych dotyczących leków"}
 ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   geom_step(linewidth = 1.2) +
+  geom_point(data = points.FH.df,
+             aes(time, surv, color = group),
+             shape = 3, size = 2) +
   scale_color_manual(values = c("A" = "steelblue", "B" = "tomato"),
                      labels = c("Lek A", "Lek B")) +
   scale_y_continuous(limits = c(0,1)) +
@@ -286,6 +320,9 @@ plot.df <- rbind(plot.A, plot.B)
 
 ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   geom_step(linewidth = 1.2) +
+  geom_point(data = points.KM.df,
+             aes(time, surv, color = group),
+             shape = 3, size = 2) +
   scale_color_manual(values = c("A" = "steelblue", "B" = "tomato"),
                      labels = c("Lek A", "Lek B")) +
   scale_y_continuous(limits = c(0,1)) +
@@ -947,18 +984,31 @@ plot.IIIA <- data.frame(time = c(0, fit.KM.IIIA$time),
 
 plot.df  <- rbind(plot.II, plot.IIIA)
 
-max.time <- max(max(df.II$times[df.II$deltas==1]),
-                max(df.III$times[df.III$deltas==1]))
+points.II <- data.frame(
+  time  = fit.KM.II$time,
+  surv  = fit.KM.II$surv,
+  group = "II"
+)
+
+points.IIIA <- data.frame(
+  time  = fit.KM.IIIA$time,
+  surv  = fit.KM.IIIA$surv,
+  group = "IIIA"
+)
+
+points.raki.df <- rbind(points.II, points.IIIA)
 
 ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   geom_step(linewidth = 1.2) +
+    geom_point(data = points.raki.df,
+             aes(time, surv, color = group),
+             shape = 3, size = 2) +
   scale_color_manual(values = c("II" = "steelblue", "IIIA" = "tomato"),
                      labels = c("II", "IIIA")) +
   scale_y_continuous(limits = c(0,1)) +
   labs(x = "Czas do progresji (t)",
        y = expression(hat(S)(t)),
        color = "Typ nowotworu") +
-  scale_x_continuous(limits = c(0, max.time)) +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
@@ -1553,6 +1603,7 @@ rz.estimator.plot <- function(df, m = 2, to = 3) {
   
   ggplot(plot.df, aes(x = time, y = surv)) +
     geom_line(color = "tomato", linewidth = 1) +
+    
     scale_y_continuous(limits = c(0, 1)) +
     labs(title = "Estymator Rossa-Zieliński",
          x = "Czas do zdarzenia (t)",
@@ -1582,20 +1633,46 @@ rz_km_plot <- function(df, m1 = 2, m2 = 5, to = 3) {
   df_rz2 <- data.frame(time = time_rz2, surv = surv_rz2, group = "RZ", panel = "M5")
   
   fit <- survfit(Surv(df$times, df$deltas) ~ 1)
-  idx <- which(fit$n.event > 0)
-  df_km1 <- data.frame(time = c(0, fit$time[idx]), surv = c(1, fit$surv[idx]), group = "KM", panel = "M2")
-  df_km2 <- data.frame(time = c(0, fit$time[idx]), surv = c(1, fit$surv[idx]), group = "KM", panel = "M5")
+  
+  df_km1 <- data.frame(time = c(0, fit$time), surv = c(1, fit$surv),
+                       group = "KM", panel = "M2")
+  df_km2 <- data.frame(time = c(0, fit$time), surv = c(1, fit$surv),
+                       group = "KM", panel = "M5")
+  
+  points.km1 <- data.frame(
+    time  = fit$time,
+    surv  = fit$surv,
+    group = "KM",
+    panel = "M2"
+  )
+  
+  points.km2 <- data.frame(
+    time  = fit$time,
+    surv  = fit$surv,
+    group = "KM",
+    panel = "M5"
+  )
   
   plot_df <- rbind(df_rz1, df_rz2, df_km1, df_km2)
   plot_df$panel <- factor(plot_df$panel, levels = c("M2", "M5"))
   
-  ggplot(plot_df, aes(x = time, y = surv, color = group)) +
-    geom_step(data = subset(plot_df, group == "KM"), linewidth = 0.8) +
-    geom_line(data = subset(plot_df, group == "RZ"), linewidth = 0.8) +
+  points_df <- rbind(points.km1, points.km2)
+  
+  ggplot() +
+    geom_step(data = subset(plot_df, group == "KM"),
+              aes(x = time, y = surv, color = group),
+              linewidth = 0.8) +
+    geom_point(data = points_df,
+               aes(x = time, y = surv, color = group),
+               shape = 3, size = 2) +
+    geom_line(data = subset(plot_df, group == "RZ"),
+              aes(x = time, y = surv, color = group),
+              linewidth = 0.8) +
     facet_wrap(~panel, ncol = 2, scales = "free_x",
                labeller = as_labeller(c("M2" = "m==2", "M5" = "m==5"), label_parsed)) +
     scale_color_manual(values = c("KM" = "tomato", "RZ" = "steelblue"),
-                       labels = c("KM" = "Kaplana-Meiera", "RZ" = "Rossy-Zielińskiego")) +
+                       labels = c("KM" = "Kaplana-Meiera",
+                                  "RZ" = "Rossy-Zielińskiego")) +
     scale_y_continuous(limits = c(0, 1)) +
     labs(x = "Czas", y = expression(hat(S)(t)), color = "Estymator") +
     theme_minimal() +
