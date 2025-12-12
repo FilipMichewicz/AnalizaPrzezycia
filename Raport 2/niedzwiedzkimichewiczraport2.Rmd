@@ -167,14 +167,14 @@ plot.B <- data.frame(time = c(0, fit.KM.B$time),
 plot.df  <- rbind(plot.A, plot.B)
 
 points.A <- data.frame(
-  time  = fit.KM.A$time,
-  surv  = fit.KM.A$surv,
+  time  = fit.KM.A$time[df.A$deltas == 0],
+  surv  = fit.KM.A$surv[df.A$deltas == 0],
   group = "A"
 )
 
 points.B <- data.frame(
-  time  = fit.KM.B$time,
-  surv  = fit.KM.B$surv,
+  time  = fit.KM.B$time[df.B$deltas == 0],
+  surv  = fit.KM.B$surv[df.B$deltas == 0],
   group = "B"
 )
 
@@ -183,12 +183,12 @@ points.KM.df <- rbind(points.A, points.B)
 
 Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy użyciu estymatora Kaplana–Meiera dla danych z zadania 3 z listy 2.
 
-```{r KM-plot, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących leków"}
+```{r KM-plot, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących leków", warning=FALSE}
 ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   geom_step(linewidth = 1.2) +
   geom_point(data = points.KM.df,
              aes(time, surv, color = group),
-             shape = 3, size = 2) +
+             shape = 3, size = 3) +
   scale_color_manual(values = c("A" = "steelblue", "B" = "tomato"),
                      labels = c("Lek A", "Lek B")) +
   scale_y_continuous(limits = c(0,1)) +
@@ -232,14 +232,14 @@ plot.B <- data.frame(time = c(0, fit.FH.B$time),
 plot.df  <- rbind(plot.A, plot.B)
 
 points.A <- data.frame(
-  time  = fit.FH.A$time,
-  surv  = fit.FH.A$surv,
+  time  = fit.FH.A$time[df.A$deltas == 0],
+  surv  = fit.FH.A$surv[df.A$deltas == 0],
   group = "A"
 )
 
 points.B <- data.frame(
-  time  = fit.FH.B$time,
-  surv  = fit.FH.B$surv,
+  time  = fit.FH.B$time[df.B$deltas == 0],
+  surv  = fit.FH.B$surv[df.B$deltas == 0],
   group = "B"
 )
 
@@ -248,7 +248,7 @@ points.FH.df <- rbind(points.A, points.B)
 
 Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy użyciu estymatora Fleminga-Harringtona.
 
-```{r FH-plot, echo=FALSE, fig.cap="Estymator Fleminga-Harringtona dla danych dotyczących leków"}
+```{r FH-plot, echo=FALSE, fig.cap="Estymator Fleminga-Harringtona dla danych dotyczących leków", warning=FALSE}
 ggplot(plot.df, aes(x = time, y = surv, color = group)) +
   geom_step(linewidth = 1.2) +
   geom_point(data = points.FH.df,
@@ -266,7 +266,7 @@ ggplot(plot.df, aes(x = time, y = surv, color = group)) +
 
 \hyperref[fig:FH-plot]{Wykres \ref*{fig:FH-plot}.} przedstawia estymowaną funkcję przeżycia za pomocą estymatora Fleminga-Harringtona. Uwagi dotyczące bycia dobrze określonym są analogiczne jak do estymatora Kaplana-Meiera.
 
-Obydwa estymatory dają podobne wyniki. W krótkim czasie lek B wydaje się korzystniejszy (wyższa funkcja przeżycia, dłuższy czas do remisji), natomiast dla $t > 0,5$ bardziej efektywny staje się lek A. Do dokładniejszej analizy warto zastosować, np. test Kołmogorowa–Smirnowa.
+Obydwa estymatory dają podobne wyniki. W krótkim czasie lek A wydaje się korzystniejszy (niższa funkcja przeżycia, dłuższy czas do remisji), natomiast dla $t > 0,5$ bardziej efektywny staje się lek B. Do dokładniejszej analizy warto zastosować, np. test Kołmogorowa–Smirnowa.
 
 ## Zadanie 2
 
@@ -311,7 +311,7 @@ BHK.tail <- function(df, end = 3, type = "kaplan-meier") {
 
 Poniżej przedstawiono wykres estymowanej funkcji przeżycia uzyskanej przy użyciu estymatora Kaplana–Meiera wraz z ogonem dla danych z zadania 3 z listy 2.
 
-```{r KM-ogon-plot, echo=FALSE, fig.cap="Estymator Kaplana-Meiera wraz z ogonem Browna, Hollandera i Kowara dla danych dotyczących leków"}
+```{r KM-ogon-plot, echo=FALSE, fig.cap="Estymator Kaplana-Meiera wraz z ogonem Browna, Hollandera i Kowara dla danych dotyczących leków", warning=FALSE}
 plot.A <- BHK.tail(df.A)
 plot.A$group <- "A"
 plot.B <- BHK.tail(df.B)
@@ -443,20 +443,20 @@ for (n in n_values) {
 }
 ```
 
-```{r hist-1, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 30"}
+```{r hist-1, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 30", warning=FALSE}
 histograms$"30"
 ```
 
 \hyperref[fig:hist-1]{Wykres \ref*{fig:hist-1}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 30$. Estymowane wartości dla $2 t_0$ są mniejsze niż dla $t_0$ co zgadza się z oczekiwaniami.
 
 
-```{r hist-2, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 50"}
+```{r hist-2, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 50", warning=FALSE}
 histograms$"50"
 ```
 
 \hyperref[fig:hist-2]{Wykres \ref*{fig:hist-2}.} przedstawia estymowaną wartość funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ dla próby o liczności $n = 50$. W porównaniu z próbą o liczności $n = 30$ przedstawionej na \hyperref[fig:hist-1]{Wykresie \ref*{fig:hist-1}.} estymowane wartości przesunęły się ku mniejszym wartościom.
 
-```{r hist-3, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 100"}
+```{r hist-3, echo=FALSE, fig.cap="Histogram oszacowań funkcji przeżycia w punktach $t_0$ oraz $2 t_0$ - liczność próby n = 100", warning=FALSE}
 histograms$"100"
 ```
 
@@ -945,7 +945,7 @@ df.cancer_unique$PP <- df.cancer_unique$PP/sum(df.cancer_unique$PP)
 df.cancer_unique$TW <- df.cancer_unique$TW/sum(df.cancer_unique$TW)
 ```
 
-```{r testy-wykres, echo=FALSE, fig.cap="\\label{fig:udbzddp} Wagi testów nieparametrycznych dla porównania rozkładów czasów przeżycia - Mayo Clinic"}
+```{r testy-wykres, echo=FALSE, fig.cap="\\label{fig:udbzddp} Wagi testów nieparametrycznych dla porównania rozkładów czasów przeżycia - Mayo Clinic", warning=FALSE}
 ggplot(df.cancer_unique, aes(x = times)) +
   geom_line(aes(y = lg, color = "logrank"), linewidth = 1.2) +
   geom_line(aes(y = GB, color = "Gehan-Breslow"), linewidth = 1.2) +
@@ -965,7 +965,7 @@ ggplot(df.cancer_unique, aes(x = times)) +
 
 Na \hyperref[fig:testy-wykres]{Wykresie \ref*{fig:testy-wykres}.} widać, jakie unormowane wagi przypisuje każdy z testów dla poszczególnych czasów. Dla $t \approx 320$ wagi testów Gehan-Breslow, Peto-Peto i Tarone-Ware przecinają krzywą wag testu logrank, co oznacza, że dla zdarzeń o czasie większym niż 320 przypisywane jest mniejsze znaczenie niż przy teście logrank.
 
-```{r Kaplan-Meier-rak, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących pacjentek z rakiem jajnika - Mayo Clinic", warning=FALSE}
+```{r Kaplan-Meier-rak, echo=FALSE, fig.cap="Estymator Kaplana-Meiera dla danych dotyczących pacjentek z rakiem jajnika - Mayo Clinic", warning=FALSE, warning=FALSE}
 surv.II <- Surv(df.II$times, df.II$deltas)
 surv.IIIA <- Surv(df.III$times, df.III$deltas)
 
@@ -985,14 +985,14 @@ plot.IIIA <- data.frame(time = c(0, fit.KM.IIIA$time),
 plot.df  <- rbind(plot.II, plot.IIIA)
 
 points.II <- data.frame(
-  time  = fit.KM.II$time,
-  surv  = fit.KM.II$surv,
+  time  = fit.KM.II$time[df.II$deltas == 0],
+  surv  = fit.KM.II$surv[df.II$deltas == 0],
   group = "II"
 )
 
 points.IIIA <- data.frame(
-  time  = fit.KM.IIIA$time,
-  surv  = fit.KM.IIIA$surv,
+  time  = fit.KM.IIIA$time[df.III$deltas == 0],
+  surv  = fit.KM.IIIA$surv[df.III$deltas == 0],
   group = "IIIA"
 )
 
@@ -1640,15 +1640,15 @@ rz_km_plot <- function(df, m1 = 2, m2 = 5, to = 3) {
                        group = "KM", panel = "M5")
   
   points.km1 <- data.frame(
-    time  = fit$time,
-    surv  = fit$surv,
+    time  = fit$time[df$deltas == 0],
+    surv  = fit$surv[df$deltas == 0],
     group = "KM",
     panel = "M2"
   )
   
   points.km2 <- data.frame(
-    time  = fit$time,
-    surv  = fit$surv,
+    time  = fit$time[df$deltas == 0],
+    surv  = fit$surv[df$deltas == 0],
     group = "KM",
     panel = "M5"
   )
@@ -1685,31 +1685,31 @@ rz_km_plot <- function(df, m1 = 2, m2 = 5, to = 3) {
 }
 ```
 
-```{r rossa-zielinski1, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych klinicznych pacjentów", warning=FALSE}
+```{r rossa-zielinski1, echo = FALSE, fig.cap="Porównanie estymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych klinicznych pacjentów", warning=FALSE}
 rz_km_plot(df.rz, to = 40)
 ```
 
 Z \hyperref[fig:rossa-zielinski1]{Wykresu \ref*{fig:rossa-zielinski1}.} można odczytać, że generowane wykresy są bardzo podobne do tych przedstawionych w artykule. Można przypuszczać, że opracowany algorytm działa poprawnie.
 
-```{r rossa-zielinski2, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek A", warning=FALSE}
+```{r rossa-zielinski2, echo = FALSE, fig.cap="Porównanie estymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek A", warning=FALSE}
 rz_km_plot(df.A, to = 1.2)
 ```
 
 \hyperref[fig:rossa-zielinski2]{Wykres \ref*{fig:rossa-zielinski2}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących leków - lek A.
 
-```{r rossa-zielinski3, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek B", warning=FALSE}
+```{r rossa-zielinski3, echo = FALSE, fig.cap="Porównanie estymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących leków - lek B", warning=FALSE}
 rz_km_plot(df.B, to = 1.2)
 ```
 
 \hyperref[fig:rossa-zielinski3]{Wykres \ref*{fig:rossa-zielinski3}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących leków - lek B.
 
-```{r rossa-zielinski4, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ II", warning=FALSE}
+```{r rossa-zielinski4, echo = FALSE, fig.cap="Porównanie estymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ II", warning=FALSE}
 rz_km_plot(df.II, to = 1500)
 ```
 
 \hyperref[fig:rossa-zielinski4]{Wykres \ref*{fig:rossa-zielinski4}.} pokazuje, w jaki sposób estymator wygładza klasyczny estymator Kaplana–Meiera dla danych dotyczących pacjentów z rakiem jajnika typu II.
 
-```{r rossa-zielinski5, echo = FALSE, fig.cap="Porównanie wstymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ IIIA", warning=FALSE}
+```{r rossa-zielinski5, echo = FALSE, fig.cap="Porównanie estymatora Kaplana-Meiera oraz Rossy-Zielińskiego dla zbioru danych dotyczących pacjentów z rakiem jajnka - typ IIIA", warning=FALSE}
 rz_km_plot(df.III, to = 1500)
 ```
 
