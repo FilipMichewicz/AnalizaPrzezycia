@@ -35,6 +35,7 @@ library(knitr)
 library(ggplot2)
 library(survival)
 library(survminer)
+library(eha)
 library(coin)
 library(xtable)
 library(gridExtra)
@@ -46,7 +47,7 @@ knitr::opts_chunk$set(fig.align='center',
                       dpi=1200, 
                       fig.width = 6, 
                       fig.height = 3.5,
-                      cache=TRUE)
+                      echo=FALSE)
 
 # ZMNIEJSZENIE FONTÓW GLOBALNIE
 theme_set(
@@ -60,10 +61,309 @@ theme_set(
 )
 
 set.seed(21370)
+
+na.patients <- apply(lung, 1, FUN = function(x) sum(is.na(x))>0)
+lung1 <- lung
+lung1$status <- as.factor(lung$status)
+lung1$sex <- as.factor(lung$sex)
+lung1$ph.ecog <- as.factor(lung$ph.ecog)
+lung1$pat.karno <- as.factor(lung$pat.karno)
 ```
 
 \newpage
+# Dane *lung*
+
+W sprawozdaniu każda lista wykorzystuje dane *lung* z pakietu *survival* w R, które dotyczą pacjentów z zaawansowanym rakiem płuc. \newline
+Zbiór danych *lung* zawiera **`r nrow(lung)`** oraz **`r ncol(lung)`** cech. Liczba brakujących danych wynosi **`r sum(is.na(lung))`**, z czego przypada ona na **`r sum(na.patients)`** pacjentów.
+
+Znaczenie poszczególnych cech oraz ich typ przedstawiono w \hyperref[tab:opis_danych]{Tabeli \ref*{tab:opis_danych}.}
+
+```{r opis_danych}
+df_table <- data.frame(
+  Typ = sapply(lung1, class),
+  Opis = c("Kod instytucji",
+           "Czas przeżycia w dniach",
+           "Cenzura (1 - cenzura, 2 - śmierć)",
+           "Wiek",
+           "Płeć (1 - mężczyzna, 2 - kobieta)",
+           "Skala ECOG według lekarza",
+           "Skala Karnofsky’ego według lekarza",
+           "Skala Karnofsky’ego według pacjenta,",
+           "Kalorie spożywane podczas posiłków",
+           "Utrata masy ciała w ciągu ostatnich sześciu miesięcy")
+)
+
+kable(df_table,
+      col.names = c("Zmienna", "Typ", "Opis"),
+      caption = "\\label{tab:opis_danych}Opis zmiennych w zbiorze danych lung")
+```
+
+* Skala (sprawności) Karnofsky’ego - skala pozwalająca określić stan ogólny i jakość życia pacjenta z chorobą nowotworową kwalifikowanego do chemioterapii bądź radioterapii. Skala ma rozpiętość od 100 do 0, gdzie 100 oznacza stan idealny, a 0 – śmierć. Skala opracowana przez Davida A. Karnofsky'ego oraz Josepha H. Burchenala w 1949 roku.
+* Skala (sprawności) ECOG - skala pozwalająca określić stan ogólny i jakość życia pacjenta z chorobą nowotworową, ale stosowana też w geriatrii i psychiatrii, lub innych ciężkich i przewlekłych chorobach.
+
+Porównanie skali ECOG do skali Karnofsky'ego:
+
+* 0 - 100, 90,
+* 1 - 80, 70,
+* 2 - 60, 50,
+* 3 - 40, 30,
+* 4 - 20, 10,
+* 5 - 0.
+
+\newpage
 # Lista 9
+
+Lista skupia się na poznaniu modelów przyspieszonego czasu awarii oraz proporcjonalnych hazardów.
+
+Niech $S_0(x)$ oraz $h_0(x)$ będą odpowiednio funkcjami przeżycia hazardu o znanych postaciach, które odpowiadają rozkładowi obserwowalnej zmiennej losowej $X$ o zerowym wektorze charakterystyk. W przypadku zadań funkcje te będą odpowiadać rozkładowi Weibulla, jednakże można też przyjąć inne, co zostało uwzględnione w poniższych opisach.
+
+## Model AFT
+
+Model, w którym funkcja przeżycia $S\left(x|z\right)$ jednostki o wektorze $z$ charakterystyk jest postaci:
+
+$$
+S\left(x|z\right) = S_0\left(\exp{\left(\beta^Tz\right)}x\right)
+$$
+
+nazywamy modelem przyspieszonego czasu awarii (AFT - accelerated failure-time). Funkcję $S_0(x)$ nazywamy bazową funkcją przeżycia, natomiast $\exp{\left(\beta^Tz\right)}$ - czynnikiem przyspieszenia.
+
+Model przyspieszonego czasu awarii ma następującą interpretację. Jeżeli $z_1$ i $z_2$ są dwoma wektorami charakterystyk, to prawdopodobieństwo przeżycia czasu $x$ przez jednostkę o charakterystyce $z_1$ jest takie samo, jak prawdopodobieństwo przeżycia czasu $\exp{\left(\beta^T\left(z_1-z_2\right)\right)}x$ przez jednostkę o charakterystyce $z_2$. Tym samym, jeżeli:
+
+* $\exp{\left(\beta^T\left(z_1-z_2\right)\right)}>1$ $\left(\beta^T\left(z_1-z_2\right)>0\right)$ - $z_1$ ma w każdej chwili większe prawdopodobieństwo wystąpienia zdarzenia przed tą chwilą niż jednostka o charakterystyce $z_2$,
+* $\exp{\left(\beta^T\left(z_1-z_2\right)\right)}<1$ $\left(\beta^T\left(z_1-z_2\right)<0\right)$ - $z_1$ ma w każdej chwili mniejsze prawdopodobieństwo wystąpienia zdarzenia przed tą chwilą niż jednostka o charakterystyce $z_2$,
+* w szczególności $\exp{\left(\beta^T\left(z_1-z_2\right)\right)}=1$ $\left(\beta^T\left(z_1-z_2\right)=0\right)$ - $z_1=z_2$.
+
+Korzystając z faktu, że \newline $h(x) = -\frac{S'(x)}{S(x)}$, model AFT możemy równoważnie przedstawić w postaci:
+
+$$
+h\left(x|z\right) = h_0\left(\exp{\left(\beta^Tz\right)}x\right)\exp{\left(\beta^Tz\right)}
+$$
+
+W praktyce często za bazową funkcję przeżycia w modelu AFT przyjmuje się funkcję przeżycia odpowiadającą rozkładowi Weibulla (w szczególnym przypadku rozkładowi wykładniczemu), Gompertza, lognormalnemu, logistycznemu oraz wartości ekstremalnej.
+
+## Model PH
+
+W (parametrycznym) modelu proporcjonalnych hazardów, w skrócie PH, funkcja hazardu $h\left(x|z\right)$ jednostki o wektorze $z$ charakterystyk jest postaci:
+
+$$
+h\left(x|z\right) = h_0(x)\exp{\left(\beta^Tz\right)}
+$$
+
+Model proporcjonalnych hazardów ma prostą interpretację, od której zawdzięcza swoją nazwę. Można zauważyć, że jeżeli $z_1=\left(z_{11},z_{12},\dots,z_{1p}\right)^T$ oraz $z_2=\left(z_{21},z_{22},\dots,z_{2p}\right)^T$ są dwoma wektorami charakterystyk, to
+
+$$
+\frac{h\left(x|z_1\right)}{h\left(x|z_2\right)} = \exp{\left(\beta^T\left(z_1-z_2\right)\right)},
+$$
+
+czyli iloraz hazardów dwóch dowolnych jednostek jest proporcjonalny.
+
+Korzystając z relacji między funkcją hazardu a przeżycia $S(x)=\exp{\left[-\int^x_0 h(u) du\right]}$, model PH możemy równoważnie przedstawić w postaci:
+
+$$
+S\left(x|z\right) = \exp{\left[-\int^x_0 h_0(u) \exp{\left(\beta^Tz\right)} du\right]} = \left[S_0(x)\right]^{\exp{\left(\beta^Tz\right)}}.
+$$
+
+W praktyce często za bazową funkcję hazardu w modelu PH przyjmuje się funkcję hazardu odpowiadającą rozkładowi Weibulla (w szczególnym przypadku rozkładowi wykładniczemu), o kawałkami stałym hazardzie, Gompertza oraz wartości ekstremalnej.
+
+## Zadanie 1
+
+W tym zadaniu oszacowane zostały parametry modelu przyspieszonego czasu awarii (AFT). Jako zmienną zależną przyjmujemy *time*, a jako charakterystyki: *age*, *sex*, *ph.ecog* oraz *ph.karno*. W tym celu wykorzystano funkcję `survreg` z pakietu `survival`. Przy tworzeniu modelu uwzględniamy fakt, że zmienne *sex* oraz *ph.ecog* są typu `factor`, a dane *age* oraz *ph.karno* zostały zcentrowane zgodnie z zaleceniami. Po wyznaczeniu odpowiedniego podzbioru danych zostały usunięte wiersze zawierające brakujące dane w ilości **`r nrow(lung)-nrow(na.omit(lung[c("time", "status", "age", "sex", "ph.ecog", "ph.karno")]))`**.
+
+```{r lung-aft, echo=TRUE}
+lung_new <- na.omit(lung[c("time", "status", "age",
+                           "sex", "ph.ecog", "ph.karno")])
+
+# Centrowanie danych
+age_average <- mean(lung_new$age)
+lung_new$age_new <- lung_new$age - age_average
+ph.karno_average <- mean(lung_new$ph.karno)
+lung_new$ph.karno_new <- lung_new$ph.karno - ph.karno_average
+
+# Tworzenie modelu AFT
+lung_new_aft <- survreg(Surv(time, status == 2) ~ age_new + as.factor(ph.ecog) +
+                                                  ph.karno_new + as.factor(sex),
+                        data = lung_new, dist = "weibull")
+```
+
+## Zadanie 2
+
+W tym zadaniu zinterpretowana zostały wyznaczone współczynniki dla poszczególnych zmiennych.
+
+```{r aft-współczynniki}
+df <- data.frame("a"=round(-lung_new_aft$coefficients[-1], 5))
+rownames(df) <- c("age", "ph.ecog=1", "ph.ecog=2",
+                  "ph.ecog=3", "ph.karno", "sex=2")
+df$difference <- abs(df$a)
+df <- df[order(df$difference, decreasing=TRUE), , drop=FALSE]
+difference <- numeric(nrow(df))
+for(i in 2:nrow(df)) difference[i] <- abs(df$a[i-1])-abs(df$a[i])
+difference[1] <- "-"
+df$difference <- difference
+kable(df, col.names=c("Charakterystyka", "Wartość współczynnika", "Różnica wartości bezwzględnych"),
+      caption="\\label{tab:aft_współczynniki} Współczynniki modelu AFT")
+```
+
+\hyperref[tab:aft_współczynniki]{Tabela \ref*{tab:aft_współczynniki}.} wskazuje, że największy wpływ na różnicę między poszczególnymi pacjentami ma zmienna `ph.ecog`. Zmienna `sex` ma wpływ umiarkowany, natomiast `ph.karno` oraz `age` - znikomy.
+ 
+## Zadanie 3
+
+W tym zadaniu oszacowana została funkcja przeżycia (w dniach) odpowiadająca rozkładowi czasu życia 70-letniej kobiety o charakterystykach `ph.ecog=1` oraz `ph.karno=90`. Dane ciągłe zostały odpowiednio zcentrowane w oparciu o wcześniej wyznaczone średnie.
+
+```{r aft-przeżycie, echo=TRUE}
+beta <- unname((-lung_new_aft$coefficients[-1]))
+z <- c(70 - age_average, 1, 0, 0, 90 - ph.karno_average, 1)
+theta_aft <- c(t(beta) %*% z)
+
+mi <- lung_new_aft$icoef[[1]]
+sigma <- exp(lung_new_aft$icoef[[2]])
+alpha_aft <- 1/sigma
+lambda_aft <- exp(-alpha_aft*mi)
+
+female_time <- function(t) exp(-lambda_aft*exp(alpha_aft*theta_aft)*t^alpha_aft)
+```
+
+W oparciu o powstałą estymowaną funkcję przeżycia można wyznaczyć oszacowanie prawdopodobieństwa, że czas życia kobiety będzie większy niż 300 dni. Estymacja wynosi **`r female_time(300)`**.
+
+## Zadanie 4
+
+W tym zadaniu narysowano wykres estymowanej funkcji przeżycia z zadania 3.
+
+```{r aft-przeżycie-wykres, fig.cap="\\label{fig:aft_przeżycie} Estymacja funkcji przeżycia uzyskanej metodą PH"}
+x <- seq(0, 1500, length.out=150000)
+df <- data.frame("x"=x, "y"=female_time(x))
+df1 <- data.frame(x=300, y=female_time(300))
+ggplot(df, aes(x=x)) +
+  geom_line(aes(y=y), lwd=0.7, color="steelblue") +
+  geom_point(aes(x=x, y=y), df1, size=3, color="limegreen") +
+  labs(x = "Czas do zgonu (t)",
+       y = "S(x|z)")
+```
+
+Na \hyperref[fig:aft_przeżycie]{wykresie \ref*{fig:aft_przeżycie}.} widać, że szacowane prawdopodobieństwo przeżycia szybko maleje do ok. 500 dni, potem zaś prędkość ta znacząco maleje. Od punktu $t=1138$ estymowana szansa przeżycia spada poniżej 1%. Zielonym punktem zaznaczona została wcześniej wymieniona wartość estymowanego prawdopodobieństwa, że zgon kobiety nie nastąpi przed 300 dniem.
+
+## Zadanie 5
+
+W tym zadaniu oszacowane zostały parametry modelu proporcjonalnych hazardów (PH). Podobnie jak wcześniej, za zmienną zależną przyjmujemy *time*, a jako charakterystyki: *age*, *sex*, *ph.ecog* oraz *ph.karno*. Również podobnie jak wcześniej, odpowiednie dane są traktowane jako `factor`, a ciągłe są centrowane.
+
+```{r ph, echo=TRUE}
+lung_new_ph <- phreg(Surv(time, status) ~ age_new + as.factor(ph.ecog) +
+                                    ph.karno_new + as.factor(sex),
+                data = lung_new, dist = "weibull")
+```
+
+## Zadanie 6
+
+W tym zadaniu zinterpretowana zostały wyznaczone współczynniki dla poszczególnych zmiennych.
+
+```{r ph-współczynniki}
+df <- data.frame("a"=round(lung_new_ph$coefficients[-c(7,8)], 5))
+rownames(df) <- c("age", "ph.ecog=1", "ph.ecog=2",
+                  "ph.ecog=3", "ph.karno", "sex=2")
+df$difference <- abs(df$a)
+df <- df[order(df$difference, decreasing=TRUE), , drop=FALSE]
+difference <- numeric(nrow(df))
+for(i in 2:nrow(df)) difference[i] <- abs(df$a[i-1])-abs(df$a[i])
+difference[1] <- "-"
+df$difference <- difference
+kable(df, col.names=c("Charakterystyka", "Wartość współczynnika", "Różnica wartości bezwzględnych"),
+      caption="\\label{tab:ph_współczynniki} Współczynniki modelu PH")
+```
+
+\hyperref[tab:ph_współczynniki]{Tabela \ref*{tab:ph_współczynniki}.} wskazuje na taką samą "hierarchię" wpływu poszczególnych zmiennych na estymację jak w modelu AFT. Jednakże różnica jest taka, że wartości bezwzględne są większe niż wcześniej, podobnie jak różnice. 
+ 
+## Zadanie 7
+
+W tym zadaniu oszacowane zostały dwie funkcje hazardu (w dniach) odpowiadające rozkładowi czasu życia 70-letnich kobiet o wspólnej charakterystyce `ph.karno=90` oraz wartościach charakterystyki `ph.ecog` odpowiednio 1 i 2. Dane ciągłe zostały odpowiednio zcentrowane w oparciu o wcześniej wyznaczone średnie. Następnie porównano uzyskane estymacje.
+
+```{r ph-hazard, echo=TRUE}
+beta <- unname(lung_new_ph$coefficients[-c(7,8)])
+alpha_ph <- exp(lung_new_ph$coefficients[["log(shape)"]])
+mu <- lung_new_ph$coefficients[["log(scale)"]]
+lambda_ph <- exp(-mu*alpha_ph)
+
+# 1 kobieta: ph.ecog=1
+z <- c(70-age_average, 1, 0, 0, 90-ph.karno_average, 1)
+theta_ph1 <- c(t(beta)%*%z)
+female_time1 <- function(t) lambda_ph*alpha_ph*t^(alpha_ph-1)*exp(theta_ph1)
+
+# 2 kobieta: ph.ecog=2
+z <- c(70-age_average, 0, 1, 0, 90-ph.karno_average, 1)
+theta_ph2 <- c(t(beta)%*%z)
+female_time2 <- function(t) lambda_ph*alpha_ph*t^(alpha_ph-1)*exp(theta_ph2)
+```
+
+```{r ph-hazard-wykres, fig.cap="\\label{fig:ph_hazard} Wykresy estymowanych funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet, uzyskane metodą PH"}
+x <- seq(0, 1500, length.out=150000)
+df <- data.frame("x"=x, "y1"=female_time1(x), "y2"=female_time2(x))
+df$log_y1 <- log(df$y1)
+df$log_y2 <- log(df$y2)
+
+ggplot(df, aes(x=x)) +
+  geom_line(aes(y=y1, color="y1"), lwd=0.7) +
+  geom_line(aes(y=y2, color="y2"), lwd=0.7) +
+  scale_color_manual(name="ph.ecog",
+                     values=c("y1"="steelblue", "y2"="tomato"),
+                     labels=c("1", "2")) +
+  labs(x = "Czas do zgonu (t)",
+       y = "h(x|z)") +
+  theme_minimal() +
+  theme(legend.position="bottom")
+```
+
+Z \hyperref[fig:ph_hazard]{wykresu \ref*{fig:ph_hazard}.} można odczytać, że funkcja hazardu dla kobiety w gorszym stanie sprawności (`ph.ecog=2`)  jest zawsze wyższa niż dla tej drugiej. Oznacza to, że w jej przypadku ryzyko zgonu w każdym momencie jest wyższe.
+
+```{r ph-hazard-wykres-log, fig.cap="\\label{fig:ph_hazard_log} Logarytmy wykresów estymowanych funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet, uzyskanych metodą PH"}
+ggplot(df, aes(x=x)) +
+  geom_line(aes(y=log_y1, color="y1"), lwd=0.7) +
+  geom_line(aes(y=log_y2, color="y2"), lwd=0.7) +
+  scale_color_manual(name="ph.ecog",
+                     values=c("y1"="steelblue", "y2"="tomato"),
+                     labels=c("1", "2")) +
+  labs(x = "Czas do zgonu (t)",
+       y = "h(x|z)") +
+  theme_minimal() +
+  theme(legend.position="bottom")
+```
+
+Poszczególne proste log-hazardu na \hyperref[fig:ph_hazard_log]{wykresie \ref*{fig:ph_hazard_log}.} są w przybliżeniu równoległe, co sugeruje, że iloraz hazardów jest stały w czasie. Tym samym nie ma podstaw do kwestionowania decyzji o przyjęciu modelu proporcjonalnych hazardów.
+
+## Zadanie 8
+
+W tym zadaniu, w oparciu o wcześniej wyznaczone funkcje hazardu, wyznaczono funkcje przeżycia.
+
+```{r ph-przeżycie, echo = TRUE}
+female_time1 <- function(t) exp(-lambda_ph*t^alpha_ph*exp(theta_ph1))
+female_time2 <- function(t) exp(-lambda_ph*t^alpha_ph*exp(theta_ph2))
+```
+
+W oparciu o wyznaczone funkcje, możemy wyznaczyć estymowane prawdopodobieństwo, że kobiety przeżyją ponad 300 dni. Dla kobiety o charakterystyce `ph.karno=2` wynosi ona **`r female_time2(300)`**, a dla drugiej (`ph.karno=1`) - **`r female_time1(300)`**. Jest to wartość większa o **`r female_time1(300)-female_time(300)`** niż ta uzyskana metodą AFT.
+
+## Zadanie 9
+
+W tym zadaniu zostały porównane funkcje przeżycia uzyskane metodami AFT oraz PH dla 70-letniej kobiety o charakterystykach $ph.karno=90$ oraz $ph.ecog=1$.
+
+```{r aftVSph-wykres, fig.cap="\\label{fig:aftVSph} Porównanie funkcji przeżycia szacowanych metodami AFT oraz PH"}
+x <- seq(0, 1500, length.out=150000)
+df <- data.frame("x"=x, "y1"=female_time(x), "y2"=female_time1(x))
+df1 <- data.frame("x"=c(300, 300), "y"=c(female_time(300), female_time1(300)))
+
+ggplot(df, aes(x=x)) +
+  geom_line(aes(y=y1, color="y1"), lwd=0.7) +
+  geom_line(aes(y=y2, color="y2"), lwd=0.7) +
+  geom_point(aes(x=x, y=y), df1, size=3, color=c("limegreen", "purple")) +
+  scale_color_manual(name="Metoda",
+                     values=c("y1"="steelblue", "y2"="tomato"),
+                     labels=c("AFT", "PH")) +
+  labs(x = "Czas do zgonu (t)",
+       y = "S(x|z)") +
+  theme_minimal() +
+  theme(legend.position="bottom")
+```
+
+Z \hyperref[fig:aftVSph]{wykresu \ref*{fig:aftVSph}.} widać znaczną różnicę między modelem AFT oraz PH. Estymowana funkcja przeżycia uzyskana za pomocą metody przyspieszonego czasu awarii maleje szybciej niż przy oszacowaniu metodą proporcjonalnych hazardów. Dopiero po czasie $t=1250$ można uznać wartości wykresów za zbliżone do siebie. Maksymalna różnica między wartościami funkcji wynosi ok. **`r max(abs(female_time(x)-female_time1(x)))`**. Zaznaczone punkty odpowiadają za estymowane wartości prawdopodobieństwa, że kobieta umrze po okresie ponad 300 dni, których konkretne wartości zostały podane przedtem.
+
+\newpage
+# Lista 10
 
 TO DO
 
@@ -78,41 +378,13 @@ TO DO
 ## Zadanie 3
 
 TO DO
-
 ## Zadanie 4
 
 TO DO
-
 ## Zadanie 5
 
 TO DO
-
 ## Zadanie 6
-
-TO DO
-
-## Zadanie 7
-
-TO DO
-
-## Zadanie 8
-
-TO DO
-
-## Zadanie 9
-
-TO DO
-
-\newpage
-# Lista 10
-
-TO DO
-
-## Zadanie 1
-
-TO DO
-
-## Zadanie 2
 
 TO DO
 
