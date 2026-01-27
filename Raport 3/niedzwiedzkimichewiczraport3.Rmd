@@ -1,33 +1,20 @@
 ---
 title: "Analiza Przeżycia"
-author: "Wiktor Niedźwiedzki (258882)  \n  Filip Michewicz (282239)"
-date: "21 stycznia 2026 Anno Domini"
-output:
+author: "Wiktor Niedźwiedzki,  Filip Michewicz"
+date: "27 stycznia 2026 Anno Domini"
+classoption: a4paper, 12pt
+geometry: top=2.5cm, bottom=2.5cm, left=2cm, right=2cm
+output: 
   pdf_document:
+    toc: true
+    fig_caption: yes
+    fig_width: 5
+    fig_height: 4
     number_sections: true
-  word_document: default
-subtitle: Raport 3
-toc: true
+    includes:
+        in_header: "preamble.tex"
 lof: true
 lot: true
-header-includes:
-- \usepackage[OT4]{polski}
-- \usepackage[utf8]{inputenc}
-- \usepackage{graphicx}
-- \usepackage{float}
-- \usepackage{hyperref}
-- \renewcommand{\contentsname}{Spis treści}
-- \renewcommand{\listfigurename}{Spis wykresów}
-- \renewcommand{\listtablename}{Spis tabel}
-- \renewcommand{\figurename}{Wykres}
-- \renewcommand{\tablename}{Tabela}
-- \usepackage{xcolor}
-- \definecolor{ForestGreen}{rgb}{0.1333, 0.5451, 0.1333}
-- \definecolor{SteelBlue}{rgb}{0.2745, 0.5098, 0.7059}
-- \definecolor{Tomato}{rgb}{1.0, 0.3882, 0.2784}
-- \usepackage{etoolbox}
-- \pretocmd{\tableofcontents}{\clearpage}{}{}
-- \patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
 ---
 
 ```{r biblioteki+zmienne_pomocnicze, include=FALSE}
@@ -333,7 +320,6 @@ model.ph <- phreg(
 
 W poniższej tabeli przedstawiono współczynniki modelu. Ich interpretacja znajduje się w kolejnym zadaniu.
 
-\newpage
 ```{r ph-współczynniki}
 df <- data.frame(beta = model.ph$coefficients)
 rownames(df) <- c(
@@ -563,7 +549,7 @@ $$
 
 czyli jest stałe w czasie i zależy tylko od różnicy charakterystyk. Dzięki temu nazwa modelu – proporcjonalne hazardy – odzwierciedla fakt, że hazardy jednostek są proporcjonalne w całym okresie obserwacji.
 
-Mimo że model proporcjonalnych hazardów Coxa przypomina parametryczny model proporcjonalnych hazardów (PH), podstawowa różnica polega na tym, że w modelu Coxa nie zakłada się konkretnej postaci bazowego hazardu $h_0(t)$. W modelu PH-AFT bazowy hazard jest parametrycznie określony, natomiast w modelu Coxa pozostaje nieznany i może mieć dowolny kształt, co sprawia, że estymacja współczynników $\beta$ jest oparta wyłącznie na względnych hazardach i obserwowanych czasach przeżycia.
+Mimo że model proporcjonalnych hazardów Coxa przypomina parametryczny model proporcjonalnych hazardów (PH), podstawowa różnica polega na tym, że w modelu Coxa nie zakłada się konkretnej postaci bazowego hazardu $h_0(t)$. W modelu AFT-PH bazowy hazard jest parametrycznie określony, natomiast w modelu Coxa pozostaje nieznany i może mieć dowolny kształt, co sprawia, że estymacja współczynników $\beta$ jest oparta wyłącznie na względnych hazardach i obserwowanych czasach przeżycia.
 
 ## Zadanie 1
 
@@ -781,42 +767,42 @@ Na \hyperref[fig:coxy]{Wykresie \ref*{fig:coxy}.} widać różne funkcje przeży
 ```{r tabela_porownawcza}
 df.table <- data.frame(
   Pacjentka = c("Pacjentka 1", "Pacjentka 2"),
-  "PH-AFT" = 100*c(surv_fun_ph(300, z1), surv_fun_ph(300, z2)),
+  "AFT-PH" = 100*c(surv_fun_ph(300, z1), surv_fun_ph(300, z2)),
   COX  = 100*c(surv_at_time_cos(df_surv_z1, 300), surv_at_time_cos(df_surv_z2, 300))
 )
 
 knitr::kable(
   df.table,
-  col.names = c("", "PH-AFT", "Cox"),
-  caption = "\\label{tab:porownanie}Estymowana funkcja przeżycia dla czasu t = 300 w procentach - porównanie modeli PH-AFT oraz Coxa",
+  col.names = c("", "AFT-PH", "Cox"),
+  caption = "\\label{tab:porownanie}Estymowana funkcja przeżycia dla czasu t = 300 w procentach - porównanie modeli AFT-PH oraz Coxa",
   digits = 2
 )
 ```
 
-Porównując prawdopodobieństwa z \hyperref[tab:porownanie]{Tabeli  \ref*{tab:porownanie}.}, można dojść do wniosku, że estymowane prawdopodobieństwa wartości dla modeli PH-AFT i Cox są do siebie bardzo zbliżone. To może sugerować, że nawet mimo braku założenia konkretnego rozkładu w modelu Coxa, wyniki są zbliżone do tych uzyskanych przy ustalonym z góry rozkładzie Weibulla.
+Porównując prawdopodobieństwa z \hyperref[tab:porownanie]{Tabeli  \ref*{tab:porownanie}.}, można dojść do wniosku, że estymowane prawdopodobieństwa wartości dla modeli AFT-PH i Cox są do siebie bardzo zbliżone. To może sugerować, że nawet mimo braku założenia konkretnego rozkładu w modelu Coxa, wyniki są zbliżone do tych uzyskanych przy ustalonym z góry rozkładzie Weibulla.
 
 ## Zadanie 6
 
-W tym zadaniu narysowano wykresy estymowanej funkcji przeżycia dla 70-letniej kobiety o stopniu sprawności fizycznej ECOG równym 1 oraz stopniu Karnofsky równym 90 dla modeli PH-AFT oraz Coxa.
+W tym zadaniu narysowano wykresy estymowanej funkcji przeżycia dla 70-letniej kobiety o stopniu sprawności fizycznej ECOG równym 1 oraz stopniu Karnofsky równym 90 dla modeli AFT-PH oraz Coxa.
 
-```{r gomboc1, fig.cap="Porównanie estymowanych funkcji przeżycia - modele PH-AFT oraz Coxa"}
+```{r gomboc1, fig.cap="Porównanie estymowanych funkcji przeżycia - modele AFT-PH oraz Coxa"}
 t <- seq(0, max(df_surv_z1$time), length.out = 10000)
 df <- data.frame(t = t,
                  s = surv_fun_ph(t, z1))
 
 ggplot() +
-  geom_line(data = df, aes(x = t, y = s, color = "PH-AFT"), lwd = 0.7) +
+  geom_line(data = df, aes(x = t, y = s, color = "AFT-PH"), lwd = 0.7) +
   geom_line(data = df_surv_z1, aes(x = time, y = survival, color = "Cox"), lwd = 0.7) +
   scale_color_manual(
     name = "Model",
-    values = c("PH-AFT" = "steelblue", "Cox" = "tomato")
+    values = c("AFT-PH" = "steelblue", "Cox" = "tomato")
   ) +
   labs(x = "Czas do zgonu (t)", y = "S(t|z)") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:gomboc1]{Wykres \ref*{fig:gomboc1}.} wskazuje zbliżoną do siebie estymację prawdopodobieństw uzyskaną modelami Coxa i PH-AFT. To z kolei sugeruje, że założenie dotyczące rozkładu Weibulla było prawidłowe.
+\hyperref[fig:gomboc1]{Wykres \ref*{fig:gomboc1}.} wskazuje zbliżoną do siebie estymację prawdopodobieństw uzyskaną modelami Coxa i AFT-PH. To z kolei sugeruje, że założenie dotyczące rozkładu Weibulla było prawidłowe.
 
 \newpage
 # Lista 11
@@ -1276,7 +1262,7 @@ kable(
 )
 ```
 
-W \hyperref[tab:eliminacja_aft]{Tabeli \ref*{tab:eliminacja_aft}.} przedstawiono kolejne kroki procedury doboru zmiennych metodą eliminacji wstecznej. W pierwszym etapie analizy modelu pełnego wskazano zmienną `age` jako czynnik o najmniejszej sile predykcyjnej, co przy przyjętym poziomie istotności skutkowało jej usunięciem. W kolejnym kroku, dla modelu zredukowanego, stwierdzono brak istotności statystycznej dla stopnia sprawności w skali Karnofsky'ego, w związku z czym ta zmienna również została wyeliminowana. W rezultacie w modelu końcowym pozostały jedynie zmienne`sex` oraz ECOG, dla których testy potwierdziły istotność statystyczną, co kończy procedurę selekcji.
+W \hyperref[tab:eliminacja_aft]{Tabeli \ref*{tab:eliminacja_aft}.} przedstawiono kolejne kroki procedury doboru zmiennych metodą eliminacji wstecznej. W pierwszym etapie analizy modelu pełnego wskazano zmienną `age` jako czynnik o najmniejszej sile predykcyjnej, co przy przyjętym poziomie istotności skutkowało jej usunięciem. W kolejnym kroku, dla modelu zredukowanego, stwierdzono brak istotności statystycznej dla stopnia sprawności w skali Karnofsky'ego, w związku z czym ta zmienna również została wyeliminowana. W rezultacie w modelu końcowym pozostały jedynie zmienne `sex` oraz ECOG, dla których testy potwierdziły istotność statystyczną, co kończy procedurę selekcji.
 
 W kolejnym kroku dokonano wyboru optymalnego modelu, minimalizując kryterium informacyjne Akaike’a (AIC). Kryterium to ocenia jakość dopasowania modelu do danych, nakładając karę za liczbę parametrów ($k=2$). Dobór polega na rozpoczęciu analizy od modelu pełnego, a następnie iteracyjnym usuwaniu tej zmiennej, której eliminacja prowadzi do największego spadku wartości AIC (poprawy dopasowania). Procedura ta jest powtarzana do momentu, w którym usunięcie jakiejkolwiek kolejnej zmiennej skutkowałoby wzrostem wartości kryterium, co oznacza osiągnięcie modelu optymalnego w sensie AIC. Analogiczny dobór wykorzystuje się dla bayesowskiego kryterium informacyjnego (BIC). Kryterium to nakłada surowszą karę za złożoność modelu, zależną od liczebności próby ($k = \ln(n) \approx 5.42$). Obydnie procedury przeprowadzono metodą krokową wsteczną przy użyciu funkcji `step`.
 
