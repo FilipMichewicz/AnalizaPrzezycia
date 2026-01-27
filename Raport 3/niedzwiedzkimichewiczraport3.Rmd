@@ -67,8 +67,6 @@ lung1$status <- as.factor(lung$status)
 lung1$sex <- as.factor(lung$sex)
 lung1$ph.ecog <- as.factor(lung$ph.ecog)
 lung1$pat.karno <- as.factor(lung$pat.karno)
-
-set.seed(123)
 ```
 
 \newpage
@@ -243,7 +241,7 @@ Interpretacja współczynników w modelu przyspieszonego czasu awarii (AFT) opie
 
 Wartości $\text{exp}(\beta_i) > 1$ oznaczają przyspieszenie wystąpienia zdarzenia (skrócenie czasu przeżycia), natomiast $\text{exp}(\beta_i) < 1$ oznaczają spowolnienie zdarzenia (wydłużenie czasu przeżycia) w porównaniu z jednostką odniesienia.
 
-Wyraz wolny odpowiada bazowej funkcji przeżycia dla jednostki referencyjnej, której zmienne objaśniające przyjmują wartości odniesienia: wiek i stopień Karnofsky’ego równy średniej w próbce (po centrowaniu), ECOG = 0 oraz płeć męska. Wtedy przewidywany czas przeżycia tej jednostki opisuje funkcja
+Wyraz wolny odpowiada bazowej funkcji przeżycia dla jednostki referencyjnej, której zmienne objaśniające przyjmują wartości odniesienia: wiek i stopień Karnofsky’ego równy średniej w próbce (po centrowaniu), ECOG = 0 oraz płeć żeńska. Wtedy przewidywany czas przeżycia tej jednostki opisuje funkcja
 
 $$
 S_0\left(\exp\left(\beta^T z_0\right) \, t\right),
@@ -270,7 +268,7 @@ $$
 
 Oznacza to, że nie można podać konkretnego procentu o ile zwiększa się szansa przeżycia przy zmianie charakterystyki dla dowolnego $x$. Można jedynie podać różnicę w wartościach $x$ dla tej samej wartości prawdopodobieństwa zgonu.
 
-W takim razie prawdopodobieństwo, że osoba A starsza o rok od osoby B przeżyje czas $x$ jest równe szansie, że osoba B przeżyje czas o $0.9\%$ dłuższy ($1.009x$). Starszy wiek zwiększa w każdej chwili szansę na zgon.
+W takim razie prawdopodobieństwo, że osoba A starsza o rok od osoby B przeżyje czas $x$ jest równe prawdopodobieństu, że osoba B przeżyje czas o $0.9\%$ dłuższy ($1.009x$). Starszy wiek zwiększa w każdej chwili szansę na zgon.
 
 Wpływ stopnia sprawności ECOG na czas przeżycia jest bardzo wyraźny. Prawdopodobieństwo, że pacjent w stanie ECOG = 1 przeżyje czas $x$, odpowiada szansie na przeżycie czasu o 52,4% dłuższego ($1.524x$) przez pacjenta w pełni sprawnego (ECOG = 0). W przypadku stanu ECOG = 2, proces ten zachodzi jeszcze szybciej – czas $x$ u chorego odpowiada aż 252,5% tego czasu u osoby sprawnej. Największą różnicę widać dla grupy ECOG 3, gdzie dany poziom ryzyka osiągany w czasie $x$ jest równy poziomowi ryzyka sprawnego pacjenta w momencie ponad pięciokrotnie większym ($5.405x$).
 
@@ -285,9 +283,7 @@ Prawdopodobieństwo na zgon mężczyzny w chwili $x$ wynosi tyle samo, co szansa
 W tym zadaniu oszacowano funkcję przeżycia (w dniach) dla 70-letniej kobiety o stopniu sprawności fizycznej ECOG równym 1 oraz stopniu Karnofsky'ego równym 90. Dane ciągłe zostały wcześniej zcentrowane względem średnich w próbie.
 
 ```{r aft-przeżycie, echo=TRUE}
-print(df$beta)
 beta_aft <- unname((-model.aft$coefficients[-1]))
-print(beta_aft)
 z <- c(70 - age_average, 1, 0, 0, 90 - ph.karno_average, 1)
 
 mi <- unname(model.aft$coefficients[1])
@@ -530,7 +526,7 @@ ggplot(df, aes(x = t)) +
 
 \hyperref[fig:aftVSph]{Wykres \ref*{fig:aftVSph}.} wskazuje idealne pokrycie rozkładów uzyskanych za pomocą modeli AFT oraz PH. To z kolej potwierdza nasze poprzednie przypuszczenia o uzyskanej matematycznej równoważności. Wynika ona bezpośrednio z faktu, że rozkład Weibulla jest jedynym rozkładem prawdopodobieństwa, który posiada jednocześnie cechę proporcjonalności hazardów oraz strukturę przyspieszonego czasu życia. Tym samym powoduje to brak zmiany kształtu funkcji przeżycia.
 
-Ze względu na uzyskane pokrycie, w dalszej części raportu wyniki będą porównywane jedynie z modelem PH, gdyż wnioski dla modelu AFT będą identyczne.
+Ze względu na uzyskane pokrycie, w dalszej części raportu wyniki będą porównywane jedynie z modelem AFT-PH, gdyż w tym szczególnym pzypadku modele są identyczne.
 
 \newpage
 # Lista 10
@@ -567,7 +563,7 @@ $$
 
 czyli jest stałe w czasie i zależy tylko od różnicy charakterystyk. Dzięki temu nazwa modelu – proporcjonalne hazardy – odzwierciedla fakt, że hazardy jednostek są proporcjonalne w całym okresie obserwacji.
 
-Mimo że model proporcjonalnych hazardów Coxa przypomina parametryczny model proporcjonalnych hazardów (PH), podstawowa różnica polega na tym, że w modelu Coxa nie zakłada się konkretnej postaci bazowego hazardu $h_0(t)$. W modelu PH bazowy hazard jest parametrycznie określony, natomiast w modelu Coxa pozostaje nieznany i może mieć dowolny kształt, co sprawia, że estymacja współczynników $\beta$ jest oparta wyłącznie na względnych hazardach i obserwowanych czasach przeżycia.
+Mimo że model proporcjonalnych hazardów Coxa przypomina parametryczny model proporcjonalnych hazardów (PH), podstawowa różnica polega na tym, że w modelu Coxa nie zakłada się konkretnej postaci bazowego hazardu $h_0(t)$. W modelu PH-AFT bazowy hazard jest parametrycznie określony, natomiast w modelu Coxa pozostaje nieznany i może mieć dowolny kształt, co sprawia, że estymacja współczynników $\beta$ jest oparta wyłącznie na względnych hazardach i obserwowanych czasach przeżycia.
 
 ## Zadanie 1
 
@@ -785,42 +781,42 @@ Na \hyperref[fig:coxy]{Wykresie \ref*{fig:coxy}.} widać różne funkcje przeży
 ```{r tabela_porownawcza}
 df.table <- data.frame(
   Pacjentka = c("Pacjentka 1", "Pacjentka 2"),
-  PH   = 100*c(surv_fun_ph(300, z1), surv_fun_ph(300, z2)),
+  "PH-AFT" = 100*c(surv_fun_ph(300, z1), surv_fun_ph(300, z2)),
   COX  = 100*c(surv_at_time_cos(df_surv_z1, 300), surv_at_time_cos(df_surv_z2, 300))
 )
 
 knitr::kable(
   df.table,
-  col.names = c("", "PH", "Cox"),
-  caption = "\\label{tab:porownanie}Estymowana funkcja przeżycia dla czasu t = 300 w procentach - porównanie modeli PH oraz Coxa",
+  col.names = c("", "PH-AFT", "Cox"),
+  caption = "\\label{tab:porownanie}Estymowana funkcja przeżycia dla czasu t = 300 w procentach - porównanie modeli PH-AFT oraz Coxa",
   digits = 2
 )
 ```
 
-Porównując prawdopodobieństwa z \hyperref[tab:porownanie]{Tabeli  \ref*{tab:porownanie}.}, można dojść do wniosku, że estymowane prawdopodobieństwa wartości dla modeli PH i Cox są do siebie bardzo zbliżone. To może sugerować, że nawet mimo braku założenia konkretnego rozkładu w modelu Coxa, wyniki są zbliżone do tych uzyskanych przy ustalonym z góry rozkładzie Weibulla.
+Porównując prawdopodobieństwa z \hyperref[tab:porownanie]{Tabeli  \ref*{tab:porownanie}.}, można dojść do wniosku, że estymowane prawdopodobieństwa wartości dla modeli PH-AFT i Cox są do siebie bardzo zbliżone. To może sugerować, że nawet mimo braku założenia konkretnego rozkładu w modelu Coxa, wyniki są zbliżone do tych uzyskanych przy ustalonym z góry rozkładzie Weibulla.
 
 ## Zadanie 6
 
-W tym zadaniu narysowano wykresy estymowanej funkcji przeżycia dla 70-letniej kobiety o stopniu sprawności fizycznej ECOG równym 1 oraz stopniu Karnofsky równym 90 dla modeli PH oraz Coxa.
+W tym zadaniu narysowano wykresy estymowanej funkcji przeżycia dla 70-letniej kobiety o stopniu sprawności fizycznej ECOG równym 1 oraz stopniu Karnofsky równym 90 dla modeli PH-AFT oraz Coxa.
 
-```{r gomboc1, fig.cap="Porównanie estymowanych funkcji przeżycia - modele PH oraz Coxa"}
+```{r gomboc1, fig.cap="Porównanie estymowanych funkcji przeżycia - modele PH-AFT oraz Coxa"}
 t <- seq(0, max(df_surv_z1$time), length.out = 10000)
 df <- data.frame(t = t,
                  s = surv_fun_ph(t, z1))
 
 ggplot() +
-  geom_line(data = df, aes(x = t, y = s, color = "PH"), lwd = 0.7) +
+  geom_line(data = df, aes(x = t, y = s, color = "PH-AFT"), lwd = 0.7) +
   geom_line(data = df_surv_z1, aes(x = time, y = survival, color = "Cox"), lwd = 0.7) +
   scale_color_manual(
     name = "Model",
-    values = c("PH" = "steelblue", "Cox" = "tomato")
+    values = c("PH-AFT" = "steelblue", "Cox" = "tomato")
   ) +
   labs(x = "Czas do zgonu (t)", y = "S(t|z)") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:gomboc1]{Wykres \ref*{fig:gomboc1}.} wskazuje zbliżoną do siebie estymację prawdopodobieństw uzyskaną modelami Coxa i PH. To z kolei sugeruje, że założenie dotyczące rozkładu Weibulla było prawidłowe.
+\hyperref[fig:gomboc1]{Wykres \ref*{fig:gomboc1}.} wskazuje zbliżoną do siebie estymację prawdopodobieństw uzyskaną modelami Coxa i PH-AFT. To z kolei sugeruje, że założenie dotyczące rozkładu Weibulla było prawidłowe.
 
 \newpage
 # Lista 11
@@ -845,9 +841,9 @@ $$
 Ze wzoru wynika też prosta interpretacja, mamy bowiem
 
 $$
-\frac{\theta_{z_1}(t)}{\theta_{z_2}(t)} = \exp\left(\beta^T(z_2-z_1)\right), \\
+\frac{\theta_{z_1}(t)}{\theta_{z_2}(t)} = \exp\left(\beta^T(z_1-z_2)\right), \\
 \phantom{} \\
-\ln \frac{\theta_{z_1}(t)}{\theta_{z_2}(t)} = \beta^T(z_2-z_1),
+\ln \frac{\theta_{z_1}(t)}{\theta_{z_2}(t)} = \beta^T(z_1-z_2),
 $$
 
 czyli iloraz szans dwóch jednostek o dowolnych charakterystykach $z_1$, $z_2$ jest stały i niezależny od czasu.
@@ -903,39 +899,38 @@ kable(
 
 ## Zadanie 2
 
-W tym zadaniu zinterpretowane zostały wyznaczone współczynniki dla poszczególnych zmiennych znajdujące się w \hyperref[tab:odds_wspolczynniki]{tabeli \ref*{tab:odds_wspolczynniki}.} Interpretacja opiera się na ilorazie estymowanych szans i dla jednostki o charakterystyce $z_i$ przesuniętej o jeden punkt
-względem średniej próbki wynosi $\exp\left(\beta_i\right)$. Jest to równoznaczne z tym, że szansa tej jednostki na zdarzenie przed chwila $t$ jest równe szansie jednostki o zerowym wektorze charakterystyk pomnożonej przez wartość $\exp\left(\beta_i\right)$, niezależnie od ustalonego $t$.
+W tym zadaniu zinterpretowane zostały wyznaczone współczynniki dla poszczególnych zmiennych znajdujące się w \hyperref[tab:odds_wspolczynniki]{tabeli \ref*{tab:odds_wspolczynniki}.} Interpretacja opiera się na ilorazie estymowanych szans. Oznacza to, że jeśli $k$-ta zmienna (charakterystyka) wzrośnie o jedną jednostkę (przy ustalonych pozostałych zmiennych), to szansa na wystąpienie zdarzenia zwiększa się (zostaje przemnożona) o czynnik $\exp(\beta_k)$, niezależnie od ustalonego czasu $t$.
 
 W naszym przypadku badanym zdarzeniem jest śmierć pacjenta. Oznacza to, że większa wartość szansy w chwili $t$ jest równoznaczna z większą szansą na zgon przed tym momentem.
 
-W przypadku wieku każdy dodatkowy rok życia zwiększa szansę na zgon o około 1,3% ($\exp(0.0132) \approx 1.0132$).
+W przypadku wieku każdy dodatkowy rok życia zwiększa szansę na zgon o około 1,3% ($\exp(0.013) \approx 1.013$).
 
-Zmiana skali ECOG z wartości 0 na wartość 1 powoduje wzrost szansy na śmierć o prawie 73% ($\exp(0.547) \approx 1.728$). W przypadku wartości ECOG = 2 szansa ta wzrasta ponad czterokrotnie ($\exp(1.4466) \approx 4.2487$), a ECOG = 3: prawie siedmiokrotnie ($\exp(1.4466) \approx 4.2487$).
+Zmiana skali ECOG z wartości 0 na wartość 1 powoduje wzrost szansy na śmierć o prawie 73% ($\exp(0.547) \approx 1.728$). W przypadku wartości ECOG = 2 szansa ta wzrasta ponad czterokrotnie ($\exp(1.4466) \approx 4.249$), a dla ECOG = 3 prawie siedmiokrotnie ($\exp(1.925) \approx 6.852$).
 
-Wzrost skali Karnofsky'ego powoduje zmniejszenie szansy śmierci o wartość poniżej 0.4% ($1-\exp(-0.0037) \approx  0.369$).
+Wzrost skali Karnofsky'ego o jeden punkt powoduje zmniejszenie szansy śmierci o ok.  0.4% ($\exp(-0.004) \approx 0.996$).
 
-Szansa mężczyzn na śmierć przed chwilą $t$ jest około 2.5 raza większa niż w przypadku kobiet ($\exp(0.9535) \approx 2.595$).
+Szansa kobiet na śmierć przed chwilą $t$ jest około 2,6 raza mniejsza niż w przypadku mężczyzn ($\exp(0.9535)\approx 2.597$).
 
 ## Zadanie 3
 
-Zadanie polega na oszacowaniu wartości skumulowanej funkcji hazardu oraz przeżycia. W tym celu zastosowano funkcję `predict` z pakietu `stats`. Wykorzystano zależność $H(t)=-\log\left(S(t)\right)$.
+Zadanie polega na oszacowaniu wartości skumulowanej funkcji hazardu oraz funkcji przeżycia. W tym celu zastosowano funkcję `predict` z pakietu `stats`. Wykorzystano zależność $H(t)=-\log\left(S(t)\right)$.
 
 ```{r odds_bazowe, echo=TRUE}
 S_0 <- predict(model.odds, Z=rep(0, 6))
-S <- data.frame("time"=S_0$time,
+base <- data.frame("time"=S_0$time,
                 "S0"=c(S_0$S0),
                 "H0"=c(-log(S_0$S0)))
 ```
 
 ```{r odds_bazowa_przeżycia, fig.cap="Estymowane wartości bazowej funkcji przeżycia - model proporcjonalnych szans", eval=FALSE}
-ggplot(S, aes(x=time)) +
+ggplot(base, aes(x=time)) +
   geom_line(aes(y=H0), lwd = 0.7, color="tomato") +
   labs(x="Czas do zgonu (t)", y= expression(hat(H)(t)))
 #\hyperref[fig:odds_bazowa_przeżycia]{Wykres \ref*{fig:odds_bazowa_przeżycia}.}
 ```
 
 ```{r odds_bazowa_skum, fig.cap="Estymowane wartości bazowej skumulowanej funkcji hazardu - model proporcjonalnych szans", eval=FALSE}
-ggplot(S, aes(x=time)) +
+ggplot(base, aes(x=time)) +
   geom_line(aes(y=S0), lwd = 0.7, color="tomato") +
   labs(x="Czas do zgonu (t)", y= expression(hat(S)(t)))
 #\hyperref[fig:odds_bazowa_skum]{Wykres \ref*{fig:odds_bazowa_skum}.}
@@ -952,8 +947,8 @@ beta_odds <- unname(model.odds$gamma)
 
 surv_cum_haz_fun_odds <- function(z) {
   theta_odd <- exp(sum(beta_odds*z))
-  df <- data.frame("time" = S$time,
-                   "S" = 1 / (1 + (1-S$S0)/S$S0 * theta_odd))
+  df <- data.frame("time" = base$time,
+                   "S" = 1 / (1 + (1-base$S0)/base$S0 * theta_odd))
   df$H <- -log(df$S)
   df$odds <- (1-df$S)/df$S
   df
@@ -972,25 +967,29 @@ cum_hazard_1_subset <- cum_hazard_1[cum_hazard_1$time <= max(Z1$time),]
 cum_hazard_2_subset <- cum_hazard_2[cum_hazard_2$time <= max(Z1$time),]
 
 ggplot() +
-  geom_line(aes(x=time, y=H, color="Odds; 1"), Z1, lwd=0.7) +
-  geom_line(aes(x=time, y=H, color="Odds; 2"), Z2, lwd=0.7) +
+  geom_line(aes(x=time, y=H, color="Szans; 1"), Z1, lwd=0.7) +
+  geom_line(aes(x=time, y=H, color="Szans; 2"), Z2, lwd=0.7) +
   geom_line(aes(x=time, y=hazard, color="Cox; 1"), cum_hazard_1_subset, lwd=0.7) +
   geom_line(aes(x=time, y=hazard, color="Cox; 2"), cum_hazard_2_subset, lwd=0.7) +
   scale_color_manual(
     name = "Model; ECOG",
-    values = c("Odds; 1" = "steelblue",
-               "Odds; 2" = "tomato",
+    values = c("Szans; 1" = "steelblue",
+               "Szans; 2" = "tomato",
                "Cox; 1" = "darkgreen",
                "Cox; 2" = "gold2")
   ) +
-  labs(x = "Czas do zgonu (t)", y = "H(x|z)") +
+  labs(x = "Czas do zgonu (t)", y = "H(t|z)") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:hazardplot4]{Wykres \ref*{fig:hazardplot4}.} pokazuje, że dla modelu proporcjonalnych szans estymowane wartości funkcji skumulowanego hazardu są mniejsze, niż te dla modelu PH Coxa. Dla kobiety o niższym stopniu ECOG = 1 różnica ta wygląda na stałą i niewielką. Jednakże przy ECOG = 2 różnica ta jest dużo bardziej wyraźna i rosnąca w czasie. Wyniki takie oznaczają, że w każdej chwili $t$ model PO wskazuje mniejsze ryzyko zgonu niż model PH Coxa, tym samym szacowane prawdopodbieństwa przeżycia bedą większe.
+\hyperref[fig:hazardplot4]{Wykres \ref*{fig:hazardplot4}.} pokazuje, że dla modelu proporcjonalnych szans estymowane wartości funkcji skumulowanego hazardu są systematycznie niższe niż te uzyskane w modelu proporcjonalnych hazardów Coxa. Dla kobiety o stopniu sprawności fizycznej ECOG równym 1 różnica ta wydaje się być w przybliżeniu stała. Jednakże przy skali ECOG równej 2 rozbieżność ta jest znacznie wyraźniejsza i narasta wraz z upływem czasu.
+
+Wyniki te oznaczają, że model proporcjonalnych szans szacuje mniejsze skumulowane ryzyko zgonu niż model Coxa, co bezpośrednio implikuje, że wyznaczane w nim prawdopodobieństwa przeżycia ($\hat{S}(t) = \exp(-\hat{H}(t))$) będą wyższe.
 
 Ze względu na to, że nałożenie logarytmu zachowa monotoniczność oraz "ranking" grup, następny wykres pominie rysowanie funkcji związanych z modelem proporcjonalnych hazardów Coxa.
+
+Ze względu na to, że nałożenie logarytmu jest przekształceniem monotonicznym (zachowuje relację porządku między grupami), a celem kolejnego kroku jest analiza relacji wewnątrz modelu proporcjonalnych szans, następny wykres pominie funkcje związane z modelem Coxa.
 
 ```{r hazardplot5, fig.cap="Logarytm estymowanej skumulowanej funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet - model proporcjonalnych szans"}
 Z1_log <- Z1[Z1$H>0,]
@@ -1005,12 +1004,12 @@ ggplot() +
     name = "ECOG",
     values = c("1" = "steelblue", "2" = "tomato")
   ) +
-  labs(x = "Czas do zgonu (t)", y = "log(H(x|z))") +
+  labs(x = "Czas do zgonu (t)", y = "log(H(t|z))") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
 
-Z \hyperref[fig:hazardplot5]{wykresu \ref*{fig:hazardplot5}.} można wyciągnąć przypuszczenia, że różnica logarytmów skumulowanych funkcji hazardu (odpowiednio: iloraz skumulowanych funkcji hazardu) nie jest stały w czasie i zależy od wartości $t$.
+Z \hyperref[fig:hazardplot5]{wykresu \ref*{fig:hazardplot5}.} można wnioskować, że różnica logarytmów skumulowanych funkcji hazardu (a tym samym iloraz tych funkcji) nie jest stała, lecz zmienia się w czasie $t$.
 
 ```{r hazardplot6, fig.cap="Różnica logarytmów estymowanej skumulowanej funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet - model proporcjonalnych szans"}
 df <- data.frame("time"=Z1_log$time,
@@ -1022,23 +1021,11 @@ ggplot(df, aes(x=time)) +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:hazardplot6]{Wykres \ref*{fig:hazardplot6}.} potwierdza nasze poprzednie wnioski. Należy jednak pamiętać, że model proporcjonalnych szans, jak sama nazwa wskazuje, zachowuje stałą wartość ilorazu estymowanych funkcji szans, a nie skumulowanych funkcji hazardu. Model ten stosuje się, gdy drugi przypadek nie zachodzi.
-
-```{r oddsplot, fig.cap="Różnica logarytmów estymowanej szansy dla odpowiednich charakterystyk 70-letnich kobiet"}
-df <- data.frame("time"=Z1_log$time,
-                 "difference"=log(Z1_log$odds)-log(Z2_log$odds))
-ggplot(df, aes(x=time)) +
-  geom_line(aes(y=difference), df, lwd=0.7, color="tomato") +
-  labs(x = "Czas do zgonu (t)", y = expression("Różnica logarytmów " * hat(theta)(t))) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-```
-
-Na podstawie \hyperref[fig:oddsplot]{wykresu \ref*{fig:oddsplot}.} nie ma podstaw do wątpienia w poprawność przyjętego modelu proporcjonalnych szans. Widoczna różnica logarytmów funkcji szans pozostaje stała w całym badanym przedziale czasu, tym samym nie zależy od jego wartości.
+\hyperref[fig:hazardplot6]{Wykres \ref*{fig:hazardplot6}.} potwierdza nasze poprzednie przypuszczenia. Należy jednak pamiętać, że model proporcjonalnych szans, jak sama nazwa wskazuje, zachowuje stałą wartość ilorazu estymowanych funkcji szans, a nie skumulowanych funkcji hazardu. Model ten stosuje się, gdy drugi przypadek nie zachodzi.
 
 ## Zadanie 5
 
-Celem zadania jest oszacować dla wcześniej wymienionych pacjentek prawdopodobieństwo, że ich czas życia będzie większy niż 300 dni, na podstawie modelu proporcjonalnych szasn. Dodatkowo dokonano porównania otrzymanych wyników z tymi uzyskanymi metodą proporcjonalnych hazardów Coxa.
+Celem zadania jest oszacować dla wcześniej wymienionych pacjentek prawdopodobieństwo, że ich czas życia będzie większy niż 300 dni, na podstawie modelu proporcjonalnych szans. Dodatkowo dokonano porównania otrzymanych wyników z tymi uzyskanymi metodą proporcjonalnych hazardów Coxa.
 
 ```{r}
 surv_at_time_odds <- function(surv_df, t) {
@@ -1053,17 +1040,19 @@ df.table <- data.frame(
 
 knitr::kable(
   df.table,
-  col.names = c("", "Cox", "Odds"),
+  col.names = c("", "Cox", "Szans"),
   caption = "\\label{tab:porownanie_odds}Estymowana funkcja przeżycia dla czasu t = 300 w procentach - porównanie modeli Coxa oraz proporcjonalnych szans",
   digits = 2
 )
 ```
 
-Porównanie wyników z \hyperref[tab:porownanie_odds]{tabeli \ref*{tab:porownanie_odds}.} prowadzi do wniosku, że estymowane wartości dla modelu PO są większe (korzystniejsze dla pacjentek) niż te dla modelu Coxa. Potwierdza to również wniosek wysnuty na podstawie \hyperref[fig:hazardplot4]{wykresu \ref*{fig:hazardplot4}.} - mniejszy skumulowany hazard oznacza mniejsze ryzyko, a mniejsza różnica między danymi funkcjami daje również mniejszą różnicę w szacowanych prawdopodobieeństwach.
+Porównanie wyników z \hyperref[tab:porownanie_odds]{Tabeli \ref*{tab:porownanie_odds}.} prowadzi do wniosku, że estymowane wartości prawdopodobieństwa przeżycia dla modelu proporcjonalnych szans są wyższe (korzystniejsze dla pacjentek) niż te dla modelu Coxa.
+
+Potwierdza to również wniosek wysnuty na podstawie \hyperref[fig:hazardplot4]{Wykresu \ref*{fig:hazardplot4}.}- mniejszy skumulowany hazard oznacza mniejsze ryzyko, co bezpośrednio przekłada się na wyższe prawdopodobieństwo przeżycia. Ponadto, mniejsza różnica między funkcjami hazardu skutkuje mniejszą różnicą w szacowanych prawdopodobieństwach.
 
 ## Zadanie 6
 
-W zadaniu narysowano wykres estymowanej funkcji przeżycia dla pacjentki o stopniu skali ECOG = 1 dla modelu proporcjonalnych szans oraz dokonano graficznego porównania z funkcją uzyskaną za pomocą modelu PO Coxa.
+W zadaniu narysowano wykres estymowanej funkcji przeżycia dla pacjentki o stopniu sprawności fizycznej ECOG równym 1 dla modelu proporcjonalnych szans oraz dokonano graficznego porównania z funkcją uzyskaną za pomocą modelu proporcjonalnych hazardów Coxa.
 
 ```{r gomboc2, fig.cap="Porównanie estymowanych funkcji przeżycia - modele Coxa oraz proporcjonalnych szans"}
 t_max <- min(max(df_surv_z1$time), max(Z1$time))
@@ -1078,35 +1067,384 @@ ggplot() +
   geom_line(data = df_cox, aes(x = time, y = survival, color = "Cox"), lwd = 0.7) +
   scale_color_manual(
     name = "Model",
-    values = c("Odds" = "steelblue", Cox = "tomato")
+    values = c("Szans" = "steelblue", Cox = "tomato")
   ) +
   labs(x = "Czas do zgonu (t)", y = "S(x|z)") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:gomboc2]{Wykres \ref*{fig:gomboc2}.} pokazuje, że estymowane wartości prawdopodobieństwa są większe dla modelu PO niż Coxa o około $10\%$. Należy jednak zauważyć, że nie zmienia się ona gwałtownie wraz z czasem, lecz stopniowo.
+\hyperref[fig:gomboc2]{Wykres \ref*{fig:gomboc2}.} pokazuje, że estymowane wartości funkcji przeżycia są wyższe dla modelu proporcjonalnych szans niż dla modelu Coxa. Należy zauważyć, że różnica między nimi nie zmienia się gwałtownie, lecz narasta stopniowo wraz z upływem czasu, a nastepnie spada.
 
-Biorąc pod uwagę wyniki uzyskane dla wszystkich analizowanych podejść można przypuszczać, że duże rozbieżności dla modelu proporcjonalnych szans mogą wynikać ze względu na nieadekwatnego dopasowania do danych. Faktycznie, model ten stosuje się, gdy nie jest spełnione założenie proporcjonalności hazardów, które w przypadku naszych danych jednak zostało potwierdzone empirycznie.
+Biorąc pod uwagę wyniki uzyskane dla wszystkich analizowanych podejść, można przypuszczać, że widoczne rozbieżności w przypadku modelu proporcjonalnych szans mogą wynikać z jego nieadekwatnego dopasowania do danych. Model ten stosuje się bowiem w sytuacjach, gdy nie jest spełnione założenie proporcjonalności hazardów, które w przypadku naszych danych zostało jednak potwierdzone empirycznie.
 
 \newpage
 # Lista 12
 
 ## Zadanie 1
 
-TO DO
+Zadanie polega na  weryfikacji istotności zmiennych `age` i `sex`, a także ocenie różnic w czasie przeżycia względem zmiennej `ph.ecog` w modelu przyśpiszonego czasu awarii. W tym celu dla zmiennych `age` i `sex` przeprowadzono testy Walda oraz IW, natomiast dla zmiennej `ph.ecog` wykorzystano jedynie test IW, ponieważ jej wielokategorialny charakter wymaga weryfikacji łącznej istotności wszystkich parametrów opisujących tę zmienną. Poziom istotności wynosi $\alpha$ = 0.05.
+
+```{r chlopiecurodzonywczwartek1, echo=TRUE}
+
+p_wald_age <- summary(model.aft)[["table"]][, 4]["age_new"]
+p_wald_sex <- summary(model.aft)[["table"]][, 4]["as.factor(sex)2"]
+
+model.aft.age <- survreg(
+  Surv(time, status) ~ as.factor(sex) + as.factor(ph.ecog) + ph.karno_new,
+  data = lung_new,
+  dist = "weibull"
+)
+
+model.aft.sex <- survreg(
+  Surv(time, status) ~ age_new + as.factor(ph.ecog) + ph.karno_new,
+  data = lung_new,
+  dist = "weibull"
+)
+
+model.aft.ecog <- survreg(
+  Surv(time, status) ~ age_new + as.factor(sex) + ph.karno_new,
+  data = lung_new,
+  dist = "weibull"
+)
+
+p_iw_age <- anova(model.aft, model.aft.age)[2, "Pr(>Chi)"]
+p_iw_sex <- anova(model.aft, model.aft.sex)[2, "Pr(>Chi)"]
+p_iw_ecog <- anova(model.aft, model.aft.ecog)[2, "Pr(>Chi)"]
+
+df <- data.frame(
+  Zmienna = c("Age", "Sex", "ECOG"),
+  Wald = c(p_wald_age, p_wald_sex, NA),
+  IW = c(p_iw_age, p_iw_sex, p_iw_ecog)
+)
+```
+
+```{r chlopiecurodzonywczwartek2}
+options(knitr.kable.NA = '-')
+
+kable(
+  df,
+  col.names = c("Zmienna usuwana", "p-value (Wald)", "p-value (IW)"),
+  digits = 4,
+  caption = "\\label{tab:testy_istotnosci}Weryfikacja istotności zmiennych age, sex oraz ph.ecog w modelu AFT",
+  row.names = FALSE,
+  na = "-"
+)
+```
+
+W \hyperref[tab:testy_istotnosci]{Tabeli \ref*{tab:testy_istotnosci}.} przedstawiono wyniki weryfikacji hipotez, z których wynika, że na przyjętym poziomie istotności $\alpha = 0.05$ nie ma podstaw do odrzucenia hipotezy o nieistotności zmiennej `age`. Natomiast w przypadku zmiennych `sex` oraz `ph.ecog` wyniki testów wskazują na ich statystyczną istotność, co oznacza, że płeć oraz stopień sprawności fizycznej ECOG są czynnikami istotnie różnicującymi czas przeżycia w analizowanym modelu.
 
 ## Zadanie 2
 
-TO DO
+Zadanie polega na weryfikacji istotności zmiennych `age` i `sex`, a także ocenie różnic w czasie przeżycia względem zmiennej `ph.ecog` w moelu proporcjonalnych hazardów Coxa. W tym celu dla zmiennych `age` i `sex` przeprowadzono testy Walda oraz IW, natomiast dla zmiennej `ph.ecog` wykorzystano jedynie test IW, ponieważ jej wielokategorialny charakter wymaga weryfikacji łącznej istotności wszystkich parametrów opisujących tę zmienną. Poziom istotności wynosi $\alpha$ = 0.05.
+
+```{r chlopiecurodzonywczwartek3, echo=TRUE}
+p_wald_age <- summary(model.cox)$coefficients["age_new", "Pr(>|z|)"]
+p_wald_sex <- summary(model.cox)$coefficients["as.factor(sex)2", "Pr(>|z|)"]
+
+model.cox.age <- coxph(
+  Surv(time, status) ~ as.factor(sex) + as.factor(ph.ecog) + ph.karno_new,
+                       data = lung_new)
+
+model.cox.sex <- coxph(
+  Surv(time, status) ~ age_new + as.factor(ph.ecog) + ph.karno_new,
+                       data = lung_new)
+
+model.cox.ecog <- coxph(
+  Surv(time, status) ~ age_new + as.factor(sex) + ph.karno_new,
+                        data = lung_new)
+
+p_iw_age <- anova(model.cox, model.cox.age)[2, "Pr(>|Chi|)"]
+p_iw_sex <- anova(model.cox, model.cox.sex)[2, "Pr(>|Chi|)"]
+p_iw_ecog <- anova(model.cox, model.cox.ecog)[2, "Pr(>|Chi|)"]
+
+df <- data.frame(
+  Zmienna = c("Age", "Sex", "ECOG"),
+  Wald = c(p_wald_age, p_wald_sex, NA),
+  IW = c(p_iw_age, p_iw_sex, p_iw_ecog)
+)
+```
+
+```{r chlopiecurodzonywczwartek4}
+options(knitr.kable.NA = '-')
+
+kable(
+  df,
+  col.names = c("Zmienna usuwana", "p-value (Wald)", "p-value (IW)"),
+  digits = 4,
+  caption = "\\label{tab:testy_istotnosci2}Weryfikacja istotności zmiennych age, sex oraz ph.ecog w modelu Coxa",
+  row.names = FALSE,
+  na = "-"
+)
+```
+
+W \hyperref[tab:testy_istotnosci2]{Tabeli \ref*{tab:testy_istotnosci2}.} przedstawiono wyniki weryfikacji hipotez. Wnioski są dokładnie takie same jak przy testowaniu hipotez dla modelu AFT.
 
 ## Zadanie 3
 
-TO DO
+W tym zadaniu dokonano wyboru optymalnego modelu przyspieszonego czasu awarii (AFT) z rozkładem Weibulla, stosując trzy różne metody selekcji zmiennych: eliminację wsteczną opartą na teście ilorazu wiarogodności, kryterium informacyjne Akaike’a (AIC) oraz bayesowskie kryterium informacyjne (BIC).
+
+Procedura eliminacji wstecznej polega na rozpoczęciu od modelu pełnego, a następnie w kolejnych krokach usuwaniu zmiennej, która ma najmniej istotny wpływ na model (najwyższa wartość p-value w teście ilorazu wiarogodności), o ile wartość ta przekracza przyjęty poziom istotności. Zgodnie z zaleceniami dla selekcji zmiennych, przyjęto poziom istotności $\alpha = 0.15$ (co pozwala zachować zmienne potencjalnie istotne, choć słabsze).
+
+```{r miodek, echo=TRUE}
+# Krok 1.
+model.aft.age <- survreg(
+  Surv(time, status) ~ as.factor(sex) + as.factor(ph.ecog) + ph.karno_new,
+  data = lung_new,
+  dist = "weibull"
+)
+
+model.aft.sex <- survreg(
+  Surv(time, status) ~ age_new + as.factor(ph.ecog) + ph.karno_new,
+  data = lung_new,
+  dist = "weibull"
+)
+
+model.aft.ecog <- survreg(
+  Surv(time, status) ~ age_new + as.factor(sex) + ph.karno_new,
+  data = lung_new,
+  dist = "weibull"
+)
+
+model.aft.karno <- survreg(
+  Surv(time, status) ~ age_new + as.factor(sex) + as.factor(ph.ecog),
+  data = lung_new,
+  dist = "weibull"
+)
+
+p_iw_age <- anova(model.aft, model.aft.age)[2, "Pr(>Chi)"]
+p_iw_sex <- anova(model.aft, model.aft.sex)[2, "Pr(>Chi)"]
+p_iw_ecog <- anova(model.aft, model.aft.ecog)[2, "Pr(>Chi)"]
+p_iw_karno <- anova(model.aft, model.aft.karno)[2, "Pr(>Chi)"]
+
+# Krok 2. usuwamy age
+
+model.aft.sex2 <- survreg(
+  Surv(time, status) ~ as.factor(ph.ecog) + ph.karno_new,
+  data = lung_new,
+  dist = "weibull"
+)
+
+model.aft.ecog2 <- survreg(
+  Surv(time, status) ~ as.factor(sex) + ph.karno_new,
+  data = lung_new,
+  dist = "weibull"
+)
+
+model.aft.karno2 <- survreg(
+  Surv(time, status) ~ as.factor(sex) + as.factor(ph.ecog),
+  data = lung_new,
+  dist = "weibull"
+)
+
+p_iw_sex2 <- anova(model.aft, model.aft.sex2)[2, "Pr(>Chi)"]
+p_iw_ecog2 <- anova(model.aft, model.aft.ecog2)[2, "Pr(>Chi)"]
+p_iw_karno2 <- anova(model.aft, model.aft.karno2)[2, "Pr(>Chi)"]
+
+# Krok 3. usuwamy karno
+
+model.aft.sex3 <- survreg(
+  Surv(time, status) ~ as.factor(ph.ecog),
+  data = lung_new,
+  dist = "weibull"
+)
+
+model.aft.ecog3 <- survreg(
+  Surv(time, status) ~ as.factor(sex),
+  data = lung_new,
+  dist = "weibull"
+)
+
+p_iw_sex3 <- anova(model.aft, model.aft.sex3)[2, "Pr(>Chi)"]
+p_iw_ecog3 <- anova(model.aft, model.aft.ecog3)[2, "Pr(>Chi)"]
+
+df <- data.frame(
+  Zmienna = c("Age", "Sex", "ECOG", "Karnofsky"),
+  "Krok 1." = c(p_iw_age, p_iw_sex, p_iw_ecog, p_iw_karno),
+  "Krok 2." = c(NA, p_iw_sex2, p_iw_ecog2, p_iw_karno2),
+  "Krok 3." = c(NA, p_iw_sex3, p_iw_ecog3, NA)
+)
+```
+
+```{r miodek2}
+kable(
+  df,
+  col.names = c("Zmienna usuwana", "Krok 1.", "Krok 2.", "Krok 3."),
+  digits = 4,
+  caption = "\\label{tab:eliminacja_aft}Dobór zmiennych do modelu AFT metodą eliminacji wstecznej",
+  row.names = FALSE
+)
+```
+
+W \hyperref[tab:eliminacja_aft]{Tabeli \ref*{tab:eliminacja_aft}.} przedstawiono kolejne kroki procedury doboru zmiennych metodą eliminacji wstecznej. W pierwszym etapie analizy modelu pełnego wskazano zmienną `age` jako czynnik o najmniejszej sile predykcyjnej, co przy przyjętym poziomie istotności skutkowało jej usunięciem. W kolejnym kroku, dla modelu zredukowanego, stwierdzono brak istotności statystycznej dla stopnia sprawności w skali Karnofsky'ego, w związku z czym ta zmienna również została wyeliminowana. W rezultacie w modelu końcowym pozostały jedynie zmienne`sex` oraz ECOG, dla których testy potwierdziły istotność statystyczną, co kończy procedurę selekcji.
+
+W kolejnym kroku dokonano wyboru optymalnego modelu, minimalizując kryterium informacyjne Akaike’a (AIC). Kryterium to ocenia jakość dopasowania modelu do danych, nakładając karę za liczbę parametrów ($k=2$). Dobór polega na rozpoczęciu analizy od modelu pełnego, a następnie iteracyjnym usuwaniu tej zmiennej, której eliminacja prowadzi do największego spadku wartości AIC (poprawy dopasowania). Procedura ta jest powtarzana do momentu, w którym usunięcie jakiejkolwiek kolejnej zmiennej skutkowałoby wzrostem wartości kryterium, co oznacza osiągnięcie modelu optymalnego w sensie AIC. Analogiczny dobór wykorzystuje się dla bayesowskiego kryterium informacyjnego (BIC). Kryterium to nakłada surowszą karę za złożoność modelu, zależną od liczebności próby ($k = \ln(n) \approx 5.42$). Obydnie procedury przeprowadzono metodą krokową wsteczną przy użyciu funkcji `step`.
+
+```{r miodek3, echo = TRUE, eval = FALSE}
+model.aic <- step(model.aft, direction = "backward", k = 2)
+model.bic <- step(model.aft, direction = "backward", k = log(226))
+```
+
+Najlepsze model wskazany przez to kryterium AIC oraz BIC są tożsame z tym wyznaczonym wcześniej za pomocą metody eliminacji.
+
+Podsumowując, każda z zastosowanych metod selekcji jednoznacznie wskazuje, że najlepszy model zawiera tylko dwie zmienne objaśniające: `sex` oraz `ph.ecog`.
+
+W poniższej tabeli przedstawiono współczynniki optymalnego modelu AFT.
+
+```{r aft_opt, echo=TRUE}
+model.aft.optimal <- survreg(
+  Surv(time, status) ~ as.factor(ph.ecog) + as.factor(sex),
+  data = lung_new,
+  dist = "weibull"
+)
+```
+
+```{r}
+df <- data.frame(beta = -model.aft.optimal$coefficients)
+rownames(df) <- c("Wyraz wolny",
+                  "ECOG 1",
+                  "ECOG 2",
+                  "ECOG 3",
+                  "Płeć = 2 (kobieta)")
+df$expbeta <- exp(df$beta)
+
+kable(
+  df,
+  col.names = c(
+    "Charakterystyka",
+    "Wartość współczynnika $\\beta$",
+    "exp($\\beta$)"
+  ),
+  digits = 3,
+  caption = "\\label{tab:aft_wspolczynniki_opt} Współczynniki modelu AFT - optymalnego"
+)
+```
+
+Model końcowy, którego parametry zestawiono w \hyperref[tab:aft_wspolczynniki_opt]{Tabeli \ref*{tab:aft_wspolczynniki_opt}.}, w niewielkim stopniu różni się od modelu pełnego z \hyperref[tab:aft_wspolczynniki]{Tabeli \ref*{tab:aft_wspolczynniki}.} Wartości współczynników $\beta$ dla wyrazu wolnego oraz zmiennej płci uległy jedynie marginalnym zmianom. Zauważalna różnica wystąpiła w przypadku współczynników dla zmiennej ECOG, które przyjęły niższe wartości. Jest to zjawisko uzasadnione, ponieważ - jak wykazano we wstępie skala Karnofsky’ego zależy od skali ECOG, a sam wiek również ma wpływ na sprawność fizyczną. Interpretacja współczynników nie zmieniła się.
 
 ## Zadanie 4
 
-TO DO
+W tym zadaniu dokonano wyboru optymalnego modelu Coxa, stosując trzy różne metody selekcji zmiennych: eliminację wsteczną opartą na teście ilorazu wiarogodności, kryterium informacyjne Akaike’a (AIC) oraz bayesowskie kryterium informacyjne (BIC).
+
+Sposób doboru przedstawono w Zadaniu 3. Zaczęto podobnie od metody eliminacji wstecznej.
+
+```{r miodek5, echo=TRUE}
+# Krok 1. 
+
+model.cox.age <- coxph(
+  Surv(time, status) ~ as.factor(sex) + as.factor(ph.ecog) + ph.karno_new,
+                       data = lung_new)
+
+model.cox.sex <- coxph(
+  Surv(time, status) ~ age_new + as.factor(ph.ecog) + ph.karno_new,
+                       data = lung_new)
+
+model.cox.ecog <- coxph(
+  Surv(time, status) ~ age_new + as.factor(sex) + ph.karno_new,
+                        data = lung_new)
+
+model.cox.karno <- coxph(
+  Surv(time, status) ~ age_new + as.factor(sex) + as.factor(ph.ecog),
+                        data = lung_new)
+
+p_iw_age <- anova(model.cox, model.cox.age)[2, "Pr(>|Chi|)"]
+p_iw_sex <- anova(model.cox, model.cox.sex)[2, "Pr(>|Chi|)"]
+p_iw_ecog <- anova(model.cox, model.cox.ecog)[2, "Pr(>|Chi|)"]
+p_iw_karno <- anova(model.cox, model.cox.karno)[2, "Pr(>|Chi|)"]
+
+# Krok 2. usuwamy ecog
+
+model.cox.age2 <- coxph(
+  Surv(time, status) ~ as.factor(sex) + ph.karno_new,
+                       data = lung_new)
+
+model.cox.sex2 <- coxph(
+  Surv(time, status) ~ age_new + ph.karno_new,
+                       data = lung_new)
+
+model.cox.ecog2 <- coxph(
+  Surv(time, status) ~ age_new + as.factor(sex),
+                        data = lung_new)
+
+p_iw_age2 <- anova(model.cox, model.cox.age2)[2, "Pr(>|Chi|)"]
+p_iw_sex2 <- anova(model.cox, model.cox.sex2)[2, "Pr(>|Chi|)"]
+p_iw_ecog2 <- anova(model.cox, model.cox.ecog2)[2, "Pr(>|Chi|)"]
+
+# Krok 3. usuwamy age
+
+model.cox.sex3 <- coxph(
+  Surv(time, status) ~ ph.karno_new,
+                       data = lung_new)
+
+model.cox.ecog3 <- coxph(
+  Surv(time, status) ~ as.factor(sex),
+                        data = lung_new)
+
+p_iw_sex2 <- anova(model.cox, model.cox.sex3)[2, "Pr(>|Chi|)"]
+p_iw_ecog2 <- anova(model.cox, model.cox.ecog3)[2, "Pr(>|Chi|)"]
+
+
+df <- data.frame(
+  Zmienna = c("Age", "Sex", "ECOG", "Karnofsky"),
+  "Krok 1." = c(p_iw_age, p_iw_sex, p_iw_ecog, p_iw_karno),
+  "Krok 2." = c(p_iw_age2, p_iw_sex2, p_iw_ecog2, NA),
+  "Krok 3." = c(NA, p_iw_sex2, p_iw_ecog2, NA)
+)
+```
+
+```{r miodek6}
+kable(
+  df,
+  col.names = c("Zmienna usuwana", "Krok 1.", "Krok 2.", "Krok 3."),
+  digits = 4,
+  caption = "\\label{tab:eliminacja_cox}Dobór zmiennych do modelu Coxa metodą eliminacji wstecznej",
+  row.names = FALSE
+)
+```
+
+W \hyperref[tab:eliminacja_cox]{Tabeli \ref*{tab:eliminacja_cox}.} przedstawiono kolejne kroki procedury doboru zmiennych metodą eliminacji wstecznej. Procedura jest dokładnie taka sama jak w Zadaniu 3.
+
+W następnej kolejności dokonano wyboru modelu stosująć kryterium AIC oraz BIC.
+
+```{r miodek7, echo = TRUE, eval = FALSE}
+model.aic <- step(model.cox, direction = "backward", k = 2)
+model.bic <- step(model.aft, direction = "backward", k = log(226))
+```
+
+Najlepsze model wskazany przez to kryterium AIC oraz BIC są tożsame z tym wyznaczonym wcześniej za pomocą metody eliminacji.
+
+Podsumowując, każda z zastosowanych metod selekcji jednoznacznie wskazuje, że najlepszy model zawiera tylko dwie zmienne objaśniające: `sex` oraz `ph.ecog`.
+
+W poniższej tabeli przedstawiono współczynniki optymalnego modelu Coxa.
+
+```{r cox-opt, echo=TRUE}
+model.cox.opt <- coxph(Surv(time, status) ~ as.factor(ph.ecog) +  
+                         as.factor(sex), data = lung_new)
+```
+
+```{r}
+df <- data.frame(beta = model.cox.opt$coefficients)
+rownames(df) <- c("ECOG 1",
+                  "ECOG 2",
+                  "ECOG 3",
+                  "Płeć = 2 (kobieta)")
+
+df$expbeta <- exp(df$beta)
+
+kable(
+  df,
+  col.names = c(
+    "Charakterystyka",
+    "Wartość współczynnika $\\beta$",
+    "exp($\\beta$)"
+  ),
+  digits = 3,
+  caption = "\\label{tab:cox_coef_opt} Współczynniki modelu Coxa - optymalnego"
+)
+```
+
+Model końcowy, którego parametry zestawiono w \hyperref[tab:cox_coef_opt]{Tabeli \ref*{tab:cox_coef_opt}.}, w niewielkim stopniu różni się od modelu pełnego z \hyperref[tab:cox_coef]{Tabeli \ref*{tab:cox_coef}.} Wartość współczynnika $\beta$ dla płci uległa jedynie marginalnej zmianie. Zauważalna różnica wystąpiła w przypadku współczynników dla zmiennej ECOG, które przyjęły niższe wartości. Jest to zjawisko uzasadnione, ponieważ - jak wykazano we wstępie skala Karnofsky’ego zależy od skali ECOG, a sam wiek również ma wpływ na sprawność fizyczną. Interpretacja współczynników nie zmieniła się.
+
 
 \newpage
 # Bibliografia
