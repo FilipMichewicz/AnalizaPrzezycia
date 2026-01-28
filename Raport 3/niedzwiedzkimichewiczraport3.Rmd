@@ -1247,7 +1247,8 @@ W kolejnym kroku dokonano wyboru optymalnego modelu, minimalizując kryterium in
 
 ```{r miodek3, echo = TRUE, eval = FALSE}
 model.aic <- step(model.aft, direction = "backward", k = 2)
-model.bic <- step(model.aft, direction = "backward", k = log(nrow(lung_new[lung_new$status == 2,])))
+model.bic <- step(model.aft, direction = "backward", 
+                  k = log(nrow(lung_new[lung_new$status == 2,])))
 ```
 
 Najlepsze model wskazany przez kryteria AIC oraz BIC są tożsame z tym wyznaczonym wcześniej za pomocą metody eliminacji.
@@ -1373,7 +1374,8 @@ W następnej kolejności dokonano wyboru modelu stosująć kryterium AIC oraz BI
 
 ```{r miodek7, echo = TRUE, eval = FALSE}
 model.aic <- step(model.cox, direction = "backward", k = 2)
-model.bic <- step(model.aft, direction = "backward", k = log(nrow(lung_new[lung_new$status == 2,])))
+model.bic <- step(model.aft, direction = "backward", 
+                  k = log(nrow(lung_new[lung_new$status == 2,])))
 ```
 
 Najlepsze model wskazany przez to kryterium AIC oraz BIC są tożsame z tym wyznaczonym wcześniej za pomocą metody eliminacji.
