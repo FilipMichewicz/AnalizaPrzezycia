@@ -53,7 +53,6 @@ lung1 <- lung
 lung1$status <- as.factor(lung$status)
 lung1$sex <- as.factor(lung$sex)
 lung1$ph.ecog <- as.factor(lung$ph.ecog)
-lung1$pat.karno <- as.factor(lung$pat.karno)
 ```
 
 \newpage
@@ -101,7 +100,7 @@ Porównanie skali ECOG ze skalą Karnofsky’ego:
 
 Lista skupia się na poznaniu modelów przyspieszonego czasu awarii oraz proporcjonalnych hazardów.
 
-Niech $S_0(x)$ oraz $h_0(x)$ będą odpowiednio funkcjami przeżycia hazardu o znanych postaciach, które odpowiadają rozkładowi obserwowalnej zmiennej losowej $X$ o zerowym wektorze charakterystyk. W przypadku zadań funkcje te będą odpowiadać rozkładowi Weibulla, jednakże można też przyjąć inne, co zostało uwzględnione w poniższych opisach.
+Niech $S_0(x)$ oraz $h_0(x)$ będą odpowiednio funkcjami przeżycia oraz hazardu o znanych postaciach, które odpowiadają rozkładowi obserwowalnej zmiennej losowej $X$ o zerowym wektorze charakterystyk. W przypadku zadań funkcje te będą odpowiadać rozkładowi Weibulla, jednakże można też przyjąć inne, co zostało uwzględnione w poniższych opisach.
 
 ## Model przyspieszonego czasu awarii (AFT)
 
@@ -228,7 +227,7 @@ Interpretacja współczynników w modelu przyspieszonego czasu awarii (AFT) opie
 
 Wartości $\text{exp}(\beta_i) > 1$ oznaczają przyspieszenie wystąpienia zdarzenia (skrócenie czasu przeżycia), natomiast $\text{exp}(\beta_i) < 1$ oznaczają spowolnienie zdarzenia (wydłużenie czasu przeżycia) w porównaniu z jednostką odniesienia.
 
-Wyraz wolny odpowiada bazowej funkcji przeżycia dla jednostki referencyjnej, której zmienne objaśniające przyjmują wartości odniesienia: wiek i stopień Karnofsky’ego równy średniej w próbce (po centrowaniu), ECOG = 0 oraz płeć żeńska. Wtedy przewidywany czas przeżycia tej jednostki opisuje funkcja
+Wyraz wolny odpowiada bazowej funkcji przeżycia dla jednostki referencyjnej, której zmienne objaśniające przyjmują wartości odniesienia: wiek i stopień Karnofsky’ego równy średniej w próbce (po centrowaniu), ECOG = 0 oraz płeć męska. Wtedy przewidywany czas przeżycia tej jednostki opisuje funkcja
 
 $$
 S_0\left(\exp\left(\beta^T z_0\right) \, t\right),
@@ -243,12 +242,6 @@ Po odpowiednich obliczeniach można pokazać, że wartość ilorazu prawdopdobie
 
 $$
 \frac{S\left(x|z_1\right)}{S\left(x|z_2\right)} = 
-\exp\left(\left(\frac{\exp\left(\beta^Tz_2\right)x}{\lambda}\right)^k -
-\left(\frac{\exp\left(\beta^Tz_1\right)x}{\lambda}\right)^k \right)
-$$
-
-$$
-\frac{S\left(x|z_1\right)}{S\left(x|z_2\right)} = 
 \exp\left(\left(\left(\frac{\exp\left(\beta^Tz_2\right)}{\lambda}\right)^k -
 \left(\frac{\exp\left(\beta^Tz_1\right)}{\lambda}\right)^k \right)x^k\right)
 $$
@@ -257,9 +250,7 @@ Oznacza to, że nie można podać konkretnego procentu o ile zwiększa się szan
 
 W takim razie prawdopodobieństwo, że osoba A starsza o rok od osoby B przeżyje czas $x$ jest równe prawdopodobieństu, że osoba B przeżyje czas o $0.9\%$ dłuższy ($1.009x$). Starszy wiek zwiększa w każdej chwili szansę na zgon.
 
-Wpływ stopnia sprawności ECOG na czas przeżycia jest bardzo wyraźny. Prawdopodobieństwo, że pacjent w stanie ECOG = 1 przeżyje czas $x$, odpowiada szansie na przeżycie czasu o 52,4% dłuższego ($1.524x$) przez pacjenta w pełni sprawnego (ECOG = 0). W przypadku stanu ECOG = 2, proces ten zachodzi jeszcze szybciej – czas $x$ u chorego odpowiada aż 252,5% tego czasu u osoby sprawnej. Największą różnicę widać dla grupy ECOG 3, gdzie dany poziom ryzyka osiągany w czasie $x$ jest równy poziomowi ryzyka sprawnego pacjenta w momencie ponad pięciokrotnie większym ($5.405x$).
-
-Każdy punkt mniej w skali Karnofsky’ego względem średniej skraca przewidywany czas przeżycia o około 1% ($\exp(-0.01) \approx 0.990$).
+Wpływ stopnia sprawności ECOG na czas przeżycia jest bardzo wyraźny. Prawdopodobieństwo, że pacjent w stanie ECOG = 1 przeżyje czas $x$, odpowiada szansie na przeżycie czasu o 52,4% dłuższego ($1.524x$) przez pacjenta w pełni sprawnego (ECOG = 0). W przypadku stanu ECOG = 2, proces ten zachodzi jeszcze szybciej – czas $x$ u chorego odpowiada aż 252,5% tego czasu u osoby sprawnej. Największą różnicę widać dla grupy ECOG = 3, gdzie dany poziom ryzyka osiągany w czasie $x$ jest równy poziomowi ryzyka sprawnego pacjenta w momencie ponad pięciokrotnie większym ($5.405x$).
 
 Każdy punkt mniej w skali Karnofsky'ego względem średniej zwiększa szacowany czas przeżycia o prawdopodobieństwie $p$ o $1\%$.
 
@@ -451,7 +442,7 @@ ggplot(df, aes(x = t, y = diff.log)) +
   theme(legend.position = "none")
 ```
 
-Jak pokazano na \hyperref[fig:ph_hazard_log_diff]{wykresie \ref*{fig:ph_hazard_log_diff}.} różnica logarytmów funkcji hazardu jest w przybliżeniu stała w czasie, co wskazuje na stałość ilorazu hazardów. W konsekwencji brak jest przesłanek empirycznych do odrzucenia założenia proporcjonalnych hazardów, a przyjęcie modelu proporcjonalnych hazardów w analizie można uznać za uzasadnione.
+Jak pokazano na \hyperref[fig:ph_hazard_log_diff]{Wykresie \ref*{fig:ph_hazard_log_diff}.} różnica logarytmów funkcji hazardu jest w przybliżeniu stała w czasie, co wskazuje na stałość ilorazu hazardów. W konsekwencji brak jest przesłanek empirycznych do odrzucenia założenia proporcjonalnych hazardów, a przyjęcie modelu proporcjonalnych hazardów w analizie można uznać za uzasadnione.
 
 ## Zadanie 8
 
@@ -557,7 +548,8 @@ Zadanie polega na oszacowaniu parametrów modelu proporcjonalnych hazardów Coxa
 
 ```{r cox-model-nie-jablka, echo=TRUE}
 model.cox <- coxph(Surv(time, status) ~ age_new + 
-                     as.factor(ph.ecog) + ph.karno_new + as.factor(sex), data = lung_new)
+                     as.factor(ph.ecog) + ph.karno_new + as.factor(sex),
+                   data = lung_new)
 ```
 
 W poniższej tabeli przedstawiono współczynniki modelu. Ich interpretacja znajduje się w kolejnym zadaniu.
@@ -591,7 +583,7 @@ W tym zadaniu zinterpretowane zostały wyznaczone współczynniki dla poszczegó
 
 Dla wieku każda jednostka wieku powyżej średniego wieku zwiększa hazard zgonu o około 1.3% ($\beta = 0.01256$, $\exp(\beta) \approx 1.0126$).
 
-Hazard zgonu kobiety jest około 43% mniejszy niż hazard meżczyzny ($\beta = -0.5657$, $\exp(\beta) \approx 0.568$).
+Hazard zgonu kobiety jest około 43% mniejszy niż hazard mężczyzny ($\beta = -0.5657$, $\exp(\beta) \approx 0.568$).
 
 Jednostka z ECOG równym 1 ma hazard zgonu około 78% wyższy niż jednostka z ECOG równym 0 ($\beta = 0.5781$, $\exp(\beta) \approx 1.783$). Jednostka z ECOG równym 2 ma hazard ponad trzykrotnie większy niż jednostka z ECOG równym 0 ($\beta = 1.2399$, $\exp(\beta) \approx 3.455$), a jednostka z ECOG równym 3 ma hazard niemal 11-krotnie wyższy ($\beta = 2.3959$, $\exp(\beta) \approx 10.978$).
 
@@ -633,7 +625,7 @@ surv_df <- data.frame(surv = exp(-basehaz_df$hazard), time = basehaz_df$time)
 
 ## Zadanie 4
 
-Zadanie polega na oszacowaniu bazowych skumulowanych funkcji hazardu (w dniach) odpowiadajacych rozkładowi czasu życia dwóch 70-letnich kobiet o tej samej wartości stopnia Karnofsky’ego równym 90 oraz zróżnicowanej wartości charakterystyki ECOG wynoszącym 1 oraz 2. Dane ciągłe zostały wcześniej zcentrowane względem średnich w próbie. Następnie porównano uzyskane estymacje skumulowanej funkcji hazardu.
+Zadanie polega na oszacowaniu bazowych skumulowanych funkcji hazardu (w dniach) odpowiadajacych rozkładowi czasu życia dwóch 70-letnich kobiet o tej samej wartości stopnia Karnofsky’ego równym 90 oraz zróżnicowanej wartości charakterystyki ECOG wynoszących 1 oraz 2. Dane ciągłe zostały wcześniej zcentrowane względem średnich w próbie. Następnie porównano uzyskane estymacje skumulowanej funkcji hazardu.
 
 W modelu Coxa skumulowana funkcja hazardu jednostki o charakterystyce $z$ wyraża się wzorem
 
@@ -710,7 +702,7 @@ $$
 = \frac{h_{z_1}(t)}{h_{z_2}(t)}.
 $$
 
-Po zalogarytmowaniu otrzymujemy
+Po zlogarytmowaniu otrzymujemy
 
 $$
 \log H_{z_1}(t) - \log H_{z_2}(t)
@@ -807,7 +799,7 @@ ggplot() +
 \newpage
 # Lista 11
 
-Celem listy jest zastosowanie modelu proporcjonalnych szans. Analiza uwzględnia: oszacowanie parametrów modelu, interpretacja wpływu zmiennych na ryzyko zdarzenia, wyznaczenie bazowych funkcji skumulowanego hazardu i funkcji przeżycia oraz wyznaczenie wartości prawdopodobieństw dla wybranych profili pacjentów.
+Celem listy jest zastosowanie modelu proporcjonalnych szans. Analiza uwzględnia: oszacowanie parametrów modelu, interpretację wpływu zmiennych na ryzyko zdarzenia, wyznaczenie bazowych funkcji skumulowanego hazardu i funkcji przeżycia oraz wyznaczenie wartości prawdopodobieństw dla wybranych profili pacjentów.
 
 ## Model proporcjonalnych szans
 
@@ -885,7 +877,7 @@ kable(
 
 ## Zadanie 2
 
-W tym zadaniu zinterpretowane zostały wyznaczone współczynniki dla poszczególnych zmiennych znajdujące się w \hyperref[tab:odds_wspolczynniki]{tabeli \ref*{tab:odds_wspolczynniki}.} Interpretacja opiera się na ilorazie estymowanych szans. Oznacza to, że jeśli $k$-ta zmienna (charakterystyka) wzrośnie o jedną jednostkę (przy ustalonych pozostałych zmiennych), to szansa na wystąpienie zdarzenia zwiększa się (zostaje przemnożona) o czynnik $\exp(\beta_k)$, niezależnie od ustalonego czasu $t$.
+W tym zadaniu zinterpretowane zostały wyznaczone współczynniki dla poszczególnych zmiennych znajdujące się w \hyperref[tab:odds_wspolczynniki]{Tabeli \ref*{tab:odds_wspolczynniki}.} Interpretacja opiera się na ilorazie estymowanych szans. Oznacza to, że jeśli $k$-ta zmienna (charakterystyka) wzrośnie o jedną jednostkę (przy ustalonych pozostałych zmiennych), to szansa na wystąpienie zdarzenia zwiększa się (zostaje przemnożona) o czynnik $\exp(\beta_k)$, niezależnie od ustalonego czasu $t$.
 
 W naszym przypadku badanym zdarzeniem jest śmierć pacjenta. Oznacza to, że większa wartość szansy w chwili $t$ jest równoznaczna z większą szansą na zgon przed tym momentem.
 
@@ -899,27 +891,13 @@ Szansa kobiet na śmierć przed chwilą $t$ jest około 2,6 raza mniejsza niż w
 
 ## Zadanie 3
 
-Zadanie polega na oszacowaniu wartości skumulowanej funkcji hazardu oraz funkcji przeżycia. W tym celu zastosowano funkcję `predict` z pakietu `stats`. Wykorzystano zależność $H(t)=-\log\left(S(t)\right)$.
+Zadanie polega na oszacowaniu wartości skumulowanej funkcji hazardu oraz funkcji przeżycia. W tym celu zastosowano funkcję `predict` z pakietu `stats` do wyznaczenia bazowej funkcji przeżycia. Następnie wykorzystano zależność $H(t)=-\log\left(S(t)\right)$.
 
 ```{r odds_bazowe, echo=TRUE}
 S_0 <- predict(model.odds, Z=rep(0, 6))
 base <- data.frame("time"=S_0$time,
                 "S0"=c(S_0$S0),
                 "H0"=c(-log(S_0$S0)))
-```
-
-```{r odds_bazowa_przeżycia, fig.cap="Estymowane wartości bazowej funkcji przeżycia - model proporcjonalnych szans", eval=FALSE}
-ggplot(base, aes(x=time)) +
-  geom_line(aes(y=H0), lwd = 0.7, color="tomato") +
-  labs(x="Czas do zgonu (t)", y= expression(hat(H)(t)))
-#\hyperref[fig:odds_bazowa_przeżycia]{Wykres \ref*{fig:odds_bazowa_przeżycia}.}
-```
-
-```{r odds_bazowa_skum, fig.cap="Estymowane wartości bazowej skumulowanej funkcji hazardu - model proporcjonalnych szans", eval=FALSE}
-ggplot(base, aes(x=time)) +
-  geom_line(aes(y=S0), lwd = 0.7, color="tomato") +
-  labs(x="Czas do zgonu (t)", y= expression(hat(S)(t)))
-#\hyperref[fig:odds_bazowa_skum]{Wykres \ref*{fig:odds_bazowa_skum}.}
 ```
 
 ## Zadanie 4
@@ -973,8 +951,6 @@ ggplot() +
 
 Wyniki te oznaczają, że model proporcjonalnych szans szacuje mniejsze skumulowane ryzyko zgonu niż model Coxa, co bezpośrednio implikuje, że wyznaczane w nim prawdopodobieństwa przeżycia ($\hat{S}(t) = \exp(-\hat{H}(t))$) będą wyższe.
 
-Ze względu na to, że nałożenie logarytmu zachowa monotoniczność oraz "ranking" grup, następny wykres pominie rysowanie funkcji związanych z modelem proporcjonalnych hazardów Coxa.
-
 Ze względu na to, że nałożenie logarytmu jest przekształceniem monotonicznym (zachowuje relację porządku między grupami), a celem kolejnego kroku jest analiza relacji wewnątrz modelu proporcjonalnych szans, następny wykres pominie funkcje związane z modelem Coxa.
 
 ```{r hazardplot5, fig.cap="Logarytm estymowanej skumulowanej funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet - model proporcjonalnych szans"}
@@ -995,7 +971,7 @@ ggplot() +
   theme(legend.position = "bottom")
 ```
 
-Z \hyperref[fig:hazardplot5]{wykresu \ref*{fig:hazardplot5}.} można wnioskować, że różnica logarytmów skumulowanych funkcji hazardu (a tym samym iloraz tych funkcji) nie jest stała, lecz zmienia się w czasie $t$.
+Z \hyperref[fig:hazardplot5]{Wykresu \ref*{fig:hazardplot5}.} można wnioskować, że różnica logarytmów skumulowanych funkcji hazardu (a tym samym iloraz tych funkcji) nie jest stała, lecz zmienia się w czasie $t$.
 
 ```{r hazardplot6, fig.cap="Różnica logarytmów estymowanej skumulowanej funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet - model proporcjonalnych szans"}
 df <- data.frame("time"=Z1_log$time,
@@ -1034,7 +1010,7 @@ knitr::kable(
 
 Porównanie wyników z \hyperref[tab:porownanie_odds]{Tabeli \ref*{tab:porownanie_odds}.} prowadzi do wniosku, że estymowane wartości prawdopodobieństwa przeżycia dla modelu proporcjonalnych szans są wyższe (korzystniejsze dla pacjentek) niż te dla modelu Coxa.
 
-Potwierdza to również wniosek wysnuty na podstawie \hyperref[fig:hazardplot4]{Wykresu \ref*{fig:hazardplot4}.}- mniejszy skumulowany hazard oznacza mniejsze ryzyko, co bezpośrednio przekłada się na wyższe prawdopodobieństwo przeżycia. Ponadto, mniejsza różnica między funkcjami hazardu skutkuje mniejszą różnicą w szacowanych prawdopodobieństwach.
+Potwierdza to również wniosek wysnuty na podstawie \hyperref[fig:hazardplot4]{Wykresu \ref*{fig:hazardplot4}.} - mniejszy skumulowany hazard oznacza mniejsze ryzyko, co bezpośrednio przekłada się na wyższe prawdopodobieństwo przeżycia. Ponadto, mniejsza różnica między funkcjami hazardu skutkuje mniejszą różnicą w szacowanych prawdopodobieństwach.
 
 ## Zadanie 6
 
@@ -1067,9 +1043,11 @@ Biorąc pod uwagę wyniki uzyskane dla wszystkich analizowanych podejść, możn
 \newpage
 # Lista 12
 
+Lista polega na analizie danych o czasie przeżycia z wykorzystaniem modeli przyspieszonego czasu awarii oraz proporcjonalnych hazardów Coxa. Celem jest ocena istotności zmiennych objaśniających przy użyciu testów Walda i testów ilorazu wiarogodności, weryfikacja hipotez dotyczących wpływu sprawności ECOG na rozkład czasu przeżycia oraz wybór najlepszego modelu z zastosowaniem procedur eliminacji zmiennych i kryteriów informacyjnych AIC oraz BIC.
+
 ## Zadanie 1
 
-Zadanie polega na  weryfikacji istotności zmiennych `age` i `sex`, a także ocenie różnic w czasie przeżycia względem zmiennej `ph.ecog` w modelu przyśpiszonego czasu awarii. W tym celu dla zmiennych `age` i `sex` przeprowadzono testy Walda oraz IW, natomiast dla zmiennej `ph.ecog` wykorzystano jedynie test IW, ponieważ jej wielokategorialny charakter wymaga weryfikacji łącznej istotności wszystkich parametrów opisujących tę zmienną. Poziom istotności wynosi $\alpha$ = 0.05.
+Zadanie polega na  weryfikacji istotności zmiennych `age` i `sex`, a także ocenie różnic w czasie przeżycia względem zmiennej `ph.ecog` w modelu przyspieszonego czasu awarii. W tym celu dla zmiennych `age` i `sex` przeprowadzono testy Walda oraz IW, natomiast dla zmiennej `ph.ecog` wykorzystano jedynie test IW, ponieważ jej wielokategorialny charakter wymaga weryfikacji łącznej istotności wszystkich parametrów opisujących tę zmienną. Poziom istotności wynosi $\alpha$ = 0.05.
 
 ```{r chlopiecurodzonywczwartek1, echo=TRUE}
 
@@ -1264,14 +1242,14 @@ kable(
 
 W \hyperref[tab:eliminacja_aft]{Tabeli \ref*{tab:eliminacja_aft}.} przedstawiono kolejne kroki procedury doboru zmiennych metodą eliminacji wstecznej. W pierwszym etapie analizy modelu pełnego wskazano zmienną `age` jako czynnik o najmniejszej sile predykcyjnej, co przy przyjętym poziomie istotności skutkowało jej usunięciem. W kolejnym kroku, dla modelu zredukowanego, stwierdzono brak istotności statystycznej dla stopnia sprawności w skali Karnofsky'ego, w związku z czym ta zmienna również została wyeliminowana. W rezultacie w modelu końcowym pozostały jedynie zmienne `sex` oraz ECOG, dla których testy potwierdziły istotność statystyczną, co kończy procedurę selekcji.
 
-W kolejnym kroku dokonano wyboru optymalnego modelu, minimalizując kryterium informacyjne Akaike’a (AIC). Kryterium to ocenia jakość dopasowania modelu do danych, nakładając karę za liczbę parametrów ($k=2$). Dobór polega na rozpoczęciu analizy od modelu pełnego, a następnie iteracyjnym usuwaniu tej zmiennej, której eliminacja prowadzi do największego spadku wartości AIC (poprawy dopasowania). Procedura ta jest powtarzana do momentu, w którym usunięcie jakiejkolwiek kolejnej zmiennej skutkowałoby wzrostem wartości kryterium, co oznacza osiągnięcie modelu optymalnego w sensie AIC. Analogiczny dobór wykorzystuje się dla bayesowskiego kryterium informacyjnego (BIC). Kryterium to nakłada surowszą karę za złożoność modelu, zależną od liczebności próby ($k = \ln(n) \approx 5.42$). Obydnie procedury przeprowadzono metodą krokową wsteczną przy użyciu funkcji `step`.
+W kolejnym kroku dokonano wyboru optymalnego modelu, minimalizując kryterium informacyjne Akaike’a (AIC). Kryterium to ocenia jakość dopasowania modelu do danych, nakładając karę za liczbę parametrów ($k=2$). Dobór polega na rozpoczęciu analizy od modelu pełnego, a następnie iteracyjnym usuwaniu tej zmiennej, której eliminacja prowadzi do największego spadku wartości AIC (poprawy dopasowania). Procedura ta jest powtarzana do momentu, w którym usunięcie jakiejkolwiek kolejnej zmiennej skutkowałoby wzrostem wartości kryterium, co oznacza osiągnięcie modelu optymalnego w sensie AIC. Analogiczny dobór wykorzystuje się dla bayesowskiego kryterium informacyjnego (BIC). Kryterium to nakłada surowszą karę za złożoność modelu, zależną od liczebności próby ($k = \ln(n) \approx 5.42$). Obydwie procedury przeprowadzono metodą krokową wsteczną przy użyciu funkcji `step`.
 
 ```{r miodek3, echo = TRUE, eval = FALSE}
 model.aic <- step(model.aft, direction = "backward", k = 2)
 model.bic <- step(model.aft, direction = "backward", k = log(226))
 ```
 
-Najlepsze model wskazany przez to kryterium AIC oraz BIC są tożsame z tym wyznaczonym wcześniej za pomocą metody eliminacji.
+Najlepsze model wskazany przez kryteria AIC oraz BIC są tożsame z tym wyznaczonym wcześniej za pomocą metody eliminacji.
 
 Podsumowując, każda z zastosowanych metod selekcji jednoznacznie wskazuje, że najlepszy model zawiera tylko dwie zmienne objaśniające: `sex` oraz `ph.ecog`.
 
@@ -1312,7 +1290,7 @@ Model końcowy, którego parametry zestawiono w \hyperref[tab:aft_wspolczynniki_
 
 W tym zadaniu dokonano wyboru optymalnego modelu Coxa, stosując trzy różne metody selekcji zmiennych: eliminację wsteczną opartą na teście ilorazu wiarogodności, kryterium informacyjne Akaike’a (AIC) oraz bayesowskie kryterium informacyjne (BIC).
 
-Sposób doboru przedstawono w Zadaniu 3. Zaczęto podobnie od metody eliminacji wstecznej.
+Sposób doboru przedstawiono w Zadaniu 3. Zaczęto podobnie od metody eliminacji wstecznej.
 
 ```{r miodek5, echo=TRUE}
 # Krok 1. 
