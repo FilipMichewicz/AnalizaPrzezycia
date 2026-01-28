@@ -58,7 +58,8 @@ lung1$ph.ecog <- as.factor(lung$ph.ecog)
 \newpage
 # Dane *lung*
 
-W sprawozdaniu każda lista wykorzystuje dane *lung* z pakietu *survival* w R, które dotyczą pacjentów z zaawansowanym rakiem płuc. \newline
+Każda lista zadań wykorzystuje dane *lung* z pakietu *survival* w pakiecie R, które dotyczą pacjentów z zaawansowanym rakiem płuc.
+
 Zbiór danych *lung* zawiera **`r nrow(lung)`** oraz **`r ncol(lung)`** cech. Liczba brakujących danych wynosi **`r sum(is.na(lung))`**, z czego przypada ona na **`r sum(na.patients)`** pacjentów.
 
 Znaczenie poszczególnych cech oraz ich typ przedstawiono w \hyperref[tab:opis_danych]{Tabeli \ref*{tab:opis_danych}.}
@@ -1242,11 +1243,11 @@ kable(
 
 W \hyperref[tab:eliminacja_aft]{Tabeli \ref*{tab:eliminacja_aft}.} przedstawiono kolejne kroki procedury doboru zmiennych metodą eliminacji wstecznej. W pierwszym etapie analizy modelu pełnego wskazano zmienną `age` jako czynnik o najmniejszej sile predykcyjnej, co przy przyjętym poziomie istotności skutkowało jej usunięciem. W kolejnym kroku, dla modelu zredukowanego, stwierdzono brak istotności statystycznej dla stopnia sprawności w skali Karnofsky'ego, w związku z czym ta zmienna również została wyeliminowana. W rezultacie w modelu końcowym pozostały jedynie zmienne `sex` oraz ECOG, dla których testy potwierdziły istotność statystyczną, co kończy procedurę selekcji.
 
-W kolejnym kroku dokonano wyboru optymalnego modelu, minimalizując kryterium informacyjne Akaike’a (AIC). Kryterium to ocenia jakość dopasowania modelu do danych, nakładając karę za liczbę parametrów ($k=2$). Dobór polega na rozpoczęciu analizy od modelu pełnego, a następnie iteracyjnym usuwaniu tej zmiennej, której eliminacja prowadzi do największego spadku wartości AIC (poprawy dopasowania). Procedura ta jest powtarzana do momentu, w którym usunięcie jakiejkolwiek kolejnej zmiennej skutkowałoby wzrostem wartości kryterium, co oznacza osiągnięcie modelu optymalnego w sensie AIC. Analogiczny dobór wykorzystuje się dla bayesowskiego kryterium informacyjnego (BIC). Kryterium to nakłada surowszą karę za złożoność modelu, zależną od liczebności próby ($k = \ln(n) \approx 5.42$). Obydwie procedury przeprowadzono metodą krokową wsteczną przy użyciu funkcji `step`.
+W kolejnym kroku dokonano wyboru optymalnego modelu, minimalizując kryterium informacyjne Akaike’a (AIC). Kryterium to ocenia jakość dopasowania modelu do danych, nakładając karę za liczbę parametrów ($k=2$). Dobór polega na rozpoczęciu analizy od modelu pełnego, a następnie iteracyjnym usuwaniu tej zmiennej, której eliminacja prowadzi do największego spadku wartości AIC (poprawy dopasowania). Procedura ta jest powtarzana do momentu, w którym usunięcie jakiejkolwiek kolejnej zmiennej skutkowałoby wzrostem wartości kryterium, co oznacza osiągnięcie modelu optymalnego w sensie AIC. Analogiczny dobór wykorzystuje się dla bayesowskiego kryterium informacyjnego (BIC). Kryterium to nakłada surowszą karę za złożoność modelu, zależną od liczebności danych kompletnych w próbie ($k = \ln(n) = \ln(163) \approx 5.09$). Obydwie procedury przeprowadzono metodą krokową wsteczną przy użyciu funkcji `step`.
 
 ```{r miodek3, echo = TRUE, eval = FALSE}
 model.aic <- step(model.aft, direction = "backward", k = 2)
-model.bic <- step(model.aft, direction = "backward", k = log(226))
+model.bic <- step(model.aft, direction = "backward", k = log(nrow(lung_new[lung_new$status == 2,])))
 ```
 
 Najlepsze model wskazany przez kryteria AIC oraz BIC są tożsame z tym wyznaczonym wcześniej za pomocą metody eliminacji.
@@ -1372,7 +1373,7 @@ W następnej kolejności dokonano wyboru modelu stosująć kryterium AIC oraz BI
 
 ```{r miodek7, echo = TRUE, eval = FALSE}
 model.aic <- step(model.cox, direction = "backward", k = 2)
-model.bic <- step(model.aft, direction = "backward", k = log(226))
+model.bic <- step(model.aft, direction = "backward", k = log(nrow(lung_new[lung_new$status == 2,])))
 ```
 
 Najlepsze model wskazany przez to kryterium AIC oraz BIC są tożsame z tym wyznaczonym wcześniej za pomocą metody eliminacji.
