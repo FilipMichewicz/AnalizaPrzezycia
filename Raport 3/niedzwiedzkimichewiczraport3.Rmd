@@ -1201,9 +1201,9 @@ model.aft.karno2 <- survreg(
   dist = "weibull"
 )
 
-p_iw_sex2 <- anova(model.aft, model.aft.sex2)[2, "Pr(>Chi)"]
-p_iw_ecog2 <- anova(model.aft, model.aft.ecog2)[2, "Pr(>Chi)"]
-p_iw_karno2 <- anova(model.aft, model.aft.karno2)[2, "Pr(>Chi)"]
+p_iw_sex2 <- anova(model.aft.age, model.aft.sex2)[2, "Pr(>Chi)"]
+p_iw_ecog2 <- anova(model.aft.age, model.aft.ecog2)[2, "Pr(>Chi)"]
+p_iw_karno2 <- anova(model.aft.age, model.aft.karno2)[2, "Pr(>Chi)"]
 
 # Krok 3. usuwamy karno
 
@@ -1219,8 +1219,8 @@ model.aft.ecog3 <- survreg(
   dist = "weibull"
 )
 
-p_iw_sex3 <- anova(model.aft, model.aft.sex3)[2, "Pr(>Chi)"]
-p_iw_ecog3 <- anova(model.aft, model.aft.ecog3)[2, "Pr(>Chi)"]
+p_iw_sex3 <- anova(model.aft.karno2, model.aft.sex3)[2, "Pr(>Chi)"]
+p_iw_ecog3 <- anova(model.aft.karno2, model.aft.ecog3)[2, "Pr(>Chi)"]
 
 df <- data.frame(
   Zmienna = c("Age", "Sex", "ECOG", "Karnofsky"),
@@ -1316,23 +1316,23 @@ p_iw_sex <- anova(model.cox, model.cox.sex)[2, "Pr(>|Chi|)"]
 p_iw_ecog <- anova(model.cox, model.cox.ecog)[2, "Pr(>|Chi|)"]
 p_iw_karno <- anova(model.cox, model.cox.karno)[2, "Pr(>|Chi|)"]
 
-# Krok 2. usuwamy ecog
+# Krok 2. usuwamy karno
 
 model.cox.age2 <- coxph(
-  Surv(time, status) ~ as.factor(sex) + ph.karno_new,
+  Surv(time, status) ~ as.factor(sex) + as.factor(ph.ecog),
                        data = lung_new)
 
 model.cox.sex2 <- coxph(
-  Surv(time, status) ~ age_new + ph.karno_new,
+  Surv(time, status) ~ age_new + as.factor(ph.ecog),
                        data = lung_new)
 
 model.cox.ecog2 <- coxph(
   Surv(time, status) ~ age_new + as.factor(sex),
                         data = lung_new)
 
-p_iw_age2 <- anova(model.cox, model.cox.age2)[2, "Pr(>|Chi|)"]
-p_iw_sex2 <- anova(model.cox, model.cox.sex2)[2, "Pr(>|Chi|)"]
-p_iw_ecog2 <- anova(model.cox, model.cox.ecog2)[2, "Pr(>|Chi|)"]
+p_iw_age2 <- anova(model.cox.karno, model.cox.age2)[2, "Pr(>|Chi|)"]
+p_iw_sex2 <- anova(model.cox.karno, model.cox.sex2)[2, "Pr(>|Chi|)"]
+p_iw_ecog2 <- anova(model.cox.karno, model.cox.ecog2)[2, "Pr(>|Chi|)"]
 
 # Krok 3. usuwamy age
 
@@ -1344,15 +1344,15 @@ model.cox.ecog3 <- coxph(
   Surv(time, status) ~ as.factor(sex),
                         data = lung_new)
 
-p_iw_sex2 <- anova(model.cox, model.cox.sex3)[2, "Pr(>|Chi|)"]
-p_iw_ecog2 <- anova(model.cox, model.cox.ecog3)[2, "Pr(>|Chi|)"]
+p_iw_sex3 <- anova(model.cox.age2, model.cox.sex3)[2, "Pr(>|Chi|)"]
+p_iw_ecog3 <- anova(model.cox.age2, model.cox.ecog3)[2, "Pr(>|Chi|)"]
 
 
 df <- data.frame(
   Zmienna = c("Age", "Sex", "ECOG", "Karnofsky"),
   "Krok 1." = c(p_iw_age, p_iw_sex, p_iw_ecog, p_iw_karno),
   "Krok 2." = c(p_iw_age2, p_iw_sex2, p_iw_ecog2, NA),
-  "Krok 3." = c(NA, p_iw_sex2, p_iw_ecog2, NA)
+  "Krok 3." = c(NA, p_iw_sex3, p_iw_ecog3, NA)
 )
 ```
 
