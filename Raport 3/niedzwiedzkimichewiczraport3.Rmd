@@ -800,9 +800,9 @@ ggplot() +
 \newpage
 # Lista 11
 
-Celem listy jest zastosowanie modelu proporcjonalnych szans. Analiza uwzględnia: oszacowanie parametrów modelu, interpretację wpływu zmiennych na ryzyko zdarzenia, wyznaczenie bazowych funkcji skumulowanego hazardu i funkcji przeżycia oraz wyznaczenie wartości prawdopodobieństw dla wybranych profili pacjentów.
+Celem listy jest zastosowanie modelu PO. Analiza uwzględnia: oszacowanie parametrów modelu, interpretację wpływu zmiennych na ryzyko zdarzenia, wyznaczenie bazowych funkcji skumulowanego hazardu i funkcji przeżycia oraz wyznaczenie wartości prawdopodobieństw dla wybranych profili pacjentów.
 
-## Model proporcjonalnych szans
+## Model proporcjonalnych szans (PO)
 
 Modelem proporcjonalnych szans nazywamy model, w którym szansę na wystąpienie zdarzenia (iloraz prawdopodobieństwa sukcesu do prawdopodobieństwa porażki) dla jednostki o charakterystyce $z$ w chwili $t$ określamy wzorem
 
@@ -841,7 +841,7 @@ $$
 
 ## Zadanie 1
 
-Zadanie polega na oszacowaniu parametrów modelu proporcjonalnych szans. Jako zmienną zależną przyjęto *time*, natomiast jako wektor charakterystyk: *age*, *sex*, *ph.ecog* oraz *ph.karno*. Do estymacji modelu wykorzystano funkcję `prop.odds` z pakietu `timereg`. Dane ciągłe zostały zcentrowane. Dodatkowo, ze względu na specyfikację funkcji, zmieniono oznaczenia statusu danych na 0 - obserwacja cenzurowana oraz 1 - dana kompletna.
+Zadanie polega na oszacowaniu parametrów modelu PO. Jako zmienną zależną przyjęto *time*, natomiast jako wektor charakterystyk: *age*, *sex*, *ph.ecog* oraz *ph.karno*. Do estymacji modelu wykorzystano funkcję `prop.odds` z pakietu `timereg`. Dane ciągłe zostały zcentrowane. Dodatkowo, ze względu na specyfikację funkcji, zmieniono oznaczenia statusu danych na 0 - obserwacja cenzurowana oraz 1 - dana kompletna.
 
 ```{r lung-odds, echo=TRUE}
 lung_new$status_new <- lung_new$status - 1
@@ -872,7 +872,7 @@ kable(
     "exp($\\beta$)"
   ),
   digits = 3,
-  caption = "\\label{tab:odds_wspolczynniki} Współczynniki modelu proporcjonalnych szans"
+  caption = "\\label{tab:odds_wspolczynniki} Współczynniki modelu PO"
 )
 ```
 
@@ -927,19 +927,19 @@ Z1 <- surv_cum_haz_fun_odds(c(70-age_average, 1, 0, 0, 90-ph.karno_average, 1))
 Z2 <- surv_cum_haz_fun_odds(c(70-age_average, 0, 1, 0, 90-ph.karno_average, 1))
 ```
 
-```{r hazardplot4, fig.cap="Estymowana skumulowana funkcja hazardu dla odpowiednich charakterystyk 70-letnich kobiet - modele Coxa i proporcjonalnych szans"}
+```{r hazardplot4, fig.cap="Estymowana skumulowana funkcja hazardu dla odpowiednich charakterystyk 70-letnich kobiet - modele Coxa i PO"}
 cum_hazard_1_subset <- cum_hazard_1[cum_hazard_1$time <= max(Z1$time),]
 cum_hazard_2_subset <- cum_hazard_2[cum_hazard_2$time <= max(Z1$time),]
 
 ggplot() +
-  geom_line(aes(x=time, y=H, color="Szans; 1"), Z1, lwd=0.7) +
-  geom_line(aes(x=time, y=H, color="Szans; 2"), Z2, lwd=0.7) +
+  geom_line(aes(x=time, y=H, color="PO; 1"), Z1, lwd=0.7) +
+  geom_line(aes(x=time, y=H, color="PO; 2"), Z2, lwd=0.7) +
   geom_line(aes(x=time, y=hazard, color="Cox; 1"), cum_hazard_1_subset, lwd=0.7) +
   geom_line(aes(x=time, y=hazard, color="Cox; 2"), cum_hazard_2_subset, lwd=0.7) +
   scale_color_manual(
     name = "Model; ECOG",
-    values = c("Szans; 1" = "steelblue",
-               "Szans; 2" = "tomato",
+    values = c("PO; 1" = "steelblue",
+               "PO; 2" = "tomato",
                "Cox; 1" = "darkgreen",
                "Cox; 2" = "gold2")
   ) +
@@ -948,13 +948,13 @@ ggplot() +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:hazardplot4]{Wykres \ref*{fig:hazardplot4}.} pokazuje, że dla modelu proporcjonalnych szans estymowane wartości funkcji skumulowanego hazardu są systematycznie niższe niż te uzyskane w modelu proporcjonalnych hazardów Coxa. Dla kobiety o stopniu sprawności fizycznej ECOG równym 1 różnica ta wydaje się być w przybliżeniu stała. Jednakże przy skali ECOG równej 2 rozbieżność ta jest znacznie wyraźniejsza i narasta wraz z upływem czasu.
+\hyperref[fig:hazardplot4]{Wykres \ref*{fig:hazardplot4}.} pokazuje, że dla modelu PO estymowane wartości funkcji skumulowanego hazardu są systematycznie niższe niż te uzyskane w modelu proporcjonalnych hazardów Coxa. Dla kobiety o stopniu sprawności fizycznej ECOG równym 1 różnica ta wydaje się być w przybliżeniu stała. Jednakże przy skali ECOG równej 2 rozbieżność ta jest znacznie wyraźniejsza i narasta wraz z upływem czasu.
 
-Wyniki te oznaczają, że model proporcjonalnych szans szacuje mniejsze skumulowane ryzyko zgonu niż model Coxa, co bezpośrednio implikuje, że wyznaczane w nim prawdopodobieństwa przeżycia ($\hat{S}(t) = \exp(-\hat{H}(t))$) będą wyższe.
+Wyniki te oznaczają, że model PO szacuje mniejsze skumulowane ryzyko zgonu niż model Coxa, co bezpośrednio implikuje, że wyznaczane w nim prawdopodobieństwa przeżycia ($\hat{S}(t) = \exp(-\hat{H}(t))$) będą wyższe.
 
-Ze względu na to, że nałożenie logarytmu jest przekształceniem monotonicznym (zachowuje relację porządku między grupami), a celem kolejnego kroku jest analiza relacji wewnątrz modelu proporcjonalnych szans, następny wykres pominie funkcje związane z modelem Coxa.
+Ze względu na to, że nałożenie logarytmu jest przekształceniem monotonicznym (zachowuje relację porządku między grupami), a celem kolejnego kroku jest analiza relacji wewnątrz modelu PO, następny wykres pominie funkcje związane z modelem Coxa.
 
-```{r hazardplot5, fig.cap="Logarytm estymowanej skumulowanej funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet - model proporcjonalnych szans"}
+```{r hazardplot5, fig.cap="Logarytm estymowanej skumulowanej funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet - model PO"}
 Z1_log <- Z1[Z1$H>0,]
 Z1_log$logH <- log(Z1_log$H)
 Z2_log <- Z2[Z2$H>0,]
@@ -974,7 +974,7 @@ ggplot() +
 
 Z \hyperref[fig:hazardplot5]{Wykresu \ref*{fig:hazardplot5}.} można wnioskować, że różnica logarytmów skumulowanych funkcji hazardu (a tym samym iloraz tych funkcji) nie jest stała, lecz zmienia się w czasie $t$.
 
-```{r hazardplot6, fig.cap="Różnica logarytmów estymowanej skumulowanej funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet - model proporcjonalnych szans"}
+```{r hazardplot6, fig.cap="Różnica logarytmów estymowanej skumulowanej funkcji hazardu dla odpowiednich charakterystyk 70-letnich kobiet - model PO"}
 df <- data.frame("time"=Z1_log$time,
                      "difference"=abs(Z1_log$logH-Z2_log$logH))
 ggplot(df, aes(x=time)) +
@@ -984,11 +984,11 @@ ggplot(df, aes(x=time)) +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:hazardplot6]{Wykres \ref*{fig:hazardplot6}.} potwierdza nasze poprzednie przypuszczenia. Należy jednak pamiętać, że model proporcjonalnych szans, jak sama nazwa wskazuje, zachowuje stałą wartość ilorazu estymowanych funkcji szans, a nie skumulowanych funkcji hazardu. Model ten stosuje się, gdy drugi przypadek nie zachodzi.
+\hyperref[fig:hazardplot6]{Wykres \ref*{fig:hazardplot6}.} potwierdza nasze poprzednie przypuszczenia. Należy jednak pamiętać, że model PO, jak sama nazwa wskazuje, zachowuje stałą wartość ilorazu estymowanych funkcji szans, a nie skumulowanych funkcji hazardu. Model ten stosuje się, gdy drugi przypadek nie zachodzi.
 
 ## Zadanie 5
 
-Celem zadania jest oszacować dla wcześniej wymienionych pacjentek prawdopodobieństwo, że ich czas życia będzie większy niż 300 dni, na podstawie modelu proporcjonalnych szans. Dodatkowo dokonano porównania otrzymanych wyników z tymi uzyskanymi metodą proporcjonalnych hazardów Coxa.
+Celem zadania jest oszacować dla wcześniej wymienionych pacjentek prawdopodobieństwo, że ich czas życia będzie większy niż 300 dni, na podstawie modelu {proporcjonalnych szans}P. Dodatkowo dokonano porównania otrzymanych wyników z tymi uzyskanymi metodą proporcjonalnych hazardów Coxa.
 
 ```{r}
 surv_at_time_odds <- function(surv_df, t) {
@@ -1003,8 +1003,8 @@ df.table <- data.frame(
 
 knitr::kable(
   df.table,
-  col.names = c("", "Cox", "Szans"),
-  caption = "\\label{tab:porownanie_odds}Estymowana funkcja przeżycia dla czasu t = 300 w procentach - porównanie modeli Coxa oraz proporcjonalnych szans",
+  col.names = c("", "Cox", "PO"),
+  caption = "\\label{tab:porownanie_odds}Estymowana funkcja przeżycia dla czasu t = 300 w procentach - porównanie modeli Coxa oraz PO",
   digits = 2
 )
 ```
@@ -1017,7 +1017,7 @@ Potwierdza to również wniosek wysnuty na podstawie \hyperref[fig:hazardplot4]{
 
 W zadaniu narysowano wykres estymowanej funkcji przeżycia dla pacjentki o stopniu sprawności fizycznej ECOG równym 1 dla modelu proporcjonalnych szans oraz dokonano graficznego porównania z funkcją uzyskaną za pomocą modelu proporcjonalnych hazardów Coxa.
 
-```{r gomboc2, fig.cap="Porównanie estymowanych funkcji przeżycia - modele Coxa oraz proporcjonalnych szans"}
+```{r gomboc2, fig.cap="Porównanie estymowanych funkcji przeżycia - modele Coxa oraz PO"}
 t_max <- min(max(df_surv_z1$time), max(Z1$time))
 t <- seq(0, t_max, length.out = 10000)
 #df_ph <- data.frame(t = t,
@@ -1026,20 +1026,20 @@ df_cox <- df_surv_z1[df_surv_z1$time <= t_max,]
 df_odds <- Z1[Z1$time <= t_max,]
 
 ggplot() +
-  geom_line(data = df_odds, aes(x = time, y = S, color = "Odds"), lwd = 0.7) +
+  geom_line(data = df_odds, aes(x = time, y = S, color = "PO"), lwd = 0.7) +
   geom_line(data = df_cox, aes(x = time, y = survival, color = "Cox"), lwd = 0.7) +
   scale_color_manual(
     name = "Model",
-    values = c("Szans" = "steelblue", Cox = "tomato")
+    values = c(PO = "steelblue", Cox = "tomato")
   ) +
   labs(x = "Czas do zgonu (t)", y = "S(x|z)") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
 
-\hyperref[fig:gomboc2]{Wykres \ref*{fig:gomboc2}.} pokazuje, że estymowane wartości funkcji przeżycia są wyższe dla modelu proporcjonalnych szans niż dla modelu Coxa. Należy zauważyć, że różnica między nimi nie zmienia się gwałtownie, lecz narasta stopniowo wraz z upływem czasu, a nastepnie spada.
+\hyperref[fig:gomboc2]{Wykres \ref*{fig:gomboc2}.} pokazuje, że estymowane wartości funkcji przeżycia są wyższe dla modelu PO niż dla modelu Coxa. Należy zauważyć, że różnica między nimi nie zmienia się gwałtownie, lecz narasta stopniowo wraz z upływem czasu, a nastepnie spada.
 
-Biorąc pod uwagę wyniki uzyskane dla wszystkich analizowanych podejść, można przypuszczać, że widoczne rozbieżności w przypadku modelu proporcjonalnych szans mogą wynikać z jego nieadekwatnego dopasowania do danych. Model ten stosuje się bowiem w sytuacjach, gdy nie jest spełnione założenie proporcjonalności hazardów, które w przypadku naszych danych zostało jednak potwierdzone empirycznie.
+Biorąc pod uwagę wyniki uzyskane dla wszystkich analizowanych podejść, można przypuszczać, że widoczne rozbieżności w przypadku modelu PO mogą wynikać z jego nieadekwatnego dopasowania do danych. Model ten stosuje się bowiem w sytuacjach, gdy nie jest spełnione założenie proporcjonalności hazardów, które w przypadku naszych danych zostało jednak potwierdzone empirycznie.
 
 \newpage
 # Lista 12
